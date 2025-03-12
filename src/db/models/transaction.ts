@@ -12,19 +12,15 @@ const TransactionSchema = new Schema<
     {
         source_bridge_hash: {
             type: String,
-            required: true,
         },
         source_block_num: {
             type: Number,
-            required: true,
         },
         source_block_pos: {
             type: Number,
-            required: true,
         },
         source_block_timestamp: {
             type: Number,
-            required: true,
         },
         source_tx_hash: {
             type: String,
@@ -32,11 +28,9 @@ const TransactionSchema = new Schema<
         },
         destination_block_num: {
             type: Number,
-            required: true,
         },
         destination_block_timestamp: {
             type: Number,
-            required: true,
         },
         destination_tx_hash: {
             type: String,
@@ -44,7 +38,6 @@ const TransactionSchema = new Schema<
         },
         origin_network: {
             type: Number,
-            lowercase: true,
         },
         origin_address: {
             type: String,
@@ -56,35 +49,29 @@ const TransactionSchema = new Schema<
         },
         leaf_type: {
             type: Number,
-            lowercase: true,
         },
         source_network: {
             type: Number,
-            lowercase: true,
         },
         destination_network: {
             type: Number,
-            lowercase: true,
         },
         destination_address: {
             type: String,
             lowercase: true,
         },
         amount: {
-            type: Number,
-            lowercase: true,
+            type: Number
         },
         deposit_count: {
             type: Number,
-            lowercase: true,
         },
         from_address: {
             type: String,
             lowercase: true,
         },
         global_index: {
-            type: Number,
-            lowercase: true,
+            type: Number
         },
         status: {
             type: String,
