@@ -1,5 +1,5 @@
 import { config } from './common/config';
-import { Logger } from './common/logger';
+import { Logger } from '../packages/common/logger';
 import { startServer } from './api/server';
 
 Logger.create({

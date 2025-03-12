@@ -2,7 +2,7 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { swagger } from '@elysiajs/swagger';
 import { config } from '../common/config';
-import { Logger } from '../common/logger';
+import { Logger } from '../../packages/common/logger';
 import { setupRoutes } from './routes';
 
 export function createApp() {

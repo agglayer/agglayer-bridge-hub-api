@@ -1,4 +1,4 @@
-import { Logger } from '../common/logger';
+import { Logger } from '../../packages/common/logger';
 import { ExternalApiError, TimeoutError, withTimeout } from '../common/error';
 
 export class ProofApiService {

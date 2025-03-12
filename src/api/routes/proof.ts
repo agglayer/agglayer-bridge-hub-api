@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { ProofApiService } from '../../services/proof';
-import { Logger } from '../../common/logger';
+import { Logger } from '../../../packages/common/logger';
 import { config } from '../../common/config';
 import {
   ValidationError,
