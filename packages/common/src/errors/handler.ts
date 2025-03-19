@@ -1,23 +1,9 @@
-import { AppError } from './types';
-import { Logger } from '../logger';
-import { config } from '../config';
+import { ApiError } from "./api_errors";
+import { Logger } from "../helpers/logger";
+import type { IErrorResponse, IErrorHandlerOptions } from "../interfaces/error";
 
-export interface ErrorResponse {
-    status: 'error';
-    message: string;
-    code: string;
-    details?: any;
-    requestId?: string;
-    timestamp: string;
-}
-
-export interface ErrorHandlerOptions {
-    includeStackTrace?: boolean;
-    logErrors?: boolean;
-}
-
-const defaultOptions: ErrorHandlerOptions = {
-    includeStackTrace: config.environment !== 'prod',
+const defaultOptions: IErrorHandlerOptions = {
+    includeStackTrace: true,
     logErrors: true,
 };
 
@@ -27,14 +13,14 @@ const defaultOptions: ErrorHandlerOptions = {
 export function formatError(
     error: Error,
     requestId?: string,
-    options: ErrorHandlerOptions = defaultOptions
-): ErrorResponse {
+    options: IErrorHandlerOptions = defaultOptions
+): IErrorResponse {
     const timestamp = new Date().toISOString();
 
     // Handle AppError instances
-    if (error instanceof AppError) {
-        const response: ErrorResponse = {
-            status: 'error',
+    if (error instanceof ApiError) {
+        const response: IErrorResponse = {
+            status: "error",
             message: error.message,
             code: error.code,
             timestamp,
@@ -54,7 +40,7 @@ export function formatError(
         if (options.includeStackTrace && error.stack) {
             response.details = {
                 ...response.details,
-                stack: error.stack.split('\n'),
+                stack: error.stack.split("\n"),
             };
         }
 
@@ -62,10 +48,10 @@ export function formatError(
     }
 
     // Handle generic errors
-    const response: ErrorResponse = {
-        status: 'error',
-        message: error.message || 'An unexpected error occurred',
-        code: 'INTERNAL_ERROR',
+    const response: IErrorResponse = {
+        status: "error",
+        message: error.message || "An unexpected error occurred",
+        code: "INTERNAL_ERROR",
         timestamp,
     };
 
@@ -75,7 +61,7 @@ export function formatError(
 
     if (options.includeStackTrace && error.stack) {
         response.details = {
-            stack: error.stack.split('\n'),
+            stack: error.stack.split("\n"),
         };
     }
 
@@ -89,10 +75,10 @@ export function formatError(
 export function handleError(
     error: Error,
     requestId?: string,
-    options: ErrorHandlerOptions = defaultOptions
-): ErrorResponse {
+    options: IErrorHandlerOptions = defaultOptions
+): IErrorResponse {
     // Determine if this is an operational or programming error
-    const isOperational = error instanceof AppError && error.isOperational;
+    const isOperational = error instanceof ApiError && error.isOperational;
 
     // Log error appropriately
     if (options.logErrors) {
@@ -101,14 +87,14 @@ export function handleError(
                 message: `Operational error: ${error.message}`,
                 requestId,
                 errorName: error.name,
-                ...(error instanceof AppError ? error.context : {}),
+                ...(error instanceof ApiError ? error.context : {}),
             });
         } else {
             Logger.error({
                 message: `Unhandled error: ${error.message}`,
                 requestId,
-                errorName: error.name
-            })
+                errorName: error.name,
+            });
         }
     }
 
@@ -119,13 +105,15 @@ export function handleError(
 /**
  * Creates express/bun compatible middleware for handling errors
  */
-export function createErrorMiddleware(options: ErrorHandlerOptions = defaultOptions) {
+export function createErrorMiddleware(
+    options: IErrorHandlerOptions = defaultOptions
+) {
     return (err: Error, req: any, res: any, next: any) => {
         // Extract request ID if available
-        const requestId = req.id || req.headers['x-request-id'];
+        const requestId = req.id || req.headers["x-request-id"];
 
         // Get status code (default to 500)
-        const statusCode = err instanceof AppError ? err.statusCode : 500;
+        const statusCode = err instanceof ApiError ? err.statusCode : 500;
 
         // Format and handle the error
         const errorResponse = handleError(err, requestId, options);

@@ -1,5 +1,5 @@
-export * from './types';
-export * from './handler';
+export * from "./api_errors";
+export * from "./handler";
 
 export function asyncHandler<T>(
     fn: (...args: any[]) => Promise<T>
@@ -9,7 +9,7 @@ export function asyncHandler<T>(
             return await fn(...args);
         } catch (error) {
             const next = args[args.length - 1];
-            if (typeof next === 'function') {
+            if (typeof next === "function") {
                 next(error);
             } else {
                 throw error;
@@ -24,7 +24,7 @@ export function withTimeout<T>(
     fn: () => Promise<T>
 ): () => Promise<T> {
     return async () => {
-        const { TimeoutError } = await import('./types');
+        const { TimeoutError } = await import("./api_errors");
 
         return new Promise<T>((resolve, reject) => {
             const timer = setTimeout(() => {

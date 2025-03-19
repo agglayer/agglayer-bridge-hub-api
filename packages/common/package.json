@@ -1,0 +1,16 @@
+{
+    "name": "bridge-hub-commons",
+    "version": "0.0.1",
+    "module": "index.ts",
+    "type": "module",
+    "devDependencies": {
+        "@types/bun": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    },
+    "dependencies": {
+        "winston": "^3.17.0",
+        "winston-transport-sentry-node": "^3.0.0"
+    }
+}
