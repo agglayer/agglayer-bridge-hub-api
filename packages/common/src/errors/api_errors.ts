@@ -1,4 +1,6 @@
-export class AppError extends Error {
+import { errorCodes } from "./error_codes";
+
+export class ApiError extends Error {
     public readonly code: string;
     public readonly statusCode: number;
     public readonly isOperational: boolean;
@@ -7,8 +9,8 @@ export class AppError extends Error {
     constructor(
         message: string,
         {
-            code = 'INTERNAL_ERROR',
-            statusCode = 500,
+            code = "INTERNAL_SERVER_ERROR",
+            statusCode = errorCodes.api.INTERNAL_SERVER_ERROR,
             isOperational = true,
             context = {},
         }: {
@@ -29,17 +31,45 @@ export class AppError extends Error {
     }
 }
 
-export class ValidationError extends AppError {
+export class UnauthorizedError extends ApiError {
+    constructor(
+        message = "Invalid auth credentials",
+        context: Record<string, any> = {}
+    ) {
+        super(message, {
+            code: "UNAUTHORIZED",
+            statusCode: errorCodes.api.UNAUTHORIZED,
+            isOperational: true,
+            context,
+        });
+    }
+}
+
+export class ForbiddenError extends ApiError {
+    constructor(
+        message = "You do not have permission to perform this action",
+        context: Record<string, any> = {}
+    ) {
+        super(message, {
+            code: "FORBIDDEN",
+            statusCode: errorCodes.api.FORBIDDEN,
+            isOperational: true,
+            context,
+        });
+    }
+}
+
+export class BadRequestError extends ApiError {
     public readonly validationErrors: Record<string, string[]>;
 
     constructor(
-        message: string,
+        message: string = "Malformed or invalid request",
         validationErrors: Record<string, string[]> = {},
         context: Record<string, any> = {}
     ) {
         super(message, {
-            code: 'VALIDATION_ERROR',
-            statusCode: 400,
+            code: "BAD_REQUEST",
+            statusCode: errorCodes.api.BAD_REQUEST,
             isOperational: true,
             context,
         });
@@ -47,9 +77,9 @@ export class ValidationError extends AppError {
     }
 }
 
-export class NotFoundError extends AppError {
+export class NotFoundError extends ApiError {
     constructor(
-        entity: string,
+        entity: string = "Path",
         identifier?: string | number,
         context: Record<string, any> = {}
     ) {
@@ -58,58 +88,29 @@ export class NotFoundError extends AppError {
             : `${entity} not found`;
 
         super(message, {
-            code: 'NOT_FOUND',
-            statusCode: 404,
+            code: "NOT_FOUND",
+            statusCode: errorCodes.api.NOT_FOUND,
             isOperational: true,
             context: { entity, identifier, ...context },
         });
     }
 }
 
-export class UnauthorizedError extends AppError {
+export class RateLimitError extends ApiError {
     constructor(
-        message = 'Authentication required',
+        message = "Rate limit exceeded",
         context: Record<string, any> = {}
     ) {
         super(message, {
-            code: 'UNAUTHORIZED',
-            statusCode: 401,
+            code: "RATE_LIMIT",
+            statusCode: errorCodes.api.TOO_MANY_REQUESTS,
             isOperational: true,
             context,
         });
     }
 }
 
-export class ForbiddenError extends AppError {
-    constructor(
-        message = 'You do not have permission to perform this action',
-        context: Record<string, any> = {}
-    ) {
-        super(message, {
-            code: 'FORBIDDEN',
-            statusCode: 403,
-            isOperational: true,
-            context,
-        });
-    }
-}
-
-export class ConflictError extends AppError {
-    constructor(
-        message: string,
-        context: Record<string, any> = {}
-    ) {
-        super(message, {
-            code: 'CONFLICT',
-            statusCode: 409,
-            isOperational: true,
-            context,
-        });
-    }
-}
-
-
-export class ExternalApiError extends AppError {
+export class ExternalApiError extends ApiError {
     public readonly apiName: string;
 
     public readonly externalCode?: string | number;
@@ -130,8 +131,8 @@ export class ExternalApiError extends AppError {
         } = {}
     ) {
         super(`${apiName} API error: ${message}`, {
-            code: 'EXTERNAL_API_ERROR',
-            statusCode: 502, // Bad Gateway
+            code: "EXTERNAL_API_ERROR",
+            statusCode: errorCodes.api.EXTERNAL_GATEWAY_ERROR,
             isOperational: true,
             context: { apiName, externalCode, ...context },
         });
@@ -142,68 +143,40 @@ export class ExternalApiError extends AppError {
     }
 }
 
-
-export class DatabaseError extends AppError {
+export class DatabaseError extends ApiError {
     constructor(
         message: string,
         originalError?: Error,
         context: Record<string, any> = {}
     ) {
         super(message, {
-            code: 'DATABASE_ERROR',
-            statusCode: 500,
+            code: "DATABASE_ERROR",
+            statusCode: errorCodes.api.INTERNAL_SERVER_ERROR,
             isOperational: true,
             context: {
                 ...context,
-                originalError: originalError ? {
-                    message: originalError.message,
-                    name: originalError.name,
-                } : undefined,
+                originalError: originalError
+                    ? {
+                          message: originalError.message,
+                          name: originalError.name,
+                      }
+                    : undefined,
             },
         });
     }
 }
 
-export class TimeoutError extends AppError {
+export class TimeoutError extends ApiError {
     constructor(
         operation: string,
         timeoutMs: number,
         context: Record<string, any> = {}
     ) {
         super(`Operation '${operation}' timed out after ${timeoutMs}ms`, {
-            code: 'TIMEOUT',
+            code: "TIMEOUT",
             statusCode: 504, // Gateway Timeout
             isOperational: true,
             context: { operation, timeoutMs, ...context },
-        });
-    }
-}
-
-export class RateLimitError extends AppError {
-    constructor(
-        message = 'Rate limit exceeded',
-        context: Record<string, any> = {}
-    ) {
-        super(message, {
-            code: 'RATE_LIMIT',
-            statusCode: 429,
-            isOperational: true,
-            context,
-        });
-    }
-}
-
-export class SyncError extends AppError {
-    constructor(
-        message: string,
-        source: string,
-        context: Record<string, any> = {}
-    ) {
-        super(message, {
-            code: 'SYNC_ERROR',
-            statusCode: 500,
-            isOperational: true,
-            context: { source, ...context },
         });
     }
 }
