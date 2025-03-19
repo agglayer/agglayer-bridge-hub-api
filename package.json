@@ -2,6 +2,9 @@
     "name": "bridge-api-hub",
     "module": "src/index.ts",
     "type": "module",
+    "workspaces": [
+        "packages/*"
+    ],
     "devDependencies": {
         "@types/bun": "latest"
     },

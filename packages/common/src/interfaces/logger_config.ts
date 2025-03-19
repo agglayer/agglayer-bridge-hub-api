@@ -6,10 +6,6 @@ export interface ILoggerConfig {
         level?: string;
         environment?: string;
     };
-    datadog?: {
-        service_name?: string;
-        api_key?: string;
-    };
     console?: {
         level?: string;
     };
