@@ -1,6 +1,6 @@
-import { config } from './common/config';
-import { Logger } from '../packages/common/logger';
-import { startServer } from './api/server';
+import { config } from "./common/config";
+import { Logger } from "../packages/common/src/helpers/logger";
+import { startServer } from "./api/server";
 
 Logger.create({
     sentry: {
@@ -19,16 +19,19 @@ Logger.create({
 async function bootstrap() {
     try {
         Logger.info({
-            name: 'Starting application',
+            name: "Starting application",
             environment: config.environment,
-            version: process.env.npm_package_version || 'unknown'
+            version: process.env.npm_package_version || "unknown",
         });
 
         await startServer();
 
-        Logger.info('Application startup complete');
+        Logger.info("Application startup complete");
     } catch (error) {
-        Logger.error({ message: 'Fatal error during application startup', error });
+        Logger.error({
+            message: "Fatal error during application startup",
+            error,
+        });
         process.exit(1);
     }
 }

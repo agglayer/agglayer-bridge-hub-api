@@ -1,36 +1,17 @@
-import winston, { Logger as WinstonLogger } from "winston";
-import Sentry from "winston-transport-sentry-node";
+import winston from "winston";
+import type { ILoggerConfig } from "../interfaces/logger_config";
+import * as SentryImport from "winston-transport-sentry-node";
+const Sentry = SentryImport.default;
 
-let logger: WinstonLogger | null = null;
+let logger: winston.Logger;
 
-export interface LoggerConfig {
-    sentry?: {
-        dsn?: string,
-        level?: string, 
-        environment?: string
-    }
-    datadog?: {
-        service_name?: string,
-        api_key?: string
-    }
-    console?: {
-        level?: string
-    }
-    winston?: winston.LoggerOptions;
-}
-
-/**
- * LoggerClass that maintains a singleton, and has straightforward methods to log any application events.
- */
 export class Logger {
     /**
      * @static
      * Create method must first be called before using the logger. It creates a singleton, which will then
      * be referred to throughout the application.
-     *
-     * @param {LoggerConfig} config - Logger configuration to overwrite winston configs and define sentry + datadog endpoints.
      */
-    static create(config: LoggerConfig) {
+    static create(config: ILoggerConfig) {
         if (!logger) {
             logger = winston.createLogger(
                 Object.assign(
@@ -49,7 +30,7 @@ export class Logger {
                                 },
                             }),
                             winston.format.printf(
-                                (info: any) =>
+                                (info) =>
                                     `${info.timestamp} ${info.level}: ${info.message}`
                             )
                         ),
@@ -62,15 +43,6 @@ export class Logger {
                                     dsn: config.sentry?.dsn,
                                 },
                                 level: config.sentry?.level || "error",
-                            }),
-                            new winston.transports.Http({
-                                host: "http-intake.logs.datadoghq.com",
-                                path:
-                                    "/api/v2/logs?dd-api-key=" +
-                                    config.datadog?.api_key +
-                                    "&ddsource=nodejs&service=" +
-                                    config.datadog?.service_name,
-                                ssl: true,
                             }),
                         ],
                     },
@@ -87,7 +59,7 @@ export class Logger {
      *
      * @param {string|object} message - String or object to log.
      */
-    static info(message: string | object): void {
+    static info(message: string | object) {
         if (typeof message === "string") {
             logger?.info(message);
         } else {
@@ -102,7 +74,7 @@ export class Logger {
      *
      * @param {string|object} message - String or object to log.
      */
-    static debug(message: string | object): void {
+    static debug(message: string | object) {
         if (typeof message === "string") {
             logger?.debug(message);
         } else {
@@ -117,7 +89,7 @@ export class Logger {
      *
      * @param {string|object} error - String or object to log.
      */
-    static error(error: string | object): void {
+    static error(error: string | object) {
         if (typeof error === "string") {
             logger?.error(error);
         } else {
@@ -138,7 +110,7 @@ export class Logger {
      *
      * @param {string|object} message - String or object to log.
      */
-    static warn(message: string | object): void {
+    static warn(message: string | object) {
         if (typeof message === "string") {
             logger?.warn(message);
         } else {
@@ -152,7 +124,7 @@ export class Logger {
      *
      * @param {string|object} message - String or object to log.
      */
-    static log(level: string, message: string | object): void {
+    static log(level: string, message: string | object) {
         if (typeof message === "string") {
             logger?.log(level, message);
         } else {
