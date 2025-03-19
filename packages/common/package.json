@@ -1,10 +1,23 @@
 {
     "name": "bridge-hub-commons",
     "version": "0.0.1",
-    "module": "index.ts",
     "type": "module",
+    "exports": {
+        "./interfaces/*": "./dist/interfaces/*.js",
+        "./errors/*": "./dist/errors/*.js",
+        "./helpers/*": "./dist/helpers/*.js"
+    },
+    "scripts": {
+        "tests": "echo 'Hello unit tests'",
+        "tests:integration": "echo 'Hello integration tests'",
+        "build": "tsup"
+    },
+    "files": [
+        "./dist/**"
+    ],
     "devDependencies": {
-        "@types/bun": "latest"
+        "@types/bun": "latest",
+        "tsup": "^8.4.0"
     },
     "peerDependencies": {
         "typescript": "^5"

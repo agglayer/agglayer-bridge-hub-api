@@ -3,10 +3,22 @@
     "version": "0.0.1",
     "module": "src/index.ts",
     "type": "module",
+    "exports": "./dist/",
+    "scripts": {
+        "tests": "echo 'Hello unit tests'",
+        "tests:integration": "echo 'Hello integration tests'",
+        "build": "tsup",
+        "start": "bun dist/index.js"
+    },
     "devDependencies": {
-        "@types/bun": "latest"
+        "@types/bun": "latest",
+        "tsup": "^8.4.0"
     },
     "peerDependencies": {
         "typescript": "^5"
+    },
+    "dependencies": {
+        "dotenv": "^16.4.7",
+        "bridge-hub-commons": "0.0.1"
     }
 }
