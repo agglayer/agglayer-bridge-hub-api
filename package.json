@@ -1,20 +1,18 @@
 {
-  "name": "bridge-api-hub",
-  "module": "src/index.ts",
-  "type": "module",
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "@elysiajs/cors": "^1.2.0",
-    "@elysiajs/swagger": "^1.2.2",
-    "elysia": "^1.2.25",
-    "express": "^4.21.2",
-    "mongoose": "^8.12.1",
-    "winston": "^3.17.0",
-    "winston-transport-sentry-node": "^3.0.0"
-  }
+    "name": "bridge-api-hub",
+    "module": "src/index.ts",
+    "type": "module",
+    "devDependencies": {
+        "@types/bun": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@elysiajs/cors": "^1.2.0",
+        "@elysiajs/swagger": "^1.2.2",
+        "elysia": "^1.2.25",
+        "express": "^4.21.2",
+        "mongoose": "^8.12.1"
+    }
 }
