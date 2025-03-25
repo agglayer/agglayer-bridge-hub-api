@@ -23,6 +23,7 @@
         "typescript": "^5"
     },
     "dependencies": {
+        "@google-cloud/firestore": "^7.11.0",
         "winston": "^3.17.0",
         "winston-transport-sentry-node": "^3.0.0"
     }
