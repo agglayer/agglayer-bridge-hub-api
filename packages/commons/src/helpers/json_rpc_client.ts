@@ -1,7 +1,7 @@
 import https from "https";
 import type { IRPCPayload } from "../interfaces/rpc_payload";
 import { Logger } from "./logger";
-import { ExternalApiError } from "../../dist/errors";
+import { ExternalApiError } from "../errors/api_errors";
 
 // ToDo: Need to remove this part once we move away from internal testnet
 const httpsAgent = new https.Agent({
