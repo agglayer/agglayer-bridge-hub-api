@@ -1,7 +1,7 @@
 import https from "https";
 import type { IRPCPayload } from "../interfaces/rpc_payload";
 import { Logger } from "./logger";
-import { ExternalApiError } from "../errors/api_errors";
+import { ExternalDependencyError } from "../errors/external_dependency_error";
 
 // ToDo: Need to remove this part once we move away from internal testnet
 const httpsAgent = new https.Agent({
@@ -41,7 +41,7 @@ export class JSONRPCClient {
             const { data, error } = await response.json();
 
             if (error) {
-                throw new ExternalApiError(
+                throw new ExternalDependencyError(
                     `rpc: ${this.url}`,
                     error.error.message,
                     {

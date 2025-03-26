@@ -1,7 +1,7 @@
 export interface IErrorResponse {
     status: "error";
     message: string;
-    code: string;
+    name: string;
     details?: any;
     requestId?: string;
     timestamp: string;
