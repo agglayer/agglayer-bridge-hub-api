@@ -22,7 +22,7 @@ export function formatError(
         const response: IErrorResponse = {
             status: "error",
             message: error.message,
-            code: error.code,
+            name: error.name,
             timestamp,
         };
 
@@ -51,7 +51,7 @@ export function formatError(
     const response: IErrorResponse = {
         status: "error",
         message: error.message || "An unexpected error occurred",
-        code: "INTERNAL_ERROR",
+        name: "INTERNAL_ERROR",
         timestamp,
     };
 
@@ -78,7 +78,7 @@ export function handleError(
     options: IErrorHandlerOptions = defaultOptions
 ): IErrorResponse {
     // Determine if this is an operational or programming error
-    const isOperational = error instanceof ApiError && error.isOperational;
+    const isOperational = error instanceof ApiError && !error.isFatal;
 
     // Log error appropriately
     if (options.logErrors) {
@@ -113,7 +113,7 @@ export function createErrorMiddleware(
         const requestId = req.id || req.headers["x-request-id"];
 
         // Get status code (default to 500)
-        const statusCode = err instanceof ApiError ? err.statusCode : 500;
+        const statusCode = err instanceof ApiError ? err.code : 500;
 
         // Format and handle the error
         const errorResponse = handleError(err, requestId, options);
