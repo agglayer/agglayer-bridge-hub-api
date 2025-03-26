@@ -1,4 +1,4 @@
-module.exports = {
+const _default = {
     branches: ["release"],
     tagFormat: "bridge-hub-commons-v${version}",
     plugins: [
@@ -19,3 +19,4 @@ module.exports = {
         "@semantic-release/github",
     ],
 };
+export { _default as default };

@@ -1,6 +1,6 @@
-module.exports = {
+const _default = {
     branches: ["release"],
-    tagFormat: "bridge-hub-api-v${version}",
+    tagFormat: "bridge-hub-commons-v${version}",
     plugins: [
         "@semantic-release/commit-analyzer",
         "@semantic-release/release-notes-generator",
@@ -9,13 +9,14 @@ module.exports = {
             "@semantic-release/git",
             {
                 assets: [
-                    "packages/api/package.json",
-                    "packages/api/CHANGELOG.md",
+                    "packages/commons/package.json",
+                    "packages/commons/CHANGELOG.md",
                 ],
                 message:
-                    "chore(bridge-hub-api release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
+                    "chore(bridge-hub-commons release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
             },
         ],
         "@semantic-release/github",
     ],
 };
+export { _default as default };
