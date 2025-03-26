@@ -1,8 +1,8 @@
 {
     "name": "bridge-hub-consumer",
     "version": "0.0.1",
-    "module": "src/index.ts",
     "type": "module",
+    "module": "src/index.ts",
     "exports": "./dist/",
     "scripts": {
         "tests": "echo 'Hello unit tests'",
