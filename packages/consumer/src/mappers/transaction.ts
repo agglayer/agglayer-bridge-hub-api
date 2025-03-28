@@ -3,6 +3,11 @@ import type {
     IBridgeTx,
     IHubBridgeTransaction,
 } from "bridge-hub-commons/interfaces/bridge_tx";
+import type {
+    IClaimTx,
+    IHubClaimTransaction,
+} from "bridge-hub-commons/interfaces/claim_tx";
+import type { IDecodedGlobalIndex } from "bridge-hub-commons/interfaces/decoded_global_index";
 
 export default class transactionMapper {
     constructor(private networkId: number) {}
@@ -33,5 +38,36 @@ export default class transactionMapper {
         });
 
         return formattedBridgeTransactions;
+    }
+
+    public mapClaimTransactions(events: IClaimTx[]): IHubClaimTransaction[] {
+        const formattedClaimTransactions: IHubClaimTransaction[] = [];
+        events.forEach((claimTransaction) => {
+            const decodedGlobalIndex = this.decodeGlobalIndex(
+                claimTransaction.global_index
+            );
+            formattedClaimTransactions.push({
+                claimTransactionHash: claimTransaction.tx_hash.toLowerCase(),
+                claimBlockNumber: claimTransaction.block_num,
+                claimTimestamp: claimTransaction.block_timestamp,
+                globalIndex: claimTransaction.global_index,
+                sourceNetwork: decodedGlobalIndex.sourceNetwork,
+                depositCount: decodedGlobalIndex.depositCount,
+            });
+        });
+
+        return formattedClaimTransactions;
+    }
+
+    private decodeGlobalIndex(globalIndex: number): IDecodedGlobalIndex {
+        const globalIndexBigInt = BigInt(globalIndex);
+        const globalIndexInHex = globalIndex.toString(16);
+        return {
+            sourceNetwork:
+                globalIndexInHex.length > 16
+                    ? 0
+                    : Number(globalIndexBigInt >> 32n) + 1,
+            depositCount: Number(globalIndexBigInt & 0xffffffffn),
+        };
     }
 }

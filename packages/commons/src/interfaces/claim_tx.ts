@@ -29,9 +29,8 @@ export interface IClaimsBridgeAPIResult extends IBridgeAPIResult {
 export interface IHubClaimTransaction {
     claimTransactionHash: string;
     claimBlockNumber: number;
-    claimTransactionIndex: number;
     claimTimestamp: number;
-    globalIndex: string;
+    globalIndex: number;
     sourceNetwork: number;
     depositCount: number;
 }
