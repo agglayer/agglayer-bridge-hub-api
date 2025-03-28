@@ -10,7 +10,10 @@ class JsonRpcConsumer<T> extends EventConsumer {
         this.client = new JSONRPCClient(endpoint);
     }
 
-    async request<T>(method: string, params?: string[]): Promise<T> {
+    async request<T>(
+        method: string,
+        params?: string[]
+    ): Promise<T | undefined> {
         try {
             return await this.client.call<T>({ method, params });
         } catch (error) {

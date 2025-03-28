@@ -5,7 +5,8 @@
     "exports": {
         "./interfaces/*": "./dist/interfaces/*.js",
         "./errors/*": "./dist/errors/*.js",
-        "./helpers/*": "./dist/helpers/*.js"
+        "./helpers/*": "./dist/helpers/*.js",
+        "./enums/*": "./dist/enums/*.js"
     },
     "scripts": {
         "tests": "echo 'Hello unit tests'",
