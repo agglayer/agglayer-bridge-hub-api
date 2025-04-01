@@ -18,7 +18,7 @@ export class ApiError extends BaseError {
             context?: Record<string, any>;
         } = {}
     ) {
-        super(name, code, isFatal, message, origin, context);
+        super(name, code, message, isFatal, origin, context);
         Error.captureStackTrace(this, this.constructor);
     }
 }
