@@ -111,30 +111,6 @@ export class RateLimitError extends ApiError {
         });
     }
 }
-export class DatabaseError extends ApiError {
-    constructor(
-        message: string,
-        originalError?: Error,
-        context: Record<string, any> = {},
-        origin: string = "api_errors"
-    ) {
-        super(message, {
-            name: "DATABASE_ERROR",
-            code: errorCodes.api.INTERNAL_SERVER_ERROR,
-            isFatal: true,
-            origin,
-            context: {
-                ...context,
-                originalError: originalError
-                    ? {
-                          message: originalError.message,
-                          name: originalError.name,
-                      }
-                    : undefined,
-            },
-        });
-    }
-}
 
 export class TimeoutError extends ApiError {
     constructor(

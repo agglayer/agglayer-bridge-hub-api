@@ -1,5 +1,5 @@
 import { JsonRpcConsumer } from "bridge-hub-commons/consumer/json_rpc_consumer";
-import type { ConsumerError } from "bridge-hub-commons/errors/consumer_errors";
+import { ConsumerError } from "bridge-hub-commons/errors/consumer_errors";
 import type { ExternalDependencyError } from "bridge-hub-commons/errors/external_dependency_error";
 import type { JSONRPCClient } from "bridge-hub-commons/helpers/json_rpc_client";
 import type {
@@ -19,6 +19,9 @@ import type TokenMappingsMapper from "./mappers/mapping";
 import type TransactionMapper from "./mappers/transaction";
 import type TokenMappingsService from "./services/mapping";
 import type TransactionsService from "./services/transaction";
+import { Logger } from "bridge-hub-commons/helpers/logger";
+import { errorCodes } from "bridge-hub-commons/errors/error_codes";
+import { DatabaseError } from "bridge-hub-commons/errors/databse_errors";
 
 export class BridgeAPIConsumer {
     private bridgeConsumer: JsonRpcConsumer<
@@ -53,7 +56,8 @@ export class BridgeAPIConsumer {
             this.consumerRpcClient,
             this.bridgeConsumerConfig,
             (data: IBridgesBridgeAPIResult) =>
-                this.getBridgesFromApiResult(data)
+                this.getBridgesFromApiResult(data),
+            null
         );
         this.claimConsumer = new JsonRpcConsumer<
             IClaimsBridgeAPIResult,
@@ -61,7 +65,8 @@ export class BridgeAPIConsumer {
         >(
             this.consumerRpcClient,
             this.claimConsumerConfig,
-            (data: IClaimsBridgeAPIResult) => this.getClaimFromApiResult(data)
+            (data: IClaimsBridgeAPIResult) => this.getClaimFromApiResult(data),
+            null
         );
         this.mappingConsumer = new JsonRpcConsumer<
             IMappingsBridgeAPIResult,
@@ -70,27 +75,28 @@ export class BridgeAPIConsumer {
             this.consumerRpcClient,
             this.mappingConsumerConfig,
             (data: IMappingsBridgeAPIResult) =>
-                this.getMappingsFromApiResult(data)
+                this.getMappingsFromApiResult(data),
+            null
         );
 
         await Promise.all([
             this.bridgeConsumer.start({
                 next: async (data) => this.onBridgeData(data as IBridgeTx[]),
                 error: (err: ConsumerError | ExternalDependencyError) =>
-                    this.onError(err),
-                closed: () => this.onClosed("Bridge"),
+                    this.onError(this.bridgeConsumerConfig.name, err),
+                closed: () => this.onClosed(this.bridgeConsumerConfig.name),
             }),
             this.claimConsumer.start({
                 next: async (data) => this.onClaimData(data as IClaimTx[]),
                 error: (err: ConsumerError | ExternalDependencyError) =>
-                    this.onError(err),
-                closed: () => this.onClosed("Claim"),
+                    this.onError(this.claimConsumerConfig.name, err),
+                closed: () => this.onClosed(this.claimConsumerConfig.name),
             }),
             this.mappingConsumer.start({
                 next: async (data) => this.onMappingData(data as IMappingTx[]),
                 error: (err: ConsumerError | ExternalDependencyError) =>
-                    this.onError(err),
-                closed: () => this.onClosed("Mappings"),
+                    this.onError(this.mappingConsumerConfig.name, err),
+                closed: () => this.onClosed(this.mappingConsumerConfig.name),
             }),
         ]);
     }
@@ -110,22 +116,93 @@ export class BridgeAPIConsumer {
     }
 
     private onBridgeData(data: IBridgeTx[]): void {
-        const mappedTransactions =
-            this.transactionMapper.mapBridgeTransactions(data);
-        this.transactionService.saveBridges(mappedTransactions);
+        try {
+            const mappedTransactions =
+                this.transactionMapper.mapBridgeTransactions(data);
+            this.transactionService.saveBridges(mappedTransactions);
+        } catch (error) {
+            if (error instanceof DatabaseError) {
+                throw error;
+            }
+            Logger.error({
+                location: "bridge_api_consumer",
+                status: `ERROR encountered on bridge consumer`,
+                error: error,
+            });
+            throw new ConsumerError(
+                `Error in onBridgeData : ${(error as Error).message}`,
+                {
+                    isFatal: true,
+                    code: errorCodes.consumer.UNKNOWN_CONSUMER_ERR,
+                    context: {
+                        error: error as Error,
+                    },
+                }
+            );
+        }
     }
     private onClaimData(data: IClaimTx[]): void {
-        const mappedTransactions =
-            this.transactionMapper.mapClaimTransactions(data);
-        this.transactionService.saveClaims(mappedTransactions);
+        try {
+            const mappedTransactions =
+                this.transactionMapper.mapClaimTransactions(data);
+            this.transactionService.saveClaims(mappedTransactions);
+        } catch (error) {
+            if (error instanceof DatabaseError) {
+                throw error;
+            }
+            Logger.error({
+                location: "bridge_api_consumer",
+                status: `ERROR encountered on claim consumer`,
+                error: error,
+            });
+            throw new ConsumerError(
+                `Error in onClaimData : ${(error as Error).message}`,
+                {
+                    isFatal: true,
+                    code: errorCodes.consumer.UNKNOWN_CONSUMER_ERR,
+                    context: {
+                        error: error as Error,
+                    },
+                }
+            );
+        }
     }
     private onMappingData(data: IMappingTx[]): void {
-        const mappedTransactions = this.tokenMappingsMapper.mapMappings(data);
-        this.tokenMappingsService.saveTokenMappings(mappedTransactions);
+        try {
+            const mappedTransactions =
+                this.tokenMappingsMapper.mapMappings(data);
+            this.tokenMappingsService.saveTokenMappings(mappedTransactions);
+        } catch (error) {
+            if (error instanceof DatabaseError) {
+                throw error;
+            }
+            Logger.error({
+                location: "bridge_api_consumer",
+                status: `ERROR encountered on mapping consumer`,
+                error: error,
+            });
+            throw new ConsumerError(
+                `Error in onMappingData : ${(error as Error).message}`,
+                {
+                    isFatal: true,
+                    code: errorCodes.consumer.UNKNOWN_CONSUMER_ERR,
+                    context: {
+                        error: error as Error,
+                    },
+                }
+            );
+        }
     }
 
-    private onError(err: Error): void {
-        console.error("Consumer error:", err);
+    private onError(
+        consumerName: string,
+        err: ConsumerError | ExternalDependencyError | Error
+    ): void {
+        Logger.error({
+            location: "bridge_api_consumer",
+            status: `ERROR encountered on ${consumerName} consumer`,
+            error: err,
+        });
     }
 
     private onClosed(consumerName: string): void {

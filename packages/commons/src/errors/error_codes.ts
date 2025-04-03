@@ -12,8 +12,8 @@ export const errorCodes = {
     datastore: {
         UNKNOWN_DATASTORE_ERR: 2000,
         DATASTORE_AUTH_ERR: 2001,
-        DATASTORE_READ_ERROR: 1002,
-        DATASTORE_WRITE_ERROR: 1003,
+        DATASTORE_READ_ERROR: 2002,
+        DATASTORE_WRITE_ERROR: 2003,
     },
 
     // External dependencies errors codes

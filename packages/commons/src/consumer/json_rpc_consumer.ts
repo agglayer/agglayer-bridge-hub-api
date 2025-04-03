@@ -4,13 +4,14 @@ import { JSONRPCClient } from "../helpers/json_rpc_client";
 import type { IConsumerConfig } from "../interfaces/consumer_config";
 import type { IObserver } from "../interfaces/observer";
 import { Cron } from "croner";
-import type { IBridgeAPIResult } from "../interfaces/bridge_api_result";
 import type { IBridgeTx } from "../interfaces/bridge_tx";
 import type { IClaimTx } from "../interfaces/claim_tx";
 import type { IMappingTx } from "../interfaces/token_mapping";
 import type { IBridgesBridgeAPIResult } from "../../dist/interfaces/bridge_tx";
 import type { IClaimsBridgeAPIResult } from "../../dist/interfaces/claim_tx";
 import type { IMappingsBridgeAPIResult } from "../../dist/interfaces/token_mapping";
+import { ExternalDependencyError } from "../../dist/errors/external_dependency_error";
+import { errorCodes } from "../errors/error_codes";
 
 export class JsonRpcConsumer<
     T extends
@@ -27,7 +28,8 @@ export class JsonRpcConsumer<
     constructor(
         private jsonRpcClient: JSONRPCClient,
         private config: IConsumerConfig,
-        private getTransactionsFromResult: Function
+        private getTransactionsFromResult: Function,
+        private lastIndexedTranasctionHash: string | null
     ) {
         super();
     }
@@ -67,11 +69,14 @@ export class JsonRpcConsumer<
                     let earliestProcessedBlockInThisRun = 0;
                     let latestProcessedBlockInThisRun = 0;
                     let pageNumber = 1;
+                    let continueRun = true;
+
                     while (
-                        earliestProcessedBlockInThisRun >
+                        continueRun &&
+                        (earliestProcessedBlockInThisRun >=
                             this.lastConsumedBlock ||
-                        this.lastConsumedBlock === 0 ||
-                        earliestProcessedBlockInThisRun === 0
+                            this.lastConsumedBlock === 0 ||
+                            earliestProcessedBlockInThisRun === 0)
                     ) {
                         let newTransactions: E[] = [];
                         const result = await this.request<T>([
@@ -87,10 +92,16 @@ export class JsonRpcConsumer<
                                 );
                                 break;
                             }
+
                             const processedTransactions =
                                 this.getTransactionsFromResult(result);
+
                             for (const tx of processedTransactions) {
-                                if (tx.block_num > this.lastConsumedBlock) {
+                                if (
+                                    tx.block_num >= this.lastConsumedBlock &&
+                                    tx.tx_hash !==
+                                        this.lastIndexedTranasctionHash
+                                ) {
                                     newTransactions.push(tx);
                                     earliestProcessedBlockInThisRun =
                                         earliestProcessedBlockInThisRun > 0
@@ -99,19 +110,26 @@ export class JsonRpcConsumer<
                                                   earliestProcessedBlockInThisRun
                                               )
                                             : tx.block_num;
-                                    latestProcessedBlockInThisRun =
-                                        tx.block_num >
+                                    latestProcessedBlockInThisRun = Math.max(
+                                        tx.block_num,
                                         latestProcessedBlockInThisRun
-                                            ? tx.block_num
-                                            : latestProcessedBlockInThisRun;
+                                    );
                                 } else {
                                     this.lastConsumedBlock = Math.max(
                                         this.lastConsumedBlock,
                                         latestProcessedBlockInThisRun
                                     );
+                                    continueRun = false;
                                     break;
                                 }
                             }
+                            if (pageNumber === 1) {
+                                this.lastIndexedTranasctionHash =
+                                    processedTransactions[0].tx_hash;
+                            }
+                            console.log(
+                                `${this.config.name} consumer - Page ${pageNumber} processed. ${processedTransactions.length} transactions found.`
+                            );
                             pageNumber++;
                         } else {
                             observer.error(
@@ -123,10 +141,22 @@ export class JsonRpcConsumer<
                         }
 
                         if (newTransactions.length > 0) {
-                            observer.next(newTransactions);
+                            await observer.next(newTransactions);
                         }
                     }
-                } catch (error) {}
+                } catch (error) {
+                    if (error instanceof ExternalDependencyError) {
+                        observer.error(error);
+                    }
+                    observer.error(
+                        new ConsumerError((error as Error).message, {
+                            origin: "JsonRpcConsumer",
+                            context: {
+                                error: error,
+                            },
+                        })
+                    );
+                }
             }
         );
     }
