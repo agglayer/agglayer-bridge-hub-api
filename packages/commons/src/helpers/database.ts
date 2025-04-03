@@ -1,7 +1,9 @@
 import {
     DocumentReference,
+    DocumentSnapshot,
     Firestore,
     Transaction,
+    type DocumentData,
     type Query,
     type QuerySnapshot,
 } from "@google-cloud/firestore";
@@ -39,7 +41,7 @@ export class DatabaseClient {
     }
 
     public async addDocuments(
-        collectionName: string,
+        collectionId: string,
         docDatas: any[],
         docIds?: string[]
     ): Promise<void> {
@@ -47,16 +49,16 @@ export class DatabaseClient {
             location: "DatabaseClient",
             function: "addDocuments",
             status: "function called",
-            data: { collectionName, docIds },
+            data: { collectionId, docIds },
         });
         try {
             const batch = db.batch();
             docDatas.forEach((doc, index) => {
                 let docRef: DocumentReference;
                 if (docIds) {
-                    docRef = db.collection(collectionName).doc(docIds[index]);
+                    docRef = db.collection(collectionId).doc(docIds[index]);
                 } else {
-                    docRef = db.collection(collectionName).doc();
+                    docRef = db.collection(collectionId).doc();
                 }
                 batch.set(docRef, doc);
             });
@@ -65,7 +67,7 @@ export class DatabaseClient {
                 location: "DatabaseClient",
                 function: "addDocuments",
                 status: "function completed",
-                data: { collectionName, docIds },
+                data: { collectionId, docIds },
             });
         } catch (error) {
             Logger.error({
@@ -74,7 +76,7 @@ export class DatabaseClient {
                 status: "function failed",
                 data: {
                     error: (error as Error).message,
-                    collectionName,
+                    collectionId,
                     docIds,
                     docDatas,
                 },
@@ -86,7 +88,7 @@ export class DatabaseClient {
     }
 
     public async updateDocuments(
-        collectionName: string,
+        collectionId: string,
         docDatas: any[],
         docIds: string[]
     ) {
@@ -94,13 +96,13 @@ export class DatabaseClient {
             location: "DatabaseClient",
             function: "updateDocuments",
             status: "function called",
-            data: { collectionName, docIds },
+            data: { collectionId, docIds },
         });
         try {
             const batch = db.batch();
             docDatas.forEach((doc, index) => {
                 const docRef: DocumentReference = db
-                    .collection(collectionName)
+                    .collection(collectionId)
                     .doc(docIds[index]);
                 batch.set(docRef, doc, { merge: true });
             });
@@ -109,7 +111,7 @@ export class DatabaseClient {
                 location: "DatabaseClient",
                 function: "updateDocuments",
                 status: "function completed",
-                data: { collectionName, docIds },
+                data: { collectionId, docIds },
             });
         } catch (error) {
             Logger.error({
@@ -118,7 +120,7 @@ export class DatabaseClient {
                 status: "function failed",
                 data: {
                     error: (error as Error).message,
-                    collectionName,
+                    collectionId,
                     docIds,
                     docDatas,
                 },
@@ -132,7 +134,7 @@ export class DatabaseClient {
     }
 
     public async conditionalUpdateDocuments(
-        collectionName: string,
+        collectionId: string,
         docDatas: any[],
         docIds: string[],
         conditions: IQueryFilterOperationParams[],
@@ -143,7 +145,7 @@ export class DatabaseClient {
             function: "conditionalUpdateDocuments",
             status: "function called",
             data: {
-                collectionName,
+                collectionId,
                 docIds,
                 conditions,
                 conditionModifications,
@@ -153,7 +155,7 @@ export class DatabaseClient {
             await db.runTransaction(async (t: Transaction) => {
                 const docs = await Promise.all(
                     docIds.map((id) =>
-                        db.collection(collectionName).doc(id).get()
+                        db.collection(collectionId).doc(id).get()
                     )
                 );
 
@@ -190,7 +192,7 @@ export class DatabaseClient {
 
                 // Apply updates to Firestore inside the transaction
                 updates.forEach(({ docId, updateData }) => {
-                    const docRef = db.collection(collectionName).doc(docId);
+                    const docRef = db.collection(collectionId).doc(docId);
                     t.set(docRef, updateData, { merge: true });
                 });
             });
@@ -199,7 +201,7 @@ export class DatabaseClient {
                 function: "conditionalUpdateDocuments",
                 status: "function completed",
                 data: {
-                    collectionName,
+                    collectionId,
                     docIds,
                     conditions,
                     conditionModifications,
@@ -212,7 +214,7 @@ export class DatabaseClient {
                 status: "function failed",
                 data: {
                     error: (error as Error).message,
-                    collectionName,
+                    collectionId,
                     docIds,
                     conditions,
                     conditionModifications,
@@ -228,14 +230,14 @@ export class DatabaseClient {
     }
 
     public async getDocuments(
-        collectionName: string,
+        collectionId: string,
         filter?: IQueryFilterOperationParams[],
         limit?: number,
         order?: IQueryOrderOperationParams[],
         startAfterCursor?: string | number
     ): Promise<any[]> {
         try {
-            const collectionRef = db.collection(collectionName);
+            const collectionRef = db.collection(collectionId);
             let query: Query = collectionRef;
             filter?.forEach((condition) => {
                 query = query.where(
@@ -267,7 +269,7 @@ export class DatabaseClient {
                 status: "function failed",
                 data: {
                     error: (error as Error).message,
-                    collectionName,
+                    collectionId,
                     filter,
                     limit,
                     order,
@@ -275,6 +277,32 @@ export class DatabaseClient {
                 },
             });
             throw new DatabaseError("Error in getDocuments", error as Error, {
+                code: errorCodes.datastore.DATASTORE_READ_ERROR,
+            });
+        }
+    }
+
+    public async getDocument(
+        collectionId: string,
+        docId: string
+    ): Promise<DocumentData | undefined> {
+        try {
+            const documentRef = db.collection(collectionId).doc(docId);
+            const snapshot: DocumentSnapshot = await documentRef.get();
+            const document = snapshot.data();
+            return document;
+        } catch (error) {
+            Logger.error({
+                location: "DatabaseClient",
+                function: "getDocument",
+                status: "function failed",
+                data: {
+                    error: (error as Error).message,
+                    collectionId,
+                    docId,
+                },
+            });
+            throw new DatabaseError("Error in getDocument", error as Error, {
                 code: errorCodes.datastore.DATASTORE_READ_ERROR,
             });
         }

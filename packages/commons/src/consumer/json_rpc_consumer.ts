@@ -7,11 +7,11 @@ import { Cron } from "croner";
 import type { IBridgeTx } from "../interfaces/bridge_tx";
 import type { IClaimTx } from "../interfaces/claim_tx";
 import type { IMappingTx } from "../interfaces/token_mapping";
-import type { IBridgesBridgeAPIResult } from "../../dist/interfaces/bridge_tx";
-import type { IClaimsBridgeAPIResult } from "../../dist/interfaces/claim_tx";
-import type { IMappingsBridgeAPIResult } from "../../dist/interfaces/token_mapping";
+import type { IBridgesBridgeAPIResult } from "../interfaces/bridge_tx";
+import type { IClaimsBridgeAPIResult } from "../interfaces/claim_tx";
+import type { IMappingsBridgeAPIResult } from "../interfaces/token_mapping";
 import { ExternalDependencyError } from "../../dist/errors/external_dependency_error";
-import { errorCodes } from "../errors/error_codes";
+import type { ILastIndexedTransaction } from "../interfaces/metadata";
 
 export class JsonRpcConsumer<
     T extends
@@ -21,15 +21,19 @@ export class JsonRpcConsumer<
     E extends IBridgeTx | IClaimTx | IMappingTx
 > extends EventConsumer {
     private consumerRunning: boolean = false;
-    protected observer: IObserver<object, ConsumerError> | null = null;
+    protected observer: IObserver<
+        object,
+        ConsumerError,
+        ILastIndexedTransaction
+    > | null = null;
     private cronjob: Cron | null = null;
-    private lastConsumedBlock: number = 0;
 
     constructor(
         private jsonRpcClient: JSONRPCClient,
         private config: IConsumerConfig,
         private getTransactionsFromResult: Function,
-        private lastIndexedTranasctionHash: string | null
+        private lastIndexedTranasctionHash: string | null,
+        private lastConsumedBlock: number = 0
     ) {
         super();
     }
@@ -47,7 +51,7 @@ export class JsonRpcConsumer<
     }
 
     public async start(
-        observer: IObserver<object, ConsumerError>
+        observer: IObserver<object, ConsumerError, ILastIndexedTransaction>
     ): Promise<void> {
         if (
             this.listenerCount("event.error") ||
@@ -57,7 +61,10 @@ export class JsonRpcConsumer<
             this.removeAllListeners();
         }
 
-        this.lastConsumedBlock = this.config.startBlock;
+        this.lastConsumedBlock = Math.max(
+            this.config.startBlock,
+            this.lastConsumedBlock
+        );
         this.observer = observer;
         this.consumerRunning = true;
 
@@ -127,9 +134,6 @@ export class JsonRpcConsumer<
                                 this.lastIndexedTranasctionHash =
                                     processedTransactions[0].tx_hash;
                             }
-                            console.log(
-                                `${this.config.name} consumer - Page ${pageNumber} processed. ${processedTransactions.length} transactions found.`
-                            );
                             pageNumber++;
                         } else {
                             observer.error(
@@ -140,8 +144,16 @@ export class JsonRpcConsumer<
                             );
                         }
 
-                        if (newTransactions.length > 0) {
+                        if (
+                            newTransactions.length > 0 &&
+                            this.lastIndexedTranasctionHash
+                        ) {
                             await observer.next(newTransactions);
+                            await observer.summary({
+                                transactionHash:
+                                    this.lastIndexedTranasctionHash,
+                                blockNumber: latestProcessedBlockInThisRun,
+                            });
                         }
                     }
                 } catch (error) {
@@ -168,6 +180,7 @@ export class JsonRpcConsumer<
      */
     private onDisconnect(): void {
         if (this.cronjob ? this.cronjob.isRunning() : false) {
+            this.consumerRunning = false;
             this.cronjob?.stop();
             this.observer?.closed();
             this.removeAllListeners();
