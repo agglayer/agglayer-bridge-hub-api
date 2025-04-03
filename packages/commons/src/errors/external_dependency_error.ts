@@ -26,8 +26,8 @@ export class ExternalDependencyError extends BaseError {
         super(
             "EXTERNAL_DEPENDENCY_ERROR",
             errorCodes.external.UNKNOWN_EXTERNAL_DEPENDENCY_ERROR,
-            true,
             `${apiName} API error: ${message}`,
+            false,
             origin,
             { apiName, externalCode, ...context }
         );

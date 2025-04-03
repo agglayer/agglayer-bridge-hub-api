@@ -1,3 +1,9 @@
+import type { TransactionStatus } from "../enums/transaction_status";
+import type { IBridgeAPIResult } from "./bridge_api_result";
+
+/**
+ * Interface for the Aggkit Claim Tx element
+ */
 export interface IClaimTx {
     block_num: number;
     block_timestamp: number; // BN
@@ -9,4 +15,24 @@ export interface IClaimTx {
     destination_network: number;
     amount: number; // BN
     from_address: string;
+}
+
+/**
+ * Interface for the Aggkit Bridge API bridge_getClaims method's result
+ */
+export interface IClaimsBridgeAPIResult extends IBridgeAPIResult {
+    claims: IClaimTx[];
+}
+
+/**
+ * Interface for the Hub API's Claim Transaction entitiy
+ */
+export interface IHubClaimTransaction {
+    claimTransactionHash: string;
+    claimBlockNumber: number;
+    claimTimestamp: number;
+    globalIndex: number;
+    sourceNetwork: number;
+    depositCount: number;
+    status: TransactionStatus;
 }

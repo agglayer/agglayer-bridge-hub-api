@@ -1,5 +1,8 @@
 import winston from "winston";
 
+/**
+ * Logger configuration interface
+ */
 export interface ILoggerConfig {
     sentry?: {
         dsn?: string;

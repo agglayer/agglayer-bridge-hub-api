@@ -2,11 +2,13 @@ import https from "https";
 import type { IRPCPayload } from "../interfaces/rpc_payload";
 import { Logger } from "./logger";
 import { ExternalDependencyError } from "../errors/external_dependency_error";
+import type { IRPCResponse } from "../interfaces/rpc_response";
+import type { IBridgeAPIResult } from "../interfaces/bridge_api_result";
 
 // ToDo: Need to remove this part once we move away from internal testnet
-const httpsAgent = new https.Agent({
-    rejectUnauthorized: false,
-});
+// const httpsAgent = new https.Agent({
+//     rejectUnauthorized: false,
+// });
 
 /**
  * A utility class to make RPC calls to the given node URL.
@@ -26,7 +28,7 @@ export class JSONRPCClient {
      *
      * @returns {Promise<any>}
      */
-    public async call<T>(payload: IRPCPayload): Promise<T> {
+    public async call<T>(payload: IRPCPayload): Promise<T | undefined> {
         try {
             const response = await fetch(new Request(this.url), {
                 method: "POST",
@@ -38,21 +40,24 @@ export class JSONRPCClient {
                 }),
             });
 
-            const { data, error } = await response.json();
+            const json: IRPCResponse<T> = await response.json();
 
-            if (error) {
+            if (json.error) {
+                if (json.error.code === -32000) {
+                    return { count: 0 } as T;
+                }
                 throw new ExternalDependencyError(
                     `rpc: ${this.url}`,
-                    error.error.message,
+                    json.error.message,
                     {
-                        externalCode: error.error.code,
+                        externalCode: json.error.code,
                     }
                 );
             }
 
-            return data;
+            return json.result;
         } catch (error) {
-            Logger.error(error as Error);
+            Logger.error(error as ExternalDependencyError);
             throw error;
         }
     }

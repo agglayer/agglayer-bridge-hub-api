@@ -1,7 +1,7 @@
-import type { ConsumerError } from "bridge-hub-commons/errors/consumer_errors";
+import type { ConsumerError } from "../errors/consumer_errors";
 import { EventEmitter } from "events";
 
-declare class EventConsumer extends EventEmitter {
+export class EventConsumer extends EventEmitter {
     /**
      * @public
      *
@@ -16,7 +16,9 @@ declare class EventConsumer extends EventEmitter {
     on(
         eventName: "fatalError",
         listener: (error: Error | ConsumerError) => void
-    ): this;
+    ): this {
+        return super.on(eventName, listener);
+    }
     /**
      * @public
      *
@@ -31,8 +33,11 @@ declare class EventConsumer extends EventEmitter {
     once(
         eventName: "fatalError",
         listener: (error: Error | ConsumerError) => void
-    ): this;
-    protected onFatalError(error: Error | ConsumerError): void;
-}
+    ): this {
+        return super.on(eventName, listener);
+    }
 
-export { EventConsumer };
+    protected onFatalError(error: Error | ConsumerError): void {
+        this.emit("fatalError", error);
+    }
+}

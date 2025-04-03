@@ -5,7 +5,9 @@
     "exports": {
         "./interfaces/*": "./dist/interfaces/*.js",
         "./errors/*": "./dist/errors/*.js",
-        "./helpers/*": "./dist/helpers/*.js"
+        "./helpers/*": "./dist/helpers/*.js",
+        "./enums/*": "./dist/enums/*.js",
+        "./consumer/*": "./dist/consumer/*.js"
     },
     "scripts": {
         "tests": "echo 'Hello unit tests'",
@@ -24,6 +26,7 @@
     },
     "dependencies": {
         "@google-cloud/firestore": "^7.11.0",
+        "croner": "^9.0.0",
         "winston": "^3.17.0",
         "winston-transport-sentry-node": "^3.0.0"
     }
