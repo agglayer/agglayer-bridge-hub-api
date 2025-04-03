@@ -1,3 +1,5 @@
+import { errorCodes } from "./error_codes";
+
 /**
  * BaseError used within the micro services that guarantees we don't loose the stack trace.
  */
@@ -19,8 +21,8 @@ export class BaseError extends Error {
         name: string,
         code: number,
         message: string = "Unknown error",
-        isFatal?: boolean | undefined,
-        origin?: string | undefined,
+        isFatal?: boolean,
+        origin?: string,
         context?: Record<string, any>
     ) {
         super(message);
@@ -29,9 +31,7 @@ export class BaseError extends Error {
         this.isFatal = isFatal ?? true;
         this.origin = origin ?? "base_error";
         this.context = context ?? {};
+        Object.setPrototypeOf(this, new.target.prototype);
     }
-    static codes: {
-        BASE_ERROR: number;
-    };
-    identifier: number = BaseError.codes.BASE_ERROR;
+    identifier: number = errorCodes.base.BASE_ERROR;
 }

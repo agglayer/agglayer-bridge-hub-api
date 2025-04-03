@@ -43,6 +43,9 @@ export class JSONRPCClient {
             const json: IRPCResponse<T> = await response.json();
 
             if (json.error) {
+                if (json.error.code === -32000) {
+                    return { count: 0 } as T;
+                }
                 throw new ExternalDependencyError(
                     `rpc: ${this.url}`,
                     json.error.message,

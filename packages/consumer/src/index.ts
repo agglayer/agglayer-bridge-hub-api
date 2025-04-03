@@ -3,6 +3,10 @@ import { JSONRPCClient } from "bridge-hub-commons/helpers/json_rpc_client";
 import dotenv from "dotenv";
 import { DatabaseClient } from "bridge-hub-commons/helpers/database";
 import { BridgeAPIConsumer } from "./bridge_api_consumer";
+import TransactionMapper from "./mappers/transaction";
+import TokenMappingsMapper from "./mappers/mapping";
+import TokenMappingsService from "./services/mapping";
+import TransactionsService from "./services/transaction";
 
 dotenv.config();
 
@@ -55,7 +59,11 @@ async function start(): Promise<void> {
                 pollSize: 10,
                 networkId: Number(process.env.NETWORK_ID) || 0,
                 maxRetries: 3,
-            }
+            },
+            new TransactionMapper(Number(process.env.NETWORK_ID) || 0),
+            new TokenMappingsMapper(Number(process.env.NETWORK_ID) || 0),
+            new TransactionsService(database, "transactions"),
+            new TokenMappingsService(database, "tokenMappings")
         );
 
         await consumer.start();

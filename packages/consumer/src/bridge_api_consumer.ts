@@ -15,6 +15,10 @@ import type {
     IMappingsBridgeAPIResult,
     IMappingTx,
 } from "bridge-hub-commons/interfaces/token_mapping";
+import type TokenMappingsMapper from "./mappers/mapping";
+import type TransactionMapper from "./mappers/transaction";
+import type TokenMappingsService from "./services/mapping";
+import type TransactionsService from "./services/transaction";
 
 export class BridgeAPIConsumer {
     private bridgeConsumer: JsonRpcConsumer<
@@ -34,7 +38,11 @@ export class BridgeAPIConsumer {
         private consumerRpcClient: JSONRPCClient,
         private bridgeConsumerConfig: IConsumerConfig,
         private claimConsumerConfig: IConsumerConfig,
-        private mappingConsumerConfig: IConsumerConfig
+        private mappingConsumerConfig: IConsumerConfig,
+        private transactionMapper: TransactionMapper,
+        private tokenMappingsMapper: TokenMappingsMapper,
+        private transactionService: TransactionsService,
+        private tokenMappingsService: TokenMappingsService
     ) {}
 
     public async start(): Promise<void> {
@@ -102,13 +110,18 @@ export class BridgeAPIConsumer {
     }
 
     private onBridgeData(data: IBridgeTx[]): void {
-        // Process bridge data
+        const mappedTransactions =
+            this.transactionMapper.mapBridgeTransactions(data);
+        this.transactionService.saveBridges(mappedTransactions);
     }
     private onClaimData(data: IClaimTx[]): void {
-        // Process claim data
+        const mappedTransactions =
+            this.transactionMapper.mapClaimTransactions(data);
+        this.transactionService.saveClaims(mappedTransactions);
     }
     private onMappingData(data: IMappingTx[]): void {
-        // Process mapping data
+        const mappedTransactions = this.tokenMappingsMapper.mapMappings(data);
+        this.tokenMappingsService.saveTokenMappings(mappedTransactions);
     }
 
     private onError(err: Error): void {

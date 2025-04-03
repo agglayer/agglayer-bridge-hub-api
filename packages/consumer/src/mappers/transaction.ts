@@ -9,7 +9,7 @@ import type {
 } from "bridge-hub-commons/interfaces/claim_tx";
 import type { IDecodedGlobalIndex } from "bridge-hub-commons/interfaces/decoded_global_index";
 
-export default class transactionMapper {
+export default class TransactionMapper {
     constructor(private networkId: number) {}
 
     public mapBridgeTransactions(events: IBridgeTx[]): IHubBridgeTransaction[] {
@@ -53,6 +53,7 @@ export default class transactionMapper {
                 globalIndex: claimTransaction.global_index,
                 sourceNetwork: decodedGlobalIndex.sourceNetwork,
                 depositCount: decodedGlobalIndex.depositCount,
+                status: TransactionStatus.CLAIMED,
             });
         });
 

@@ -1,3 +1,4 @@
+import type { TransactionStatus } from "../enums/transaction_status";
 import type { IBridgeAPIResult } from "./bridge_api_result";
 
 /**
@@ -33,4 +34,5 @@ export interface IHubClaimTransaction {
     globalIndex: number;
     sourceNetwork: number;
     depositCount: number;
+    status: TransactionStatus;
 }

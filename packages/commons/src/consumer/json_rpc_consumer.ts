@@ -8,9 +8,15 @@ import type { IBridgeAPIResult } from "../interfaces/bridge_api_result";
 import type { IBridgeTx } from "../interfaces/bridge_tx";
 import type { IClaimTx } from "../interfaces/claim_tx";
 import type { IMappingTx } from "../interfaces/token_mapping";
+import type { IBridgesBridgeAPIResult } from "../../dist/interfaces/bridge_tx";
+import type { IClaimsBridgeAPIResult } from "../../dist/interfaces/claim_tx";
+import type { IMappingsBridgeAPIResult } from "../../dist/interfaces/token_mapping";
 
 export class JsonRpcConsumer<
-    T,
+    T extends
+        | IBridgesBridgeAPIResult
+        | IClaimsBridgeAPIResult
+        | IMappingsBridgeAPIResult,
     E extends IBridgeTx | IClaimTx | IMappingTx
 > extends EventConsumer {
     private consumerRunning: boolean = false;
@@ -64,7 +70,8 @@ export class JsonRpcConsumer<
                     while (
                         earliestProcessedBlockInThisRun >
                             this.lastConsumedBlock ||
-                        this.lastConsumedBlock === 0
+                        this.lastConsumedBlock === 0 ||
+                        earliestProcessedBlockInThisRun === 0
                     ) {
                         let newTransactions: E[] = [];
                         const result = await this.request<T>([
@@ -73,21 +80,35 @@ export class JsonRpcConsumer<
                             this.config.pollSize,
                         ]);
                         if (result) {
+                            if (result.count === 0) {
+                                this.lastConsumedBlock = Math.max(
+                                    this.lastConsumedBlock,
+                                    latestProcessedBlockInThisRun
+                                );
+                                break;
+                            }
                             const processedTransactions =
                                 this.getTransactionsFromResult(result);
                             for (const tx of processedTransactions) {
                                 if (tx.block_num > this.lastConsumedBlock) {
                                     newTransactions.push(tx);
                                     earliestProcessedBlockInThisRun =
-                                        tx.block_num;
+                                        earliestProcessedBlockInThisRun > 0
+                                            ? Math.min(
+                                                  tx.block_num,
+                                                  earliestProcessedBlockInThisRun
+                                              )
+                                            : tx.block_num;
                                     latestProcessedBlockInThisRun =
                                         tx.block_num >
                                         latestProcessedBlockInThisRun
                                             ? tx.block_num
                                             : latestProcessedBlockInThisRun;
                                 } else {
-                                    this.lastConsumedBlock =
-                                        latestProcessedBlockInThisRun;
+                                    this.lastConsumedBlock = Math.max(
+                                        this.lastConsumedBlock,
+                                        latestProcessedBlockInThisRun
+                                    );
                                     break;
                                 }
                             }
@@ -100,7 +121,10 @@ export class JsonRpcConsumer<
                                 )
                             );
                         }
-                        observer.next(newTransactions);
+
+                        if (newTransactions.length > 0) {
+                            observer.next(newTransactions);
+                        }
                     }
                 } catch (error) {}
             }
