@@ -2,12 +2,13 @@
     "name": "bridge-hub-api",
     "version": "0.0.1",
     "type": "module",
-    "module": "src/index.ts",
+    "module": "src/server.ts",
     "exports": "./dist/",
     "scripts": {
         "tests": "echo 'Hello unit tests'",
         "tests:integration": "echo 'Hello integration tests'",
-        "build": "tsup"
+        "build": "tsup",
+        "start": "bun dist/server.js"
     },
     "devDependencies": {
         "@types/bun": "latest",
@@ -17,6 +18,8 @@
         "typescript": "^5"
     },
     "dependencies": {
-        "hono": "^4.7.5"
+        "hono": "^4.7.5",
+        "zod": "^3.24.2",
+        "bridge-hub-commons": "0.0.1"
     }
 }

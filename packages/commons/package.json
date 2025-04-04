@@ -4,10 +4,11 @@
     "type": "module",
     "exports": {
         "./interfaces/*": "./dist/interfaces/*.js",
-        "./errors/*": "./dist/errors/*.js",
+        "./errors": "./dist/errors/index.js",
         "./helpers/*": "./dist/helpers/*.js",
         "./enums/*": "./dist/enums/*.js",
-        "./consumer/*": "./dist/consumer/*.js"
+        "./consumer/*": "./dist/consumer/*.js",
+        "./constants/*": "./dist/constants/*.js"
     },
     "scripts": {
         "tests": "echo 'Hello unit tests'",

@@ -13,8 +13,8 @@ import type {
     IQueryOrderOperationParams,
 } from "../interfaces/database";
 import { Logger } from "./logger";
-import { DatabaseError } from "../errors/databse_errors";
-import { errorCodes } from "../errors/error_codes";
+import { DatabaseError } from "../errors";
+import { errorCodes } from "../constants/error_codes";
 
 let db: Firestore;
 

@@ -1,4 +1,4 @@
-import { ConsumerError } from "../errors/consumer_errors";
+import { ConsumerError } from "../errors";
 import { EventConsumer } from "./abstract_event_consumer";
 import { JSONRPCClient } from "../helpers/json_rpc_client";
 import type { IConsumerConfig } from "../interfaces/consumer_config";
@@ -10,7 +10,7 @@ import type { IMappingTx } from "../interfaces/token_mapping";
 import type { IBridgesBridgeAPIResult } from "../interfaces/bridge_tx";
 import type { IClaimsBridgeAPIResult } from "../interfaces/claim_tx";
 import type { IMappingsBridgeAPIResult } from "../interfaces/token_mapping";
-import { ExternalDependencyError } from "../errors/external_dependency_error";
+import { ExternalDependencyError } from "../errors";
 import type { ILastIndexedTransaction } from "../interfaces/metadata";
 
 export class JsonRpcConsumer<
@@ -77,6 +77,7 @@ export class JsonRpcConsumer<
                     let latestProcessedBlockInThisRun = 0;
                     let pageNumber = 1;
                     let continueRun = true;
+                    let gotNewTxs = false;
 
                     while (
                         continueRun &&
@@ -97,6 +98,7 @@ export class JsonRpcConsumer<
                                     this.lastConsumedBlock,
                                     latestProcessedBlockInThisRun
                                 );
+                                continueRun = false;
                                 break;
                             }
 
@@ -144,17 +146,16 @@ export class JsonRpcConsumer<
                             );
                         }
 
-                        if (
-                            newTransactions.length > 0 &&
-                            this.lastIndexedTranasctionHash
-                        ) {
+                        if (newTransactions.length > 0) {
                             await observer.next(newTransactions);
-                            await observer.summary({
-                                transactionHash:
-                                    this.lastIndexedTranasctionHash,
-                                blockNumber: latestProcessedBlockInThisRun,
-                            });
+                            gotNewTxs = true;
                         }
+                    }
+                    if (gotNewTxs && this.lastIndexedTranasctionHash) {
+                        await observer.summary({
+                            transactionHash: this.lastIndexedTranasctionHash,
+                            blockNumber: latestProcessedBlockInThisRun,
+                        });
                     }
                 } catch (error) {
                     if (error instanceof ExternalDependencyError) {

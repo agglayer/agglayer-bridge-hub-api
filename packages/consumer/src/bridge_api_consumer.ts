@@ -1,6 +1,9 @@
 import { JsonRpcConsumer } from "bridge-hub-commons/consumer/json_rpc_consumer";
-import { ConsumerError } from "bridge-hub-commons/errors/consumer_errors";
-import type { ExternalDependencyError } from "bridge-hub-commons/errors/external_dependency_error";
+import {
+    ConsumerError,
+    ExternalDependencyError,
+    DatabaseError,
+} from "bridge-hub-commons/errors";
 import type { JSONRPCClient } from "bridge-hub-commons/helpers/json_rpc_client";
 import type {
     IBridgesBridgeAPIResult,
@@ -20,8 +23,7 @@ import type TransactionMapper from "./mappers/transaction";
 import type TokenMappingsService from "./services/mapping";
 import type TransactionsService from "./services/transaction";
 import { Logger } from "bridge-hub-commons/helpers/logger";
-import { errorCodes } from "bridge-hub-commons/errors/error_codes";
-import { DatabaseError } from "bridge-hub-commons/errors/databse_errors";
+import { errorCodes } from "bridge-hub-commons/constants/error_codes";
 import type MetadataService from "./services/metadata";
 import type { ILastIndexedTransaction } from "bridge-hub-commons/interfaces/metadata";
 import type MetadataMapper from "./mappers/metadata";

@@ -21,7 +21,7 @@ export const errorCodes = {
         UNKNOWN_EXTERNAL_DEPENDENCY_ERROR: 3000,
     },
 
-    // API error codes
+    // API related error codes
     api: {
         BAD_REQUEST: 400,
         UNAUTHORIZED: 401,
