@@ -17,7 +17,6 @@ export default class TransactionMapper {
         const formattedBridgeTransactions: IHubBridgeTransaction[] = [];
         events.forEach((bridgeTransaction) => {
             formattedBridgeTransactions.push({
-                metadata: bridgeTransaction.metadata,
                 blockNumber: bridgeTransaction.block_num,
                 transactionIndex: bridgeTransaction.block_pos,
                 timestamp: bridgeTransaction.block_timestamp,
