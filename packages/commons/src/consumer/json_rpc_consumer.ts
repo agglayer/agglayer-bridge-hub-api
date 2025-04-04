@@ -10,7 +10,7 @@ import type { IMappingTx } from "../interfaces/token_mapping";
 import type { IBridgesBridgeAPIResult } from "../interfaces/bridge_tx";
 import type { IClaimsBridgeAPIResult } from "../interfaces/claim_tx";
 import type { IMappingsBridgeAPIResult } from "../interfaces/token_mapping";
-import { ExternalDependencyError } from "../../dist/errors/external_dependency_error";
+import { ExternalDependencyError } from "../errors/external_dependency_error";
 import type { ILastIndexedTransaction } from "../interfaces/metadata";
 
 export class JsonRpcConsumer<

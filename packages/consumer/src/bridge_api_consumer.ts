@@ -90,14 +90,14 @@ export class BridgeAPIConsumer {
         );
 
         await Promise.all([
-            // this.bridgeConsumer.start({
-            //     next: async (data) => this.onBridgeData(data as IBridgeTx[]),
-            //     summary: async (data: ILastIndexedTransaction) =>
-            //         this.onBridgeDataSummary(data),
-            //     error: (err: ConsumerError | ExternalDependencyError) =>
-            //         this.onError(this.bridgeConsumerConfig.name, err),
-            //     closed: () => this.onClosed(this.bridgeConsumerConfig.name),
-            // }),
+            this.bridgeConsumer.start({
+                next: async (data) => this.onBridgeData(data as IBridgeTx[]),
+                summary: async (data: ILastIndexedTransaction) =>
+                    this.onBridgeDataSummary(data),
+                error: (err: ConsumerError | ExternalDependencyError) =>
+                    this.onError(this.bridgeConsumerConfig.name, err),
+                closed: () => this.onClosed(this.bridgeConsumerConfig.name),
+            }),
             this.claimConsumer.start({
                 next: async (data) => this.onClaimData(data as IClaimTx[]),
                 summary: async (data: ILastIndexedTransaction) =>
