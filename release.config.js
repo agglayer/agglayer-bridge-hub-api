@@ -1,5 +1,5 @@
 const _default = {
-    branches: ["main"],
+    branches: ["release", { name: "main", prerelease: "beta" }],
     tagFormat: "v${version}",
     plugins: [
         "@semantic-release/commit-analyzer",
