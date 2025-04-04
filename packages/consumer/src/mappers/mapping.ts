@@ -10,7 +10,6 @@ export default class TokenMappingsMapper {
         const formattedMappings: IHubTokenMappings[] = [];
         events.forEach((mappingEvent) => {
             formattedMappings.push({
-                metadata: mappingEvent.metadata,
                 blockNumber: mappingEvent.block_num,
                 transactionIndex: mappingEvent.block_pos,
                 timestamp: mappingEvent.block_timestamp,
