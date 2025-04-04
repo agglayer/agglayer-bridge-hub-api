@@ -38,7 +38,7 @@ export interface IHubBridgeTransaction {
     blockNumber: number;
     transactionIndex: number;
     timestamp: number;
-    leafType: number;
+    leafType: "ASSET" | "MESSAGE";
     originTokenNetwork: number;
     originTokenAddress: string;
     sourceNetwork: number;
