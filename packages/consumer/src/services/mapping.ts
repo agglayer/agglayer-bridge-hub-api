@@ -4,12 +4,12 @@ import type { IHubTokenMappings } from "bridge-hub-commons/interfaces/token_mapp
 export default class TokenMappingsService {
     constructor(
         private database: DatabaseClient,
-        private collectionName: string = "tokenMappings"
+        private collectionId: string = "tokenMappings"
     ) {}
 
     public async saveTokenMappings(
         mappings: IHubTokenMappings[]
     ): Promise<void> {
-        this.database.addDocuments(this.collectionName, mappings);
+        this.database.addDocuments(this.collectionId, mappings);
     }
 }

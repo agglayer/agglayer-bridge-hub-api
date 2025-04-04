@@ -7,7 +7,7 @@ import { CryptoHasher } from "bun";
 export default class TransactionsService {
     constructor(
         private database: DatabaseClient,
-        private collectionName: string = "transactions"
+        private collectionId: string = "transactions"
     ) {}
 
     private generateDocId(depositCount: number, sourceNetwork: number): string {
@@ -25,7 +25,7 @@ export default class TransactionsService {
             docIds.push(docId);
         }
         this.database.conditionalUpdateDocuments(
-            this.collectionName,
+            this.collectionId,
             bridgetransactions,
             docIds,
             [
@@ -54,7 +54,7 @@ export default class TransactionsService {
             docIds.push(docId);
         }
         this.database.updateDocuments(
-            this.collectionName,
+            this.collectionId,
             claimTransactions,
             docIds
         );

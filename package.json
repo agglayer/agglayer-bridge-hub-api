@@ -17,11 +17,5 @@
     "peerDependencies": {
         "typescript": "^5.0.0"
     },
-    "dependencies": {
-        "@elysiajs/cors": "^1.2.0",
-        "@elysiajs/swagger": "^1.2.2",
-        "elysia": "^1.2.25",
-        "express": "^4.21.2",
-        "mongoose": "^8.12.1"
-    }
+    "dependencies": {}
 }

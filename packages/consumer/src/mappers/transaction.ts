@@ -1,3 +1,4 @@
+import { LeafType } from "bridge-hub-commons/enums/leaf_type";
 import { TransactionStatus } from "bridge-hub-commons/enums/transaction_status";
 import type {
     IBridgeTx,
@@ -16,12 +17,14 @@ export default class TransactionMapper {
         const formattedBridgeTransactions: IHubBridgeTransaction[] = [];
         events.forEach((bridgeTransaction) => {
             formattedBridgeTransactions.push({
-                metadata: bridgeTransaction.metadata,
                 blockNumber: bridgeTransaction.block_num,
                 transactionIndex: bridgeTransaction.block_pos,
                 timestamp: bridgeTransaction.block_timestamp,
                 transactionHash: bridgeTransaction.tx_hash.toLowerCase(),
-                leafType: bridgeTransaction.leaf_type,
+                leafType:
+                    LeafType.ASSET === bridgeTransaction.leaf_type
+                        ? "ASSET"
+                        : "MESSAGE",
                 originTokenNetwork: bridgeTransaction.origin_network,
                 originTokenAddress:
                     bridgeTransaction.origin_address.toLowerCase(),

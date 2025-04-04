@@ -1,4 +1,4 @@
-import type { ConsumerError } from "../errors/consumer_errors";
+import type { ConsumerError } from "../errors";
 import { EventEmitter } from "events";
 
 export class EventConsumer extends EventEmitter {

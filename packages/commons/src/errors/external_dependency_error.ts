@@ -1,5 +1,5 @@
 import { BaseError } from "./base_error";
-import { errorCodes } from "./error_codes";
+import { errorCodes } from "../constants/error_codes";
 
 export class ExternalDependencyError extends BaseError {
     public readonly apiName: string;

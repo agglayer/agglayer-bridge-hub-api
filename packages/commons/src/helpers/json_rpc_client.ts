@@ -1,7 +1,7 @@
 import https from "https";
 import type { IRPCPayload } from "../interfaces/rpc_payload";
 import { Logger } from "./logger";
-import { ExternalDependencyError } from "../errors/external_dependency_error";
+import { ExternalDependencyError } from "../errors";
 import type { IRPCResponse } from "../interfaces/rpc_response";
 import type { IBridgeAPIResult } from "../interfaces/bridge_api_result";
 

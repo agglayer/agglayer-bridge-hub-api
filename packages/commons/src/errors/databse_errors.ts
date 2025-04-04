@@ -1,14 +1,15 @@
 import { BaseError } from "./base_error";
 import { errorCodes } from "../constants/error_codes";
 
-export class ConsumerError extends BaseError {
+export class DatabaseError extends BaseError {
     constructor(
         message: string,
+        originalError?: Error,
         {
             name = "CONSUMER_ERROR",
             code = errorCodes.consumer.UNKNOWN_CONSUMER_ERR,
             isFatal = true,
-            origin = "consumer_errors",
+            origin = "databse_errors",
             context = {},
         }: {
             name?: string;

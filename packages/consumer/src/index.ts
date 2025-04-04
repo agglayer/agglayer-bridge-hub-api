@@ -7,6 +7,8 @@ import TransactionMapper from "./mappers/transaction";
 import TokenMappingsMapper from "./mappers/mapping";
 import TokenMappingsService from "./services/mapping";
 import TransactionsService from "./services/transaction";
+import MetadataService from "./services/metadata";
+import MetadataMapper from "./mappers/metadata";
 
 dotenv.config();
 
@@ -62,8 +64,14 @@ async function start(): Promise<void> {
             },
             new TransactionMapper(Number(process.env.NETWORK_ID) || 0),
             new TokenMappingsMapper(Number(process.env.NETWORK_ID) || 0),
+            new MetadataMapper(),
             new TransactionsService(database, "transactions"),
-            new TokenMappingsService(database, "tokenMappings")
+            new TokenMappingsService(database, "tokenMappings"),
+            new MetadataService(
+                database,
+                "metadata",
+                process.env.METADATA_DOC || "lastIndexedTransactions"
+            )
         );
 
         await consumer.start();

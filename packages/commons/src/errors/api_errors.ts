@@ -1,5 +1,5 @@
 import { BaseError } from "./base_error";
-import { errorCodes } from "./error_codes";
+import { errorCodes } from "../constants/error_codes";
 
 export class ApiError extends BaseError {
     constructor(
@@ -60,7 +60,7 @@ export class BadRequestError extends ApiError {
 
     constructor(
         message: string = "Malformed or invalid request",
-        validationErrors: Record<string, string[]> = {},
+        validationErrors: Record<string, any> = {},
         context: Record<string, any> = {},
         origin: string = "api_errors"
     ) {
@@ -108,30 +108,6 @@ export class RateLimitError extends ApiError {
             isFatal: true,
             origin,
             context,
-        });
-    }
-}
-export class DatabaseError extends ApiError {
-    constructor(
-        message: string,
-        originalError?: Error,
-        context: Record<string, any> = {},
-        origin: string = "api_errors"
-    ) {
-        super(message, {
-            name: "DATABASE_ERROR",
-            code: errorCodes.api.INTERNAL_SERVER_ERROR,
-            isFatal: true,
-            origin,
-            context: {
-                ...context,
-                originalError: originalError
-                    ? {
-                          message: originalError.message,
-                          name: originalError.name,
-                      }
-                    : undefined,
-            },
         });
     }
 }

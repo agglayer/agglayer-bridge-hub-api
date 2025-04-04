@@ -12,8 +12,8 @@ export const errorCodes = {
     datastore: {
         UNKNOWN_DATASTORE_ERR: 2000,
         DATASTORE_AUTH_ERR: 2001,
-        DATASTORE_READ_ERROR: 1002,
-        DATASTORE_WRITE_ERROR: 1003,
+        DATASTORE_READ_ERROR: 2002,
+        DATASTORE_WRITE_ERROR: 2003,
     },
 
     // External dependencies errors codes
@@ -21,7 +21,7 @@ export const errorCodes = {
         UNKNOWN_EXTERNAL_DEPENDENCY_ERROR: 3000,
     },
 
-    // API error codes
+    // API related error codes
     api: {
         BAD_REQUEST: 400,
         UNAUTHORIZED: 401,

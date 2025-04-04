@@ -3,14 +3,12 @@ name: Release
 on:
     push:
         branches:
+            - main
             - release
 
-permissions:
-    contents: write
-
 jobs:
-    release:
-        name: Semantic Release
+    semantic-versioning:
+        name: Semantic Versioning
         runs-on: ubuntu-latest
 
         steps:
@@ -25,7 +23,7 @@ jobs:
                   bun-version: latest
 
             - name: Install Dependencies
-              run: bun install --frozen-lockfile
+              run: bun install --dev --frozen-lockfile
 
             - name: Run Semantic Release for each package
               env:

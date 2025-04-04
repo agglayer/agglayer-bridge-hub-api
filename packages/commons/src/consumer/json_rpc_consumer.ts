@@ -1,16 +1,17 @@
-import { ConsumerError } from "../errors/consumer_errors";
+import { ConsumerError } from "../errors";
 import { EventConsumer } from "./abstract_event_consumer";
 import { JSONRPCClient } from "../helpers/json_rpc_client";
 import type { IConsumerConfig } from "../interfaces/consumer_config";
 import type { IObserver } from "../interfaces/observer";
 import { Cron } from "croner";
-import type { IBridgeAPIResult } from "../interfaces/bridge_api_result";
 import type { IBridgeTx } from "../interfaces/bridge_tx";
 import type { IClaimTx } from "../interfaces/claim_tx";
 import type { IMappingTx } from "../interfaces/token_mapping";
-import type { IBridgesBridgeAPIResult } from "../../dist/interfaces/bridge_tx";
-import type { IClaimsBridgeAPIResult } from "../../dist/interfaces/claim_tx";
-import type { IMappingsBridgeAPIResult } from "../../dist/interfaces/token_mapping";
+import type { IBridgesBridgeAPIResult } from "../interfaces/bridge_tx";
+import type { IClaimsBridgeAPIResult } from "../interfaces/claim_tx";
+import type { IMappingsBridgeAPIResult } from "../interfaces/token_mapping";
+import { ExternalDependencyError } from "../errors";
+import type { ILastIndexedTransaction } from "../interfaces/metadata";
 
 export class JsonRpcConsumer<
     T extends
@@ -20,14 +21,19 @@ export class JsonRpcConsumer<
     E extends IBridgeTx | IClaimTx | IMappingTx
 > extends EventConsumer {
     private consumerRunning: boolean = false;
-    protected observer: IObserver<object, ConsumerError> | null = null;
+    protected observer: IObserver<
+        object,
+        ConsumerError,
+        ILastIndexedTransaction
+    > | null = null;
     private cronjob: Cron | null = null;
-    private lastConsumedBlock: number = 0;
 
     constructor(
         private jsonRpcClient: JSONRPCClient,
         private config: IConsumerConfig,
-        private getTransactionsFromResult: Function
+        private getTransactionsFromResult: Function,
+        private lastIndexedTranasctionHash: string | null,
+        private lastConsumedBlock: number = 0
     ) {
         super();
     }
@@ -45,7 +51,7 @@ export class JsonRpcConsumer<
     }
 
     public async start(
-        observer: IObserver<object, ConsumerError>
+        observer: IObserver<object, ConsumerError, ILastIndexedTransaction>
     ): Promise<void> {
         if (
             this.listenerCount("event.error") ||
@@ -55,7 +61,10 @@ export class JsonRpcConsumer<
             this.removeAllListeners();
         }
 
-        this.lastConsumedBlock = this.config.startBlock;
+        this.lastConsumedBlock = Math.max(
+            this.config.startBlock,
+            this.lastConsumedBlock
+        );
         this.observer = observer;
         this.consumerRunning = true;
 
@@ -67,11 +76,15 @@ export class JsonRpcConsumer<
                     let earliestProcessedBlockInThisRun = 0;
                     let latestProcessedBlockInThisRun = 0;
                     let pageNumber = 1;
+                    let continueRun = true;
+                    let gotNewTxs = false;
+
                     while (
-                        earliestProcessedBlockInThisRun >
+                        continueRun &&
+                        (earliestProcessedBlockInThisRun >=
                             this.lastConsumedBlock ||
-                        this.lastConsumedBlock === 0 ||
-                        earliestProcessedBlockInThisRun === 0
+                            this.lastConsumedBlock === 0 ||
+                            earliestProcessedBlockInThisRun === 0)
                     ) {
                         let newTransactions: E[] = [];
                         const result = await this.request<T>([
@@ -85,12 +98,19 @@ export class JsonRpcConsumer<
                                     this.lastConsumedBlock,
                                     latestProcessedBlockInThisRun
                                 );
+                                continueRun = false;
                                 break;
                             }
+
                             const processedTransactions =
                                 this.getTransactionsFromResult(result);
+
                             for (const tx of processedTransactions) {
-                                if (tx.block_num > this.lastConsumedBlock) {
+                                if (
+                                    tx.block_num >= this.lastConsumedBlock &&
+                                    tx.tx_hash !==
+                                        this.lastIndexedTranasctionHash
+                                ) {
                                     newTransactions.push(tx);
                                     earliestProcessedBlockInThisRun =
                                         earliestProcessedBlockInThisRun > 0
@@ -99,18 +119,22 @@ export class JsonRpcConsumer<
                                                   earliestProcessedBlockInThisRun
                                               )
                                             : tx.block_num;
-                                    latestProcessedBlockInThisRun =
-                                        tx.block_num >
+                                    latestProcessedBlockInThisRun = Math.max(
+                                        tx.block_num,
                                         latestProcessedBlockInThisRun
-                                            ? tx.block_num
-                                            : latestProcessedBlockInThisRun;
+                                    );
                                 } else {
                                     this.lastConsumedBlock = Math.max(
                                         this.lastConsumedBlock,
                                         latestProcessedBlockInThisRun
                                     );
+                                    continueRun = false;
                                     break;
                                 }
+                            }
+                            if (pageNumber === 1) {
+                                this.lastIndexedTranasctionHash =
+                                    processedTransactions[0].tx_hash;
                             }
                             pageNumber++;
                         } else {
@@ -123,10 +147,29 @@ export class JsonRpcConsumer<
                         }
 
                         if (newTransactions.length > 0) {
-                            observer.next(newTransactions);
+                            await observer.next(newTransactions);
+                            gotNewTxs = true;
                         }
                     }
-                } catch (error) {}
+                    if (gotNewTxs && this.lastIndexedTranasctionHash) {
+                        await observer.summary({
+                            transactionHash: this.lastIndexedTranasctionHash,
+                            blockNumber: latestProcessedBlockInThisRun,
+                        });
+                    }
+                } catch (error) {
+                    if (error instanceof ExternalDependencyError) {
+                        observer.error(error);
+                    }
+                    observer.error(
+                        new ConsumerError((error as Error).message, {
+                            origin: "JsonRpcConsumer",
+                            context: {
+                                error: error,
+                            },
+                        })
+                    );
+                }
             }
         );
     }
@@ -138,6 +181,7 @@ export class JsonRpcConsumer<
      */
     private onDisconnect(): void {
         if (this.cronjob ? this.cronjob.isRunning() : false) {
+            this.consumerRunning = false;
             this.cronjob?.stop();
             this.observer?.closed();
             this.removeAllListeners();

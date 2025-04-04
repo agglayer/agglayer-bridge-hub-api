@@ -1,4 +1,4 @@
-import { errorCodes } from "./error_codes";
+import { errorCodes } from "../constants/error_codes";
 
 /**
  * BaseError used within the micro services that guarantees we don't loose the stack trace.
