@@ -26,7 +26,6 @@ export interface IMappingsBridgeAPIResult extends IBridgeAPIResult {
  * Interface for the Hub API's Token Mappings entitiy
  */
 export interface IHubTokenMappings {
-    metadata: string;
     blockNumber: number;
     transactionIndex: number;
     timestamp: number;
