@@ -231,10 +231,10 @@ export class DatabaseClient {
 
     public async getDocuments(
         collectionId: string,
-        filter?: IQueryFilterOperationParams[],
-        limit?: number,
-        order?: IQueryOrderOperationParams[],
-        startAfterCursor?: string | number
+        filter?: IQueryFilterOperationParams[] | undefined,
+        limit?: number | undefined,
+        order?: IQueryOrderOperationParams[] | undefined,
+        startAfterCursor?: string | number | undefined
     ): Promise<any[]> {
         try {
             const collectionRef = db.collection(collectionId);

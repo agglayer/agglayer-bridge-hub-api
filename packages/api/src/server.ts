@@ -4,9 +4,9 @@ import { cors } from "hono/cors";
 import router from "./routes";
 import { Logger } from "bridge-hub-commons/helpers/logger";
 import { DatabaseClient } from "bridge-hub-commons/helpers/database";
+import { TransactionService } from "./services";
 
 const app = new Hono();
-let database: DatabaseClient;
 
 async function serve(): Promise<void> {
     Logger.create({
@@ -19,9 +19,14 @@ async function serve(): Promise<void> {
         },
     });
 
-    database = new DatabaseClient(
+    const database = new DatabaseClient(
         process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
         process.env.FIRESTORE_DATABASE_ID ?? ""
+    );
+
+    const transactionService = TransactionService.initializeTransactionService(
+        database,
+        "transactions"
     );
 
     // Middlewares
