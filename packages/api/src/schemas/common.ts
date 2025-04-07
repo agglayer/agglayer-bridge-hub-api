@@ -6,3 +6,8 @@ export const networkIdsSchema = z
     .refine((arr) => arr.every((n) => Number.isInteger(n) && n >= 0), {
         message: "Network IDs must be non-negative integers",
     });
+
+export const PaginationSchema = z.object({
+    limit: z.coerce.number().int().nonnegative().default(20),
+    startAfterTimestamp: z.coerce.number().nonnegative().optional(),
+});
