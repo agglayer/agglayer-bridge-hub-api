@@ -8,6 +8,6 @@ export const networkIdsSchema = z
     });
 
 export const PaginationSchema = z.object({
-    limit: z.number().int().nonnegative().default(20).optional(),
+    limit: z.number().int().nonnegative().default(20),
     startAfter: z.string().nonempty().optional(),
 });
