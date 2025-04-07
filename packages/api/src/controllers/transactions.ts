@@ -23,7 +23,7 @@ export const getTransactions = async (c: Context) => {
 
     if (query.sourceNetworkIds) {
         queryParams.push({
-            field: "sourceNetworkId",
+            field: "sourceNetwork",
             operator: "in",
             value: query.sourceNetworkIds,
         });
@@ -39,7 +39,8 @@ export const getTransactions = async (c: Context) => {
 
     const transactions = await TransactionService.getTranasctions(
         queryParams,
-        query.limit
+        query.limit,
+        query.startAfterTimestamp
     );
 
     return handleResponse(c, transactions);
@@ -51,7 +52,7 @@ export const getTransactionByDepositCount = async (c: Context) => {
 
     const queryParams: IQueryFilterOperationParams[] = [
         {
-            field: "sourceNetworkId",
+            field: "sourceNetwork",
             operator: "==",
             value: sourceNetworkId,
         },

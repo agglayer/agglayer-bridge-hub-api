@@ -10,8 +10,8 @@ export const TransactionsQuerySchema = z
     .merge(PaginationSchema);
 
 export const TransactionsByDepositCountQuerySchema = z.object({
-    sourceNetworkId: z.number().int().nonnegative(),
-    depositCount: z.number().int().nonnegative(),
+    sourceNetworkId: z.coerce.number().int().nonnegative(),
+    depositCount: z.coerce.number().int().nonnegative(),
 });
 
 export type TransactionsByDepositCountQuery = z.infer<
