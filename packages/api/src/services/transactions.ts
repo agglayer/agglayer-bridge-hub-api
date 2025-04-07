@@ -4,6 +4,7 @@ import type {
     IQueryOrderOperationParams,
 } from "bridge-hub-commons/interfaces/database";
 import type { IHubTransaction } from "bridge-hub-commons/interfaces/hub_tx";
+import { CryptoHasher } from "bun";
 
 let db: DatabaseClient;
 let collectionId: string;
@@ -27,6 +28,12 @@ export class TransactionService {
         }
     }
 
+    static generateDocId(depositCount: number, sourceNetwork: number): string {
+        const hasher = new CryptoHasher("sha256");
+        hasher.update(`${depositCount}:${sourceNetwork}`);
+        return hasher.digest("hex").slice(0, 32);
+    }
+
     static async getTranasctions(
         queryParams: IQueryFilterOperationParams[],
         limit?: number | undefined,
@@ -39,5 +46,11 @@ export class TransactionService {
             orderParams,
             startAfterTimestamp
         );
+    }
+
+    static async getTransactionByDepositCount(
+        docId: string
+    ): Promise<IHubTransaction | null> {
+        return (await db.getDocument(collectionId, docId)) as IHubTransaction;
     }
 }

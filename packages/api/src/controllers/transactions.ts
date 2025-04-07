@@ -48,22 +48,16 @@ export const getTransactions = async (c: Context) => {
 
 export const getTransactionByDepositCount = async (c: Context) => {
     const { sourceNetworkId, depositCount }: TransactionsByDepositCountQuery =
-        c.get("validatedQuery");
+        c.get("validatedParams");
 
-    const queryParams: IQueryFilterOperationParams[] = [
-        {
-            field: "sourceNetwork",
-            operator: "==",
-            value: sourceNetworkId,
-        },
-        {
-            field: "depositCount",
-            operator: "==",
-            value: depositCount,
-        },
-    ];
+    const docId: string = TransactionService.generateDocId(
+        depositCount,
+        sourceNetworkId
+    );
 
-    const transactions = await TransactionService.getTranasctions(queryParams);
+    const transaction = await TransactionService.getTransactionByDepositCount(
+        docId
+    );
 
-    return handleResponse(c, transactions[0]);
+    return handleResponse(c, transaction);
 };
