@@ -3,13 +3,13 @@ import {
     TransactionsByDepositCountQuerySchema,
     TransactionsQuerySchema,
 } from "../schemas/transactions_query";
-import { BadRequestError } from "bridge-hub-commons/errors";
 import { handleError } from "../utils/response_handler";
 import {
     MappingsByOriginTokenQuerySchema,
     MappingsQuerySchema,
 } from "../schemas/mappings_query";
 import { PaginationSchema } from "../schemas/common";
+import { BadRequestError } from "@polygonlabs/servercore";
 
 export const validateTransactionQueryParams: MiddlewareHandler = async (
     context,

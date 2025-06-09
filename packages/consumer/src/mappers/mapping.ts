@@ -1,7 +1,7 @@
 import type {
     IHubTokenMappings,
     IMappingTx,
-} from "bridge-hub-commons/interfaces/token_mapping";
+} from "../interfaces/token_mapping";
 
 export default class TokenMappingsMapper {
     constructor(private networkId: number) {}

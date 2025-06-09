@@ -1,15 +1,15 @@
-import type { DatabaseClient } from "bridge-hub-commons/helpers/database";
-import type { IHubTokenMappings } from "bridge-hub-commons/interfaces/token_mapping";
+import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import type { IHubTokenMappings } from "../interfaces/token_mapping";
 
 export default class TokenMappingsService {
     constructor(
         private database: DatabaseClient,
-        private collectionId: string = "tokenMappings"
+        private collectionId: string = "bridge_hub_api_tokenMappings"
     ) {}
 
     public async saveTokenMappings(
         mappings: IHubTokenMappings[]
     ): Promise<void> {
-        this.database.addDocuments(this.collectionId, mappings);
+        this.database.addDocuments([this.collectionId], mappings);
     }
 }

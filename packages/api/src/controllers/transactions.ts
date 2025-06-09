@@ -1,11 +1,11 @@
 import type { Context } from "hono";
 import { handleResponse } from "../utils/response_handler";
 import { TransactionService } from "../services";
-import type { IQueryFilterOperationParams } from "bridge-hub-commons/interfaces/database";
 import type {
     TransactionsByDepositCountQuery,
     TransactionsQuery,
 } from "../schemas";
+import type { IQueryFilterOperationParams } from "@polygonlabs/servercore";
 
 export const getTransactions = async (c: Context) => {
     const query: TransactionsQuery = c.get("validatedQuery");

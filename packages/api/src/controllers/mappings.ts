@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import { handleResponse } from "../utils/response_handler";
-import type { IQueryFilterOperationParams } from "bridge-hub-commons/interfaces/database";
 import { MappingsService } from "../services/mappings";
+import type { IQueryFilterOperationParams } from "@polygonlabs/servercore";
 
 export const getMappings = async (c: Context) => {
     const query = c.get("validatedQuery");

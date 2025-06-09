@@ -1,10 +1,10 @@
-import type { DatabaseClient } from "bridge-hub-commons/helpers/database";
 import type {
     IQueryFilterOperationParams,
     IQueryOrderOperationParams,
-} from "bridge-hub-commons/interfaces/database";
-import type { IHubTransaction } from "bridge-hub-commons/interfaces/hub_tx";
+} from "@polygonlabs/servercore";
+import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import { CryptoHasher } from "bun";
+import type { IHubTransaction } from "../interfaces/hub_tx";
 
 let db: DatabaseClient;
 let collectionId: string;
