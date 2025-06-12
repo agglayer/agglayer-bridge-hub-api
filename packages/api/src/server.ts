@@ -1,10 +1,10 @@
+import { Logger } from "@polygonlabs/servercore";
 import { Hono } from "hono";
-import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import router from "./routes";
-import { Logger } from "bridge-hub-commons/helpers/logger";
-import { DatabaseClient } from "bridge-hub-commons/helpers/database";
 import { TransactionService } from "./services";
+import { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import { logger } from "hono/logger";
 
 const app = new Hono();
 
@@ -19,10 +19,11 @@ async function serve(): Promise<void> {
         },
     });
 
-    const database = new DatabaseClient(
-        process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
-        process.env.FIRESTORE_DATABASE_ID ?? ""
-    );
+    const database = new DatabaseClient({
+        projectId: process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
+        databaseId: process.env.FIRESTORE_DATABASE_ID ?? "",
+    });
+    await database.connect();
 
     const transactionService = TransactionService.initializeTransactionService(
         database,

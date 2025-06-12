@@ -1,6 +1,6 @@
 const _default = {
     branches: ["release", { name: "main", prerelease: "beta" }],
-    tagFormat: "v${version}",
+    tagFormat: "bridge-hub-consumer-v${version}",
     plugins: [
         "@semantic-release/commit-analyzer",
         "@semantic-release/release-notes-generator",

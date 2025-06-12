@@ -1,14 +1,8 @@
-import { LeafType } from "bridge-hub-commons/enums/leaf_type";
-import { TransactionStatus } from "bridge-hub-commons/enums/transaction_status";
-import type {
-    IBridgeTx,
-    IHubBridgeTransaction,
-} from "bridge-hub-commons/interfaces/bridge_tx";
-import type {
-    IClaimTx,
-    IHubClaimTransaction,
-} from "bridge-hub-commons/interfaces/claim_tx";
-import type { IDecodedGlobalIndex } from "bridge-hub-commons/interfaces/decoded_global_index";
+import { LeafType } from "../enums/leaf_type";
+import { TransactionStatus } from "../enums/transaction_status";
+import type { IBridgeTx, IHubBridgeTransaction } from "../interfaces/bridge_tx";
+import type { IClaimTx, IHubClaimTransaction } from "../interfaces/claim_tx";
+import type { IDecodedGlobalIndex } from "../interfaces/decoded_global_index";
 
 export default class TransactionMapper {
     constructor(private networkId: number) {}

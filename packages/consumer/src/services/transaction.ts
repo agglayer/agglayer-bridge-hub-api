@@ -1,13 +1,13 @@
-import { TransactionStatus } from "bridge-hub-commons/enums/transaction_status";
-import type { DatabaseClient } from "bridge-hub-commons/helpers/database";
-import type { IHubBridgeTransaction } from "bridge-hub-commons/interfaces/bridge_tx";
-import type { IHubClaimTransaction } from "bridge-hub-commons/interfaces/claim_tx";
+import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import { TransactionStatus } from "../enums/transaction_status";
+import type { IHubBridgeTransaction } from "../interfaces/bridge_tx";
+import type { IHubClaimTransaction } from "../interfaces/claim_tx";
 import { CryptoHasher } from "bun";
 
 export default class TransactionsService {
     constructor(
         private database: DatabaseClient,
-        private collectionId: string = "transactions"
+        private collectionId: string = "bridge_hub_api_transactions"
     ) {}
 
     private generateDocId(depositCount: number, sourceNetwork: number): string {
@@ -54,7 +54,7 @@ export default class TransactionsService {
             docIds.push(docId);
         }
         this.database.updateDocuments(
-            this.collectionId,
+            [this.collectionId],
             claimTransactions,
             docIds
         );

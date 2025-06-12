@@ -1,5 +1,7 @@
-import type { ILastIndexedTransaction } from "bridge-hub-commons/interfaces/metadata";
-import type { IHubMetadata } from "bridge-hub-commons/interfaces/metadata";
+import type {
+    IHubMetadata,
+    ILastIndexedTransaction,
+} from "../interfaces/metadata";
 
 export default class MetadataMapper {
     constructor() {}

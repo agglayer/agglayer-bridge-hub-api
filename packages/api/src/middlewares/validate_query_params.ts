@@ -3,9 +3,13 @@ import {
     TransactionsByDepositCountQuerySchema,
     TransactionsQuerySchema,
 } from "../schemas/transactions_query";
-import { BadRequestError } from "bridge-hub-commons/errors";
 import { handleError } from "../utils/response_handler";
-import { MappingsQuerySchema } from "../schemas/mappings_query";
+import {
+    MappingsByOriginTokenQuerySchema,
+    MappingsQuerySchema,
+} from "../schemas/mappings_query";
+import { PaginationSchema } from "../schemas/common";
+import { BadRequestError } from "@polygonlabs/servercore";
 
 export const validateTransactionQueryParams: MiddlewareHandler = async (
     context,
@@ -37,13 +41,13 @@ export const validateTransactionByDepositCountQueryParams: MiddlewareHandler =
                 parsedQuery.error.message,
                 parsedQuery.error.format(),
                 undefined,
-                "validateTransactionQueryParams"
+                "validateTransactionByDepositCountQueryParams"
             );
 
             return handleError(context, error);
         }
 
-        context.set("validatedQuery", parsedQuery.data);
+        context.set("validatedParams", parsedQuery.data);
         await next();
     };
 
@@ -66,3 +70,36 @@ export const validateMappingsQueryParams: MiddlewareHandler = async (
     context.set("validatedQuery", parsedQuery.data);
     await next();
 };
+
+export const validateMappingsByOriginTokenQueryParams: MiddlewareHandler =
+    async (context, next) => {
+        const parsedParams = MappingsByOriginTokenQuerySchema.safeParse(
+            context.req.param()
+        );
+
+        const parsedQuery = PaginationSchema.safeParse(context.req.query());
+
+        if (!parsedQuery.success) {
+            const error = new BadRequestError(
+                parsedQuery.error.message,
+                parsedQuery.error.format(),
+                undefined,
+                "validateMappingsByOriginTokenQueryParams"
+            );
+
+            return handleError(context, error);
+        } else if (!parsedParams.success) {
+            const error = new BadRequestError(
+                parsedParams.error.message,
+                parsedParams.error.format(),
+                undefined,
+                "validateMappingsByOriginTokenQueryParams"
+            );
+
+            return handleError(context, error);
+        }
+
+        context.set("validatedQuery", parsedQuery.data);
+        context.set("validatedParams", parsedParams.data);
+        await next();
+    };

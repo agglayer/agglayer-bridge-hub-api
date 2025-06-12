@@ -1,7 +1,19 @@
-import { Logger } from "bridge-hub-commons/helpers/logger";
-import { JSONRPCClient } from "bridge-hub-commons/helpers/json_rpc_client";
 import dotenv from "dotenv";
-import { DatabaseClient } from "bridge-hub-commons/helpers/database";
+dotenv.config(); // Load environment variables first
+
+import { Logger } from "@polygonlabs/servercore";
+
+// Initialize the logger globally
+Logger.create({
+    sentry: {
+        dsn: process.env.SENTRY_DSN,
+        level: "error",
+    },
+    console: {
+        level: "info",
+    },
+});
+
 import { BridgeAPIConsumer } from "./bridge_api_consumer";
 import TransactionMapper from "./mappers/transaction";
 import TokenMappingsMapper from "./mappers/mapping";
@@ -9,67 +21,68 @@ import TokenMappingsService from "./services/mapping";
 import TransactionsService from "./services/transaction";
 import MetadataService from "./services/metadata";
 import MetadataMapper from "./mappers/metadata";
+import { DatabaseClient } from "@polygonlabs/servercore-firestore";
 
-dotenv.config();
-
-let jsonRPCClient: JSONRPCClient;
 let database: DatabaseClient;
 
 async function start(): Promise<void> {
     try {
-        Logger.create({
-            sentry: {
-                dsn: process.env.SENTRY_DSN,
-                level: "error",
-            },
-            console: {
-                level: "info",
-            },
+        database = new DatabaseClient({
+            projectId: process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
+            databaseId: process.env.FIRESTORE_DATABASE_ID ?? "",
         });
-
-        jsonRPCClient = new JSONRPCClient(process.env.BRIDGE_SERVICE_URL ?? "");
-        database = new DatabaseClient(
-            process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
-            process.env.FIRESTORE_DATABASE_ID ?? ""
-        );
+        await database.connect();
 
         const consumer = new BridgeAPIConsumer(
-            jsonRPCClient,
             {
-                name: "bridges",
-                requestMethod: "bridge_getBridges",
-                pollInterval: 5,
-                startBlock: Number(process.env.START_BLOCK) || 0,
-                pollSize: 10,
-                networkId: Number(process.env.NETWORK_ID) || 0,
-                maxRetries: 3,
+                apiUrl: new URL(`${process.env.BRIDGE_SERVICE_URL}/bridges`),
+                startCount: { key: "deposit_count", value: 0 },
+                cronExpr: "0/10 * * * * ?",
+                pollSize: 2,
+                method: "GET",
+                params: {
+                    network_id: process.env.NETWORK_ID || "0",
+                    page_size: "2",
+                },
+                paginationParam: "page_number",
+                resultPath: "bridges",
             },
             {
-                name: "claims",
-                requestMethod: "bridge_getClaims",
-                pollInterval: 5,
-                startBlock: Number(process.env.START_BLOCK) || 0,
-                pollSize: 10,
-                networkId: Number(process.env.NETWORK_ID) || 0,
-                maxRetries: 3,
+                apiUrl: new URL(`${process.env.BRIDGE_SERVICE_URL}/claims`),
+                startCount: { key: "block_number", value: 0 },
+                cronExpr: "0/10 * * * * ?",
+                pollSize: 2,
+                method: "GET",
+                params: {
+                    network_id: process.env.NETWORK_ID || "0",
+                    page_size: "2",
+                },
+                paginationParam: "page_number",
+                resultPath: "claims",
             },
             {
-                name: "tokenMappings",
-                requestMethod: "bridge_getTokenMappings",
-                pollInterval: 5,
-                startBlock: Number(process.env.START_BLOCK) || 0,
-                pollSize: 10,
-                networkId: Number(process.env.NETWORK_ID) || 0,
-                maxRetries: 3,
+                apiUrl: new URL(
+                    `${process.env.BRIDGE_SERVICE_URL}/token-mappings`
+                ),
+                startCount: { key: "block_number", value: 0 },
+                cronExpr: "0/10 * * * * ?",
+                pollSize: 2,
+                method: "GET",
+                params: {
+                    network_id: process.env.NETWORK_ID || "0",
+                    page_size: "2",
+                },
+                paginationParam: "page_number",
+                resultPath: "token_mappings",
             },
             new TransactionMapper(Number(process.env.NETWORK_ID) || 0),
             new TokenMappingsMapper(Number(process.env.NETWORK_ID) || 0),
             new MetadataMapper(),
-            new TransactionsService(database, "transactions"),
-            new TokenMappingsService(database, "tokenMappings"),
+            new TransactionsService(database, "bridge_hub_api_transactions"),
+            new TokenMappingsService(database, "bridge_hub_api_tokenMappings"),
             new MetadataService(
                 database,
-                "metadata",
+                "bridge_hub_api_metadata",
                 process.env.METADATA_DOC || "lastIndexedTransactions"
             )
         );

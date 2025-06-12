@@ -3,7 +3,6 @@ import type {
     IQueryOrderOperationParams,
 } from "@polygonlabs/servercore";
 import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
-import { CryptoHasher } from "bun";
 import type { IHubTransaction } from "../interfaces/hub_tx";
 
 let db: DatabaseClient;
@@ -17,7 +16,7 @@ const orderParams: IQueryOrderOperationParams[] = [
     },
 ];
 
-export class TransactionService {
+export class MappingsService {
     static initializeTransactionService(
         database: DatabaseClient,
         collectionIdParam: string = "transactions"
@@ -28,13 +27,7 @@ export class TransactionService {
         }
     }
 
-    static generateDocId(depositCount: number, sourceNetwork: number): string {
-        const hasher = new CryptoHasher("sha256");
-        hasher.update(`${depositCount}:${sourceNetwork}`);
-        return hasher.digest("hex").slice(0, 32);
-    }
-
-    static async getTranasctions(
+    static async getMappings(
         queryParams: IQueryFilterOperationParams[],
         limit?: number | undefined,
         startAfterTimestamp?: number | undefined
@@ -46,11 +39,5 @@ export class TransactionService {
             orderParams,
             startAfterTimestamp
         );
-    }
-
-    static async getTransactionByDepositCount(
-        docId: string
-    ): Promise<IHubTransaction | null> {
-        return (await db.getDocument(collectionId, docId)) as IHubTransaction;
     }
 }
