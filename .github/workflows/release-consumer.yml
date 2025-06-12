@@ -5,6 +5,9 @@ on:
         branches:
             - main
             - release
+        paths:
+            - "packages/consumer/**"
+            - ".github/workflows/release-consumer.yml"
 
 jobs:
     semantic-versioning:
