@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config(); // Load environment variables first
 
-import { Logger } from "@polygonlabs/servercore";
+import { Logger, setupHealthCheckServer } from "@polygonlabs/servercore";
 
 // Initialize the logger globally
 Logger.create({
@@ -87,6 +87,12 @@ async function start(): Promise<void> {
             )
         );
 
+        setupHealthCheckServer(
+            [
+                `${process.env.BRIDGE_SERVICE_URL}/bridges?network_id=${process.env.NETWORK_ID}`,
+            ],
+            3001
+        );
         await consumer.start();
 
         Logger.info(
