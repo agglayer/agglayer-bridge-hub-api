@@ -91,7 +91,7 @@ async function start(): Promise<void> {
             [
                 `${process.env.BRIDGE_SERVICE_URL}/bridges?network_id=${process.env.NETWORK_ID}`,
             ],
-            8080
+            3001
         );
         await consumer.start();
 
