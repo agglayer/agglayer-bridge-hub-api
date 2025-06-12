@@ -56,6 +56,7 @@ export class BridgeAPIConsumer {
         >(this.mappingConsumerConfig);
 
         await Promise.all([
+            // start bridge consumer
             this.bridgeConsumer.start({
                 next: async (data) => this.onBridgeData(data as IBridgeTx[]),
                 summary: async (data: ILastIndexedTransaction) =>
@@ -63,6 +64,26 @@ export class BridgeAPIConsumer {
                 error: (err: ConsumerError | ExternalDependencyError) =>
                     this.onError("bridge-consumer", err),
                 closed: () => this.onClosed("bridge-consumer"),
+            }),
+
+            // start claim consumer
+            this.claimConsumer.start({
+                next: async (data) => this.onClaimData(data as IClaimTx[]),
+                summary: async (data: ILastIndexedTransaction) =>
+                    this.onClaimDataSummary(data),
+                error: (err: ConsumerError | ExternalDependencyError) =>
+                    this.onError("claim-consumer", err),
+                closed: () => this.onClosed("claim-consumer"),
+            }),
+
+            // start mapping consumer
+            this.mappingConsumer.start({
+                next: async (data) => this.onMappingData(data as IMappingTx[]),
+                summary: async (data: ILastIndexedTransaction) =>
+                    this.onMappingDataSummary(data),
+                error: (err: ConsumerError | ExternalDependencyError) =>
+                    this.onError("mapping-consumer", err),
+                closed: () => this.onClosed("mapping-consumer"),
             }),
         ]);
     }
@@ -114,6 +135,124 @@ export class BridgeAPIConsumer {
             });
             throw new ConsumerError(
                 `Error in onMappingData : ${(error as Error).message}`,
+                {
+                    isFatal: true,
+                    code: errorCodes.consumer.UNKNOWN_CONSUMER_ERR,
+                    context: {
+                        error: error as Error,
+                    },
+                }
+            );
+        }
+    }
+
+    private async onClaimData(data: IClaimTx[]): Promise<void> {
+        try {
+            const mappedTransactions =
+                this.transactionMapper.mapClaimTransactions(data);
+            await this.transactionService.saveClaims(mappedTransactions);
+        } catch (error) {
+            if (error instanceof DatabaseError) {
+                throw error;
+            }
+            Logger.error({
+                location: "bridge_api_consumer",
+                function: "onClaimData",
+                status: `ERROR encountered on claim consumer`,
+                error: error,
+            });
+            throw new ConsumerError(
+                `Error in onClaimData : ${(error as Error).message}`,
+                {
+                    isFatal: true,
+                    code: errorCodes.consumer.UNKNOWN_CONSUMER_ERR,
+                    context: {
+                        error: error as Error,
+                    },
+                }
+            );
+        }
+    }
+
+    private async onClaimDataSummary(
+        data: ILastIndexedTransaction
+    ): Promise<void> {
+        try {
+            const mappedMetadata =
+                this.metadataMapper.mapLastIndexedClaimTx(data);
+            await this.metadataService.saveLastIndexedTxs(mappedMetadata);
+        } catch (error) {
+            if (error instanceof DatabaseError) {
+                throw error;
+            }
+            Logger.error({
+                location: "bridge_api_consumer",
+                function: "onClaimDataSummary",
+                status: `ERROR encountered on claim consumer`,
+                error: error,
+            });
+            throw new ConsumerError(
+                `Error in onClaimData : ${(error as Error).message}`,
+                {
+                    isFatal: true,
+                    code: errorCodes.consumer.UNKNOWN_CONSUMER_ERR,
+                    context: {
+                        error: error as Error,
+                    },
+                }
+            );
+        }
+    }
+
+    private async onMappingData(data: IMappingTx[]): Promise<void> {
+        try {
+            const mappedTransactions =
+                this.tokenMappingsMapper.mapMappings(data);
+            await this.tokenMappingsService.saveTokenMappings(
+                mappedTransactions
+            );
+        } catch (error) {
+            if (error instanceof DatabaseError) {
+                throw error;
+            }
+            Logger.error({
+                location: "bridge_api_consumer",
+                function: "onMappingData",
+                status: `ERROR encountered on mapping consumer`,
+                error: error,
+            });
+            throw new ConsumerError(
+                `Error in onMappingData : ${(error as Error).message}`,
+                {
+                    isFatal: true,
+                    code: errorCodes.consumer.UNKNOWN_CONSUMER_ERR,
+                    context: {
+                        error: error as Error,
+                    },
+                }
+            );
+        }
+    }
+
+    private async onMappingDataSummary(
+        data: ILastIndexedTransaction
+    ): Promise<void> {
+        try {
+            const mappedMetadata =
+                this.metadataMapper.mapLastIndexedMappingTx(data);
+            await this.metadataService.saveLastIndexedTxs(mappedMetadata);
+        } catch (error) {
+            if (error instanceof DatabaseError) {
+                throw error;
+            }
+            Logger.error({
+                location: "bridge_api_consumer",
+                function: "onMappingDataSummary",
+                status: `ERROR encountered on mapping consumer`,
+                error: error,
+            });
+            throw new ConsumerError(
+                `Error in onClaimData : ${(error as Error).message}`,
                 {
                     isFatal: true,
                     code: errorCodes.consumer.UNKNOWN_CONSUMER_ERR,
