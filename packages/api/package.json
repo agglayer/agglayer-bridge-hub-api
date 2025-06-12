@@ -1,6 +1,5 @@
 {
     "name": "bridge-hub-api",
-    "version": "0.0.1",
     "type": "module",
     "module": "src/server.ts",
     "exports": "./dist/",
@@ -11,7 +10,11 @@
         "start": "bun dist/server.js"
     },
     "devDependencies": {
+        "@semantic-release/commit-analyzer": "^13.0.1",
+        "@semantic-release/github": "^11.0.1",
+        "@semantic-release/release-notes-generator": "^14.0.3",
         "@types/bun": "latest",
+        "semantic-release": "^24.2.3",
         "tsup": "^8.4.0"
     },
     "peerDependencies": {
