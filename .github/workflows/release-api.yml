@@ -1,0 +1,48 @@
+name: Release Bridge-Hub-API
+
+on:
+    push:
+        branches:
+            - main
+            - release
+
+jobs:
+    semantic-versioning:
+        name: Semantic Versioning
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/create-github-app-token@v1
+              id: app-token
+              with:
+                  app-id: ${{ secrets.SEMANTIC_RELEASE_BOT_APP_ID }}
+                  private-key: ${{ secrets.SEMANTIC_RELEASE_BOT_APP_PRIVATE_KEY }}
+
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+              with:
+                  token: ${{ steps.app-token.outputs.token }}
+                  fetch-depth: 0
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v1
+              with:
+                  bun-version: latest
+
+            - name: Install Dependencies
+              working-directory: packages/api
+              run: bun install --dev --frozen-lockfile
+
+            - name: Build the package
+              working-directory: packages/api
+              run: bun run build
+
+            - name: Run tests
+              working-directory: packages/api
+              run: bun run tests
+
+            - name: Release API
+              working-directory: packages/api
+              env:
+                  GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+              run: npx semantic-release --extends ./release.config.js
