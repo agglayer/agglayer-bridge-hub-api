@@ -8,6 +8,7 @@ on:
         paths:
             - "packages/api/**"
             - ".github/workflows/release-api.yml"
+            - ".github/workflows/deploy_api_gcp.yaml"
 
 jobs:
     semantic-versioning:

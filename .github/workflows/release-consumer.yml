@@ -8,6 +8,7 @@ on:
         paths:
             - "packages/consumer/**"
             - ".github/workflows/release-consumer.yml"
+            - ".github/workflows/deploy_consumer_gcp.yaml"
 
 jobs:
     semantic-versioning:
