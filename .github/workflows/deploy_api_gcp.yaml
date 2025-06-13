@@ -2,7 +2,7 @@ name: Publish api docker images to GCP
 
 on:
   push:
-    tags: ['v*.*.*']
+    tags: ['bridge-hub-api-v*']
   workflow_dispatch:
     inputs:
       tag:
