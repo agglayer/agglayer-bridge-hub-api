@@ -1,0 +1,25 @@
+name: Publish consumer docker images to GCP
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and push'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  docker-release-api:
+    uses: 0xPolygon/pipelines/.github/workflows/gcp_pipeline_release_image.yaml@main
+    with:
+      image_name: bridge-hub-consumer
+      dockerfile_path: packages/consumer/Dockerfile
+      dockerfile_context: packages/consumer
+      image_tag: ${{ inputs.tag || github.ref_name }}
+      checkout_ref: ${{ github.ref_name }}
