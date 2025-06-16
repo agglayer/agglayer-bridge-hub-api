@@ -84,8 +84,8 @@ export default class TransactionsService {
             [
                 {
                     field: "status",
-                    value: TransactionStatus.BRIDGED,
-                    defaultValue: TransactionStatus.BRIDGED,
+                    value: TransactionStatus.LEAF_INCLUDED,
+                    defaultValue: TransactionStatus.LEAF_INCLUDED,
                 },
             ]
         );
@@ -134,7 +134,7 @@ export default class TransactionsService {
                     value: TransactionStatus.BRIDGED,
                 },
             ],
-            50,
+            10,
             undefined,
             undefined,
             ["sourceNetwork", "depositCount"]
@@ -158,7 +158,7 @@ export default class TransactionsService {
                     value: TransactionStatus.LEAF_INCLUDED,
                 },
             ],
-            50,
+            10,
             undefined,
             undefined,
             ["sourceNetwork", "depositCount", "leafIndex"]
