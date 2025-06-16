@@ -3,7 +3,7 @@
  */
 export enum TransactionStatus {
     BRIDGED = "BRIDGED",
+    LEAF_INCLUDED = "LEAF_INCLUDED",
     READY_TO_CLAIM = "READY_TO_CLAIM",
-    CLAIM_PENDING = "CLAIM_PENDING",
     CLAIMED = "CLAIMED",
 }
