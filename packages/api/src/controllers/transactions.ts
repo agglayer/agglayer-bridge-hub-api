@@ -31,7 +31,7 @@ export const getTransactions = async (c: Context) => {
 
     if (query.destinationNetworkIds) {
         queryParams.push({
-            field: "destinationNetworkId",
+            field: "destinationNetwork",
             operator: "in",
             value: query.destinationNetworkIds,
         });
@@ -40,7 +40,7 @@ export const getTransactions = async (c: Context) => {
     const transactions = await TransactionService.getTranasctions(
         queryParams,
         query.limit,
-        query.startAfterTimestamp
+        query.startAfter
     );
 
     return handleResponse(c, transactions);

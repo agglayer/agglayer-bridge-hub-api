@@ -12,7 +12,7 @@ let collectionId: string;
 // Order params for db request
 const orderParams: IQueryOrderOperationParams[] = [
     {
-        field: "timestamp",
+        field: "hubUID",
         order: "desc",
     },
 ];
@@ -37,14 +37,14 @@ export class TransactionService {
     static async getTranasctions(
         queryParams: IQueryFilterOperationParams[],
         limit?: number | undefined,
-        startAfterTimestamp?: number | undefined
+        startAfter?: string | undefined
     ): Promise<IHubTransaction[]> {
         return await db.getDocuments(
             collectionId,
             queryParams,
             limit,
             orderParams,
-            startAfterTimestamp
+            startAfter
         );
     }
 

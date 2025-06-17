@@ -41,7 +41,7 @@ export const getMappings = async (c: Context) => {
     const mappings = await MappingsService.getMappings(
         queryParams,
         query.limit,
-        query.startAfterTimestamp
+        query.startAfter
     );
 
     return handleResponse(c, mappings);
@@ -72,7 +72,7 @@ export const getMappingsByOriginToken = async (c: Context) => {
     const mappings = await MappingsService.getMappings(
         queryParams,
         query.limit,
-        query.startAfterTimestamp
+        query.startAfter
     );
 
     return handleResponse(c, mappings);

@@ -27,7 +27,7 @@ async function serve(): Promise<void> {
 
     const transactionService = TransactionService.initializeTransactionService(
         database,
-        "transactions"
+        "bridge_hub_api_transactions"
     );
 
     // Middlewares
