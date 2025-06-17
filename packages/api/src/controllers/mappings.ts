@@ -1,7 +1,10 @@
 import type { Context } from "hono";
-import { handleResponse } from "../utils/response_handler";
 import { MappingsService } from "../services/mappings";
-import type { IQueryFilterOperationParams } from "@polygonlabs/servercore";
+import {
+    handleResponse,
+    type IQueryFilterOperationParams,
+} from "@polygonlabs/servercore";
+import { getResponseContext } from "../middlewares/response_context";
 
 export const getMappings = async (c: Context) => {
     const query = c.get("validatedQuery");
@@ -44,7 +47,7 @@ export const getMappings = async (c: Context) => {
         query.startAfter
     );
 
-    return handleResponse(c, mappings);
+    return handleResponse(getResponseContext(c), mappings);
 };
 
 export const getMappingsByOriginToken = async (c: Context) => {
@@ -75,5 +78,5 @@ export const getMappingsByOriginToken = async (c: Context) => {
         query.startAfter
     );
 
-    return handleResponse(c, mappings);
+    return handleResponse(getResponseContext(c), mappings);
 };
