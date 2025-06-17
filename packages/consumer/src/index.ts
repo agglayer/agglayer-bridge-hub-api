@@ -107,7 +107,7 @@ async function start(): Promise<void> {
             [
                 `${process.env.BRIDGE_SERVICE_URL}/bridges?network_id=${process.env.NETWORK_ID}`,
             ],
-            3001
+            Number(process.env.HEALTH_CHECK_PORT || "3001")
         );
         await bridgeAPIConsumer.start();
         await claimReadinessConsumer.start();

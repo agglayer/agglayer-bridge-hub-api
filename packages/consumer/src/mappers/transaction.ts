@@ -1,3 +1,4 @@
+import { generateDeterministicULID } from "@polygonlabs/servercore";
 import { LeafType } from "../enums/leaf_type";
 import { TransactionStatus } from "../enums/transaction_status";
 import type { IBridgeTx, IHubBridgeTransaction } from "../interfaces/bridge_tx";
@@ -11,6 +12,13 @@ export default class TransactionMapper {
         const formattedBridgeTransactions: IHubBridgeTransaction[] = [];
         events.forEach((bridgeTransaction) => {
             formattedBridgeTransactions.push({
+                hubUID: generateDeterministicULID(
+                    [
+                        this.networkId.toString(),
+                        bridgeTransaction.deposit_count.toString(),
+                    ],
+                    bridgeTransaction.block_timestamp
+                ),
                 blockNumber: bridgeTransaction.block_num,
                 transactionIndex: bridgeTransaction.block_pos,
                 timestamp: bridgeTransaction.block_timestamp,

@@ -118,7 +118,8 @@ export default class TransactionsService {
     }
 
     public async getBridgedTransactions(
-        sourceNetwork: number
+        sourceNetwork: number,
+        afterId?: string
     ): Promise<IHubBridgedStatusTransactions[]> {
         return await this.database.getDocuments(
             this.collectionId,
@@ -135,14 +136,15 @@ export default class TransactionsService {
                 },
             ],
             10,
-            undefined,
-            undefined,
-            ["sourceNetwork", "depositCount"]
+            [{ field: "hubUID", order: "asc" }],
+            afterId,
+            ["sourceNetwork", "depositCount", "hubUID"]
         );
     }
 
     public async getLeafIncludedTransactions(
-        destinationNetwork: number
+        destinationNetwork: number,
+        afterId?: string
     ): Promise<IHubLeafIncludedStatusTransactions[]> {
         return await this.database.getDocuments(
             this.collectionId,
@@ -159,9 +161,9 @@ export default class TransactionsService {
                 },
             ],
             10,
-            undefined,
-            undefined,
-            ["sourceNetwork", "depositCount", "leafIndex"]
+            [{ field: "hubUID", order: "asc" }],
+            afterId,
+            ["sourceNetwork", "depositCount", "leafIndex", "hubUID"]
         );
     }
 }

@@ -35,20 +35,24 @@ export interface IBridgesBridgeAPIResult extends IBridgeAPIResult {
 export interface IHubBridgedStatusTransactions {
     sourceNetwork: number;
     depositCount: number;
+    hubUID: string;
 }
 
 /**
  * Interface for the Hub API's Transaction entity with LEAF_INCLUDED status
  */
 export interface IHubLeafIncludedStatusTransactions {
-    destinationNetwork: number;
+    sourceNetwork: number;
+    depositCount: number;
     leafIndex: number;
+    hubUID: string;
 }
 
 /**
  * Interface for the Hub API's Bridge Transaction entity
  */
 export interface IHubBridgeTransaction {
+    hubUID: string;
     transactionHash: string;
     blockNumber: number;
     transactionIndex: number;
