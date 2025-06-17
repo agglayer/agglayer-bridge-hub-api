@@ -1,15 +1,14 @@
 import type { MiddlewareHandler } from "hono";
-import {
-    TransactionsByDepositCountQuerySchema,
-    TransactionsQuerySchema,
-} from "../schemas/transactions_query";
 import { handleError } from "../utils/response_handler";
-import {
-    MappingsByOriginTokenQuerySchema,
-    MappingsQuerySchema,
-} from "../schemas/mappings_query";
 import { PaginationSchema } from "../schemas/common";
 import { BadRequestError } from "@polygonlabs/servercore";
+import {
+    ClaimProofQuerySchema,
+    MappingsByOriginTokenQuerySchema,
+    MappingsQuerySchema,
+    TransactionsByDepositCountQuerySchema,
+    TransactionsQuerySchema,
+} from "../schemas";
 
 export const validateTransactionQueryParams: MiddlewareHandler = async (
     context,
@@ -103,3 +102,23 @@ export const validateMappingsByOriginTokenQueryParams: MiddlewareHandler =
         context.set("validatedParams", parsedParams.data);
         await next();
     };
+
+export const validateClaimProofQueryParams: MiddlewareHandler = async (
+    context,
+    next
+) => {
+    const parsedQuery = ClaimProofQuerySchema.safeParse(context.req.query());
+    if (!parsedQuery.success) {
+        const error = new BadRequestError(
+            parsedQuery.error.message,
+            parsedQuery.error.format(),
+            undefined,
+            "validateProofQueryParams"
+        );
+
+        return handleError(context, error);
+    }
+
+    context.set("validatedQuery", parsedQuery.data);
+    await next();
+};
