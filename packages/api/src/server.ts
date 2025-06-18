@@ -5,6 +5,7 @@ import router from "./routes";
 import { TransactionService } from "./services";
 import { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import { logger } from "hono/logger";
+import { ProofService } from "./services/proof";
 
 const app = new Hono();
 
@@ -25,10 +26,20 @@ async function serve(): Promise<void> {
     });
     await database.connect();
 
-    const transactionService = TransactionService.initializeTransactionService(
+    TransactionService.initializeTransactionService(
         database,
-        "transactions"
+        "bridge_hub_api_transactions"
     );
+
+    // Parse the CHAIN_CONFIG environment variable and convert it to a Map
+    const chainConfig = new Map<number, string>(
+        Object.entries(JSON.parse(process.env.CHAIN_CONFIG || "{}")).map(
+            ([key, value]) => [Number(key), value as string]
+        )
+    );
+
+    // Initialize services
+    ProofService.initializeService(chainConfig);
 
     // Middlewares
     app.use("*", logger()); // Logs all requests

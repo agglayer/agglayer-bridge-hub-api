@@ -1,35 +1,38 @@
 import type {
     IHubMetadata,
-    ILastIndexedTransaction,
+    ILastIndexedBridgeTransaction,
+    ILastIndexedClaimTransaction,
+    ILastIndexedMappingTransaction,
 } from "../interfaces/metadata";
 
 export default class MetadataMapper {
     constructor() {}
 
-    public mapLastIndexedBridgeTx(data: ILastIndexedTransaction): IHubMetadata {
+    public mapLastIndexedBridgeTx(
+        data: ILastIndexedBridgeTransaction
+    ): IHubMetadata {
         const formattedMetadata: IHubMetadata = {
-            lastIndexedBridgeTxHash: data.transactionHash,
-            lastIndexedBridgeBlockNumber: data.blockNumber,
+            lastIndexedBridgeDepositCount: data.deposit_count,
         };
 
         return formattedMetadata;
     }
 
-    public mapLastIndexedClaimTx(data: ILastIndexedTransaction): IHubMetadata {
+    public mapLastIndexedClaimTx(
+        data: ILastIndexedClaimTransaction
+    ): IHubMetadata {
         const formattedMetadata: IHubMetadata = {
-            lastIndexedClaimTxHash: data.transactionHash,
-            lastIndexedClaimBlockNumber: data.blockNumber,
+            lastIndexedClaimBlockNumber: data.block_number,
         };
 
         return formattedMetadata;
     }
 
     public mapLastIndexedMappingTx(
-        data: ILastIndexedTransaction
+        data: ILastIndexedMappingTransaction
     ): IHubMetadata {
         const formattedMetadata: IHubMetadata = {
-            lastIndexedMappingTxHash: data.transactionHash,
-            lastIndexedMappingBlockNumber: data.blockNumber,
+            lastIndexedMappingBlockNumber: data.block_number,
         };
 
         return formattedMetadata;

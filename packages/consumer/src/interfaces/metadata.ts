@@ -1,13 +1,17 @@
 export interface IHubMetadata {
-    lastIndexedBridgeTxHash?: string;
-    lastIndexedBridgeBlockNumber?: number;
-    lastIndexedClaimTxHash?: string;
+    lastIndexedBridgeDepositCount?: number;
     lastIndexedClaimBlockNumber?: number;
-    lastIndexedMappingTxHash?: string;
     lastIndexedMappingBlockNumber?: number;
 }
 
-export interface ILastIndexedTransaction {
-    transactionHash: string;
-    blockNumber: number;
+export interface ILastIndexedBridgeTransaction {
+    deposit_count: number;
+}
+
+export interface ILastIndexedClaimTransaction {
+    block_number: number;
+}
+
+export interface ILastIndexedMappingTransaction {
+    block_number: number;
 }

@@ -22,6 +22,7 @@ import TransactionsService from "./services/transaction";
 import MetadataService from "./services/metadata";
 import MetadataMapper from "./mappers/metadata";
 import { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import { ClaimReadinessConsumer } from "./claim_readiness_consumer";
 
 let database: DatabaseClient;
 
@@ -33,7 +34,12 @@ async function start(): Promise<void> {
         });
         await database.connect();
 
-        const consumer = new BridgeAPIConsumer(
+        const transactionService = new TransactionsService(
+            database,
+            "bridge_hub_api_transactions"
+        );
+
+        const bridgeAPIConsumer = new BridgeAPIConsumer(
             {
                 apiUrl: new URL(`${process.env.BRIDGE_SERVICE_URL}/bridges`),
                 startCount: { key: "deposit_count", value: 0 },
@@ -78,7 +84,7 @@ async function start(): Promise<void> {
             new TransactionMapper(Number(process.env.NETWORK_ID) || 0),
             new TokenMappingsMapper(Number(process.env.NETWORK_ID) || 0),
             new MetadataMapper(),
-            new TransactionsService(database, "bridge_hub_api_transactions"),
+            transactionService,
             new TokenMappingsService(database, "bridge_hub_api_tokenMappings"),
             new MetadataService(
                 database,
@@ -87,13 +93,24 @@ async function start(): Promise<void> {
             )
         );
 
+        const claimReadinessConsumer = new ClaimReadinessConsumer(
+            {
+                cronExpr: "0/30 * * * * ?",
+                networkId: Number(process.env.NETWORK_ID) || 0,
+                l1InfoTreeIndexUrl: `${process.env.BRIDGE_SERVICE_URL}/l1-info-tree-index`,
+                injectedL1InfoLeafUrl: `${process.env.BRIDGE_SERVICE_URL}/injected-l1-info-leaf`,
+            },
+            transactionService
+        );
+
         setupHealthCheckServer(
             [
                 `${process.env.BRIDGE_SERVICE_URL}/bridges?network_id=${process.env.NETWORK_ID}`,
             ],
-            3001
+            Number(process.env.HEALTH_CHECK_PORT || "3001")
         );
-        await consumer.start();
+        await bridgeAPIConsumer.start();
+        await claimReadinessConsumer.start();
 
         Logger.info(
             `Consumer for network id ${process.env.NETWORK_ID} started`

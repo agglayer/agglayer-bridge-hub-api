@@ -1,11 +1,14 @@
 import type { Context } from "hono";
-import { handleResponse } from "../utils/response_handler";
 import { TransactionService } from "../services";
 import type {
     TransactionsByDepositCountQuery,
     TransactionsQuery,
 } from "../schemas";
-import type { IQueryFilterOperationParams } from "@polygonlabs/servercore";
+import {
+    handleResponse,
+    type IQueryFilterOperationParams,
+} from "@polygonlabs/servercore";
+import { getResponseContext } from "../middlewares/response_context";
 
 export const getTransactions = async (c: Context) => {
     const query: TransactionsQuery = c.get("validatedQuery");
@@ -31,7 +34,7 @@ export const getTransactions = async (c: Context) => {
 
     if (query.destinationNetworkIds) {
         queryParams.push({
-            field: "destinationNetworkId",
+            field: "destinationNetwork",
             operator: "in",
             value: query.destinationNetworkIds,
         });
@@ -40,10 +43,10 @@ export const getTransactions = async (c: Context) => {
     const transactions = await TransactionService.getTranasctions(
         queryParams,
         query.limit,
-        query.startAfterTimestamp
+        query.startAfter
     );
 
-    return handleResponse(c, transactions);
+    return handleResponse(getResponseContext(c), transactions);
 };
 
 export const getTransactionByDepositCount = async (c: Context) => {
@@ -59,5 +62,5 @@ export const getTransactionByDepositCount = async (c: Context) => {
         docId
     );
 
-    return handleResponse(c, transaction);
+    return handleResponse(getResponseContext(c), transaction);
 };

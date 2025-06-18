@@ -9,5 +9,5 @@ export const networkIdsSchema = z
 
 export const PaginationSchema = z.object({
     limit: z.coerce.number().int().nonnegative().default(20),
-    startAfterTimestamp: z.coerce.number().nonnegative().optional(),
+    startAfter: z.coerce.string().optional(),
 });

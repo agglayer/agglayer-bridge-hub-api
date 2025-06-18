@@ -33,6 +33,7 @@ export interface IBridgesBridgeAPIResult extends IBridgeAPIResult {
  * Interface for the Hub API's Bridge Transaction entitiy
  */
 export interface IHubBridgeTransaction {
+    hubUID: string;
     transactionHash: string;
     blockNumber: number;
     transactionIndex: number;

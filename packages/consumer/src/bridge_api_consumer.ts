@@ -8,7 +8,11 @@ import {
     RestAPIConsumer,
 } from "@polygonlabs/servercore";
 import type { IBridgeTx } from "./interfaces/bridge_tx";
-import type { ILastIndexedTransaction } from "./interfaces/metadata";
+import type {
+    ILastIndexedBridgeTransaction,
+    ILastIndexedClaimTransaction,
+    ILastIndexedMappingTransaction,
+} from "./interfaces/metadata";
 import type { IClaimTx } from "./interfaces/claim_tx";
 import type { IMappingTx } from "./interfaces/token_mapping";
 import type TransactionMapper from "./mappers/transaction";
@@ -20,13 +24,13 @@ import type MetadataService from "./services/metadata";
 
 export class BridgeAPIConsumer {
     private bridgeConsumer:
-        | RestAPIConsumer<IBridgeTx[], ILastIndexedTransaction>
+        | RestAPIConsumer<IBridgeTx[], ILastIndexedBridgeTransaction>
         | undefined = undefined;
     private claimConsumer:
-        | RestAPIConsumer<IClaimTx[], ILastIndexedTransaction>
+        | RestAPIConsumer<IClaimTx[], ILastIndexedClaimTransaction>
         | undefined = undefined;
     private mappingConsumer:
-        | RestAPIConsumer<IMappingTx[], ILastIndexedTransaction>
+        | RestAPIConsumer<IMappingTx[], ILastIndexedMappingTransaction>
         | undefined = undefined;
 
     constructor(
@@ -44,22 +48,22 @@ export class BridgeAPIConsumer {
     public async start(): Promise<void> {
         this.bridgeConsumer = new RestAPIConsumer<
             IBridgeTx[],
-            ILastIndexedTransaction
+            ILastIndexedBridgeTransaction
         >(this.bridgeConsumerConfig);
         this.claimConsumer = new RestAPIConsumer<
             IClaimTx[],
-            ILastIndexedTransaction
+            ILastIndexedClaimTransaction
         >(this.claimConsumerConfig);
         this.mappingConsumer = new RestAPIConsumer<
             IMappingTx[],
-            ILastIndexedTransaction
+            ILastIndexedMappingTransaction
         >(this.mappingConsumerConfig);
 
         await Promise.all([
             // start bridge consumer
             this.bridgeConsumer.start({
                 next: async (data) => this.onBridgeData(data as IBridgeTx[]),
-                summary: async (data: ILastIndexedTransaction) =>
+                summary: async (data: ILastIndexedBridgeTransaction) =>
                     this.onBridgeDataSummary(data),
                 error: (err: ConsumerError | ExternalDependencyError) =>
                     this.onError("bridge-consumer", err),
@@ -69,7 +73,7 @@ export class BridgeAPIConsumer {
             // start claim consumer
             this.claimConsumer.start({
                 next: async (data) => this.onClaimData(data as IClaimTx[]),
-                summary: async (data: ILastIndexedTransaction) =>
+                summary: async (data: ILastIndexedClaimTransaction) =>
                     this.onClaimDataSummary(data),
                 error: (err: ConsumerError | ExternalDependencyError) =>
                     this.onError("claim-consumer", err),
@@ -79,7 +83,7 @@ export class BridgeAPIConsumer {
             // start mapping consumer
             this.mappingConsumer.start({
                 next: async (data) => this.onMappingData(data as IMappingTx[]),
-                summary: async (data: ILastIndexedTransaction) =>
+                summary: async (data: ILastIndexedMappingTransaction) =>
                     this.onMappingDataSummary(data),
                 error: (err: ConsumerError | ExternalDependencyError) =>
                     this.onError("mapping-consumer", err),
@@ -117,7 +121,7 @@ export class BridgeAPIConsumer {
     }
 
     private async onBridgeDataSummary(
-        data: ILastIndexedTransaction
+        data: ILastIndexedBridgeTransaction
     ): Promise<void> {
         try {
             const mappedMetadata =
@@ -175,7 +179,7 @@ export class BridgeAPIConsumer {
     }
 
     private async onClaimDataSummary(
-        data: ILastIndexedTransaction
+        data: ILastIndexedClaimTransaction
     ): Promise<void> {
         try {
             const mappedMetadata =
@@ -235,7 +239,7 @@ export class BridgeAPIConsumer {
     }
 
     private async onMappingDataSummary(
-        data: ILastIndexedTransaction
+        data: ILastIndexedMappingTransaction
     ): Promise<void> {
         try {
             const mappedMetadata =

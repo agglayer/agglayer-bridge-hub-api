@@ -1,15 +1,14 @@
 import type { MiddlewareHandler } from "hono";
+import { PaginationSchema } from "../schemas/common";
+import { BadRequestError, handleError } from "@polygonlabs/servercore";
 import {
-    TransactionsByDepositCountQuerySchema,
-    TransactionsQuerySchema,
-} from "../schemas/transactions_query";
-import { handleError } from "../utils/response_handler";
-import {
+    ClaimProofQuerySchema,
     MappingsByOriginTokenQuerySchema,
     MappingsQuerySchema,
-} from "../schemas/mappings_query";
-import { PaginationSchema } from "../schemas/common";
-import { BadRequestError } from "@polygonlabs/servercore";
+    TransactionsByDepositCountQuerySchema,
+    TransactionsQuerySchema,
+} from "../schemas";
+import { getResponseContext } from "./response_context";
 
 export const validateTransactionQueryParams: MiddlewareHandler = async (
     context,
@@ -24,7 +23,7 @@ export const validateTransactionQueryParams: MiddlewareHandler = async (
             "validateTransactionQueryParams"
         );
 
-        return handleError(context, error);
+        return handleError(getResponseContext(context), error);
     }
 
     context.set("validatedQuery", parsedQuery.data);
@@ -44,7 +43,7 @@ export const validateTransactionByDepositCountQueryParams: MiddlewareHandler =
                 "validateTransactionByDepositCountQueryParams"
             );
 
-            return handleError(context, error);
+            return handleError(getResponseContext(context), error);
         }
 
         context.set("validatedParams", parsedQuery.data);
@@ -64,7 +63,7 @@ export const validateMappingsQueryParams: MiddlewareHandler = async (
             "validateMappingsQueryParams"
         );
 
-        return handleError(context, error);
+        return handleError(getResponseContext(context), error);
     }
 
     context.set("validatedQuery", parsedQuery.data);
@@ -87,7 +86,7 @@ export const validateMappingsByOriginTokenQueryParams: MiddlewareHandler =
                 "validateMappingsByOriginTokenQueryParams"
             );
 
-            return handleError(context, error);
+            return handleError(getResponseContext(context), error);
         } else if (!parsedParams.success) {
             const error = new BadRequestError(
                 parsedParams.error.message,
@@ -96,10 +95,30 @@ export const validateMappingsByOriginTokenQueryParams: MiddlewareHandler =
                 "validateMappingsByOriginTokenQueryParams"
             );
 
-            return handleError(context, error);
+            return handleError(getResponseContext(context), error);
         }
 
         context.set("validatedQuery", parsedQuery.data);
         context.set("validatedParams", parsedParams.data);
         await next();
     };
+
+export const validateClaimProofQueryParams: MiddlewareHandler = async (
+    context,
+    next
+) => {
+    const parsedQuery = ClaimProofQuerySchema.safeParse(context.req.query());
+    if (!parsedQuery.success) {
+        const error = new BadRequestError(
+            parsedQuery.error.message,
+            parsedQuery.error.format(),
+            undefined,
+            "validateProofQueryParams"
+        );
+
+        return handleError(getResponseContext(context), error);
+    }
+
+    context.set("validatedQuery", parsedQuery.data);
+    await next();
+};

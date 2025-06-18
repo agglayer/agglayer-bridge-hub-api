@@ -30,14 +30,14 @@ export class MappingsService {
     static async getMappings(
         queryParams: IQueryFilterOperationParams[],
         limit?: number | undefined,
-        startAfterTimestamp?: number | undefined
+        startAfter?: number | undefined
     ): Promise<IHubTransaction[]> {
         return await db.getDocuments(
             collectionId,
             queryParams,
             limit,
             orderParams,
-            startAfterTimestamp
+            startAfter
         );
     }
 }

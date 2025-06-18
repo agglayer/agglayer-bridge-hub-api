@@ -1,6 +1,10 @@
 import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import { TransactionStatus } from "../enums/transaction_status";
-import type { IHubBridgeTransaction } from "../interfaces/bridge_tx";
+import type {
+    IHubBridgedStatusTransactions,
+    IHubBridgeTransaction,
+    IHubLeafIncludedStatusTransactions,
+} from "../interfaces/bridge_tx";
 import type { IHubClaimTransaction } from "../interfaces/claim_tx";
 import { CryptoHasher } from "bun";
 
@@ -57,6 +61,109 @@ export default class TransactionsService {
             [this.collectionId],
             claimTransactions,
             docIds
+        );
+    }
+
+    public async updateLeafIndex(
+        depositCount: number,
+        sourceNetwork: number,
+        leafIndex: number
+    ): Promise<void> {
+        const docId = this.generateDocId(depositCount, sourceNetwork);
+        this.database.conditionalUpdateDocuments(
+            this.collectionId,
+            [{ leafIndex }],
+            [docId],
+            [
+                {
+                    field: "status",
+                    operator: "==",
+                    value: TransactionStatus.BRIDGED,
+                },
+            ],
+            [
+                {
+                    field: "status",
+                    value: TransactionStatus.LEAF_INCLUDED,
+                    defaultValue: TransactionStatus.LEAF_INCLUDED,
+                },
+            ]
+        );
+    }
+
+    public async updateTransactionToReadyToClaim(
+        depositCount: number,
+        sourceNetwork: number
+    ): Promise<void> {
+        const docId = this.generateDocId(depositCount, sourceNetwork);
+        this.database.conditionalUpdateDocuments(
+            this.collectionId,
+            [{}],
+            [docId],
+            [
+                {
+                    field: "status",
+                    operator: "==",
+                    value: TransactionStatus.LEAF_INCLUDED,
+                },
+            ],
+            [
+                {
+                    field: "status",
+                    value: TransactionStatus.READY_TO_CLAIM,
+                    defaultValue: TransactionStatus.READY_TO_CLAIM,
+                },
+            ]
+        );
+    }
+
+    public async getBridgedTransactions(
+        sourceNetwork: number,
+        afterId?: string
+    ): Promise<IHubBridgedStatusTransactions[]> {
+        return await this.database.getDocuments(
+            this.collectionId,
+            [
+                {
+                    field: "sourceNetwork",
+                    operator: "==",
+                    value: sourceNetwork,
+                },
+                {
+                    field: "status",
+                    operator: "==",
+                    value: TransactionStatus.BRIDGED,
+                },
+            ],
+            10,
+            [{ field: "hubUID", order: "asc" }],
+            afterId,
+            ["sourceNetwork", "depositCount", "hubUID"]
+        );
+    }
+
+    public async getLeafIncludedTransactions(
+        destinationNetwork: number,
+        afterId?: string
+    ): Promise<IHubLeafIncludedStatusTransactions[]> {
+        return await this.database.getDocuments(
+            this.collectionId,
+            [
+                {
+                    field: "destinationNetwork",
+                    operator: "==",
+                    value: destinationNetwork,
+                },
+                {
+                    field: "status",
+                    operator: "==",
+                    value: TransactionStatus.LEAF_INCLUDED,
+                },
+            ],
+            10,
+            [{ field: "hubUID", order: "asc" }],
+            afterId,
+            ["sourceNetwork", "depositCount", "leafIndex", "hubUID"]
         );
     }
 }
