@@ -52,6 +52,6 @@ async function serve(): Promise<void> {
 serve();
 
 export default {
-    port: process.env.PORT || 3000,
+    port: process.env.PORT || 3001,
     fetch: app.fetch,
 };
