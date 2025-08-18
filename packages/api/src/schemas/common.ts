@@ -11,3 +11,7 @@ export const PaginationSchema = z.object({
     limit: z.coerce.number().int().nonnegative().default(20),
     startAfter: z.coerce.string().optional(),
 });
+
+export const NetworkSchema = z.object({
+    network: z.enum(["mainnet", "testnet"]),
+});

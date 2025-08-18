@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { networkIdsSchema, PaginationSchema } from "./common";
+import { networkIdsSchema, NetworkSchema, PaginationSchema } from "./common";
 
 export const TransactionsQuerySchema = z
     .object({
@@ -7,12 +7,15 @@ export const TransactionsQuerySchema = z
         sourceNetworkIds: networkIdsSchema.optional(),
         destinationNetworkIds: networkIdsSchema.optional(),
     })
-    .merge(PaginationSchema);
+    .merge(PaginationSchema)
+    .merge(NetworkSchema);
 
-export const TransactionsByDepositCountQuerySchema = z.object({
-    sourceNetworkId: z.coerce.number().int().nonnegative(),
-    depositCount: z.coerce.number().int().nonnegative(),
-});
+export const TransactionsByDepositCountQuerySchema = z
+    .object({
+        sourceNetworkId: z.coerce.number().int().nonnegative(),
+        depositCount: z.coerce.number().int().nonnegative(),
+    })
+    .merge(NetworkSchema);
 
 export type TransactionsByDepositCountQuery = z.infer<
     typeof TransactionsByDepositCountQuerySchema

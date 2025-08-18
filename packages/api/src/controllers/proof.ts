@@ -12,8 +12,10 @@ import { getResponseContext } from "../middlewares/response_context";
 export const getProof = async (c: Context) => {
     try {
         const validatedQuery: ClaimProofQuery = c.get("validatedQuery");
+        const { network } = c.get("validatedParams");
 
         const proof = await ProofService.getProof(
+            network,
             validatedQuery.sourceNetworkId,
             validatedQuery.depositCount,
             validatedQuery.leafIndex

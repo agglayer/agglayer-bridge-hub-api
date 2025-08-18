@@ -7,7 +7,7 @@ import { CryptoHasher } from "bun";
 import type { IHubTransaction } from "../interfaces/hub_tx";
 
 let db: DatabaseClient;
-let collectionId: string;
+let collectionId: Map<string, string>;
 
 // Order params for db request
 const orderParams: IQueryOrderOperationParams[] = [
@@ -20,11 +20,14 @@ const orderParams: IQueryOrderOperationParams[] = [
 export class TransactionService {
     static initializeTransactionService(
         database: DatabaseClient,
-        collectionIdParam: string = "transactions"
+        collectionIdParams: Map<string, string> = new Map([
+            ["mainnet", "transactions"],
+            ["testnet", "transactions_testnet"],
+        ])
     ) {
         if (!db) {
             db = database;
-            collectionId = collectionIdParam;
+            collectionId = collectionIdParams;
         }
     }
 
@@ -34,13 +37,14 @@ export class TransactionService {
         return hasher.digest("hex").slice(0, 32);
     }
 
-    static async getTranasctions(
+    static async getTransactions(
+        network: string,
         queryParams: IQueryFilterOperationParams[],
         limit?: number | undefined,
         startAfter?: string | undefined
     ): Promise<IHubTransaction[]> {
         return await db.getDocuments(
-            collectionId,
+            collectionId.get(network) || "",
             queryParams,
             limit,
             orderParams,
@@ -49,8 +53,12 @@ export class TransactionService {
     }
 
     static async getTransactionByDepositCount(
+        network: string,
         docId: string
     ): Promise<IHubTransaction | null> {
-        return (await db.getDocument(collectionId, docId)) as IHubTransaction;
+        return (await db.getDocument(
+            collectionId.get(network) || "",
+            docId
+        )) as IHubTransaction;
     }
 }

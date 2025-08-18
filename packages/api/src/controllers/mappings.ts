@@ -8,6 +8,7 @@ import { getResponseContext } from "../middlewares/response_context";
 
 export const getMappings = async (c: Context) => {
     const query = c.get("validatedQuery");
+    const { network } = c.get("validatedParams");
 
     // Create query params for db request
     const queryParams: IQueryFilterOperationParams[] = [];
@@ -42,6 +43,7 @@ export const getMappings = async (c: Context) => {
     }
 
     const mappings = await MappingsService.getMappings(
+        network,
         queryParams,
         query.limit,
         query.startAfter
@@ -52,7 +54,8 @@ export const getMappings = async (c: Context) => {
 
 export const getMappingsByOriginToken = async (c: Context) => {
     const query = c.get("validatedQuery");
-    const { originTokenNetwork, originTokenAddress } = c.get("validatedParams");
+    const { originTokenNetwork, originTokenAddress, network } =
+        c.get("validatedParams");
 
     // Create query params for db request
     const queryParams: IQueryFilterOperationParams[] = [];
@@ -73,6 +76,7 @@ export const getMappingsByOriginToken = async (c: Context) => {
     }
 
     const mappings = await MappingsService.getMappings(
+        network,
         queryParams,
         query.limit,
         query.startAfter

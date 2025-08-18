@@ -12,6 +12,7 @@ import { getResponseContext } from "../middlewares/response_context";
 
 export const getTransactions = async (c: Context) => {
     const query: TransactionsQuery = c.get("validatedQuery");
+    const { network } = c.get("validatedParams");
 
     // Create query params for db request
     const queryParams: IQueryFilterOperationParams[] = [];
@@ -40,7 +41,8 @@ export const getTransactions = async (c: Context) => {
         });
     }
 
-    const transactions = await TransactionService.getTranasctions(
+    const transactions = await TransactionService.getTransactions(
+        network,
         queryParams,
         query.limit,
         query.startAfter
@@ -50,8 +52,11 @@ export const getTransactions = async (c: Context) => {
 };
 
 export const getTransactionByDepositCount = async (c: Context) => {
-    const { sourceNetworkId, depositCount }: TransactionsByDepositCountQuery =
-        c.get("validatedParams");
+    const {
+        sourceNetworkId,
+        depositCount,
+        network,
+    }: TransactionsByDepositCountQuery = c.get("validatedParams");
 
     const docId: string = TransactionService.generateDocId(
         depositCount,
@@ -59,6 +64,7 @@ export const getTransactionByDepositCount = async (c: Context) => {
     );
 
     const transaction = await TransactionService.getTransactionByDepositCount(
+        network,
         docId
     );
 
