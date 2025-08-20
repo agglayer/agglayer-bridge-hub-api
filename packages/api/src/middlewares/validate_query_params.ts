@@ -14,6 +14,9 @@ export const validateTransactionQueryParams: MiddlewareHandler = async (
     context,
     next
 ) => {
+    const parsedParams = MappingsByOriginTokenQuerySchema.safeParse(
+        context.req.param()
+    );
     const parsedQuery = TransactionsQuerySchema.safeParse(context.req.query());
     if (!parsedQuery.success) {
         const error = new BadRequestError(
@@ -24,9 +27,19 @@ export const validateTransactionQueryParams: MiddlewareHandler = async (
         );
 
         return handleError(getResponseContext(context), error);
+    } else if (!parsedParams.success) {
+        const error = new BadRequestError(
+            parsedParams.error.message,
+            parsedParams.error.format(),
+            undefined,
+            "validateTransactionQueryParams"
+        );
+
+        return handleError(getResponseContext(context), error);
     }
 
     context.set("validatedQuery", parsedQuery.data);
+    context.set("validatedParams", parsedParams.data);
     await next();
 };
 
@@ -54,6 +67,9 @@ export const validateMappingsQueryParams: MiddlewareHandler = async (
     context,
     next
 ) => {
+    const parsedParams = MappingsByOriginTokenQuerySchema.safeParse(
+        context.req.param()
+    );
     const parsedQuery = MappingsQuerySchema.safeParse(context.req.query());
     if (!parsedQuery.success) {
         const error = new BadRequestError(
@@ -64,9 +80,19 @@ export const validateMappingsQueryParams: MiddlewareHandler = async (
         );
 
         return handleError(getResponseContext(context), error);
+    } else if (!parsedParams.success) {
+        const error = new BadRequestError(
+            parsedParams.error.message,
+            parsedParams.error.format(),
+            undefined,
+            "validateMappingsQueryParams"
+        );
+
+        return handleError(getResponseContext(context), error);
     }
 
     context.set("validatedQuery", parsedQuery.data);
+    context.set("validatedParams", parsedParams.data);
     await next();
 };
 
@@ -107,6 +133,9 @@ export const validateClaimProofQueryParams: MiddlewareHandler = async (
     context,
     next
 ) => {
+    const parsedParams = MappingsByOriginTokenQuerySchema.safeParse(
+        context.req.param()
+    );
     const parsedQuery = ClaimProofQuerySchema.safeParse(context.req.query());
     if (!parsedQuery.success) {
         const error = new BadRequestError(
@@ -117,8 +146,18 @@ export const validateClaimProofQueryParams: MiddlewareHandler = async (
         );
 
         return handleError(getResponseContext(context), error);
+    } else if (!parsedParams.success) {
+        const error = new BadRequestError(
+            parsedParams.error.message,
+            parsedParams.error.format(),
+            undefined,
+            "validateProofQueryParams"
+        );
+
+        return handleError(getResponseContext(context), error);
     }
 
     context.set("validatedQuery", parsedQuery.data);
+    context.set("validatedParams", parsedParams.data);
     await next();
 };

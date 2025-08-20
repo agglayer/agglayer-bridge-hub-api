@@ -28,15 +28,27 @@ async function serve(): Promise<void> {
 
     TransactionService.initializeTransactionService(
         database,
-        "bridge_hub_api_transactions"
+        new Map([
+            ["mainnet", "bridge_hub_api_transactions"],
+            ["testnet", "bridge_hub_api_transactions_testnet"],
+        ])
     );
 
     // Parse the CHAIN_CONFIG environment variable and convert it to a Map
-    const chainConfig = new Map<number, string>(
-        Object.entries(JSON.parse(process.env.CHAIN_CONFIG || "{}")).map(
-            ([key, value]) => [Number(key), value as string]
-        )
-    );
+    // Parse CHAIN_CONFIG as an object with "mainnet" and "testnet" keys, each mapping to an object of chainId -> url
+    const rawConfig = JSON.parse(process.env.CHAIN_CONFIG || "{}");
+    // Convert each network's config to a Map<number, string>
+    const chainConfig: Map<string, Map<number, string>> = new Map();
+    for (const [network, config] of Object.entries(rawConfig)) {
+        chainConfig.set(
+            network,
+            new Map<number, string>(
+                Object.entries(config as Map<string, string>).map(
+                    ([key, value]) => [Number(key), value]
+                )
+            )
+        );
+    }
 
     // Initialize services
     ProofService.initializeService(chainConfig);
@@ -46,7 +58,7 @@ async function serve(): Promise<void> {
     app.use("*", cors()); // Enables CORS for all routes
 
     // Register routes
-    app.route("/", router);
+    app.route("/:network/", router);
 }
 
 serve();

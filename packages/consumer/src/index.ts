@@ -28,6 +28,19 @@ let database: DatabaseClient;
 
 async function start(): Promise<void> {
     try {
+        const collectionsConfig =
+            process.env.NETWORK === "mainnet"
+                ? {
+                      transactions: "bridge_hub_api_transactions",
+                      tokenMappings: "bridge_hub_api_tokenMappings",
+                      metadata: "bridge_hub_api_metadata",
+                  }
+                : {
+                      transactions: "bridge_hub_api_transactions_testnet",
+                      tokenMappings: "bridge_hub_api_tokenMappings_testnet",
+                      metadata: "bridge_hub_api_metadata_testnet",
+                  };
+
         database = new DatabaseClient({
             projectId: process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
             databaseId: process.env.FIRESTORE_DATABASE_ID ?? "",
@@ -36,7 +49,7 @@ async function start(): Promise<void> {
 
         const transactionService = new TransactionsService(
             database,
-            "bridge_hub_api_transactions"
+            collectionsConfig.transactions
         );
 
         const bridgeAPIConsumer = new BridgeAPIConsumer(
@@ -85,10 +98,10 @@ async function start(): Promise<void> {
             new TokenMappingsMapper(Number(process.env.NETWORK_ID) || 0),
             new MetadataMapper(),
             transactionService,
-            new TokenMappingsService(database, "bridge_hub_api_tokenMappings"),
+            new TokenMappingsService(database, collectionsConfig.tokenMappings),
             new MetadataService(
                 database,
-                "bridge_hub_api_metadata",
+                collectionsConfig.metadata,
                 process.env.METADATA_DOC || "lastIndexedTransactions"
             )
         );

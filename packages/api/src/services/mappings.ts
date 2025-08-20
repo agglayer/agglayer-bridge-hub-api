@@ -6,7 +6,7 @@ import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import type { IHubTransaction } from "../interfaces/hub_tx";
 
 let db: DatabaseClient;
-let collectionId: string;
+let collectionId: Map<string, string>;
 
 // Order params for db request
 const orderParams: IQueryOrderOperationParams[] = [
@@ -17,9 +17,12 @@ const orderParams: IQueryOrderOperationParams[] = [
 ];
 
 export class MappingsService {
-    static initializeTransactionService(
+    static initializeMappingsService(
         database: DatabaseClient,
-        collectionIdParam: string = "transactions"
+        collectionIdParam: Map<string, string> = new Map([
+            ["mainnet", "mappings"],
+            ["testnet", "mappings_testnet"],
+        ])
     ) {
         if (!db) {
             db = database;
@@ -28,12 +31,13 @@ export class MappingsService {
     }
 
     static async getMappings(
+        network: string,
         queryParams: IQueryFilterOperationParams[],
         limit?: number | undefined,
         startAfter?: number | undefined
     ): Promise<IHubTransaction[]> {
         return await db.getDocuments(
-            collectionId,
+            collectionId.get(network) || "",
             queryParams,
             limit,
             orderParams,
