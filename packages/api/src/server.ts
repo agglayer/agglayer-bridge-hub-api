@@ -6,6 +6,7 @@ import { TransactionService } from "./services";
 import { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import { logger } from "hono/logger";
 import { ProofService } from "./services/proof";
+import healthCheckRoutes from "./routes/health_check";
 
 const app = new Hono();
 
@@ -59,6 +60,7 @@ async function serve(): Promise<void> {
 
     // Register routes
     app.route("/:network/", router);
+    app.route("/health-check", healthCheckRoutes);
 }
 
 serve();
