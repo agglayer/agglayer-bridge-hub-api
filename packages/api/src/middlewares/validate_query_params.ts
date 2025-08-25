@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from "hono";
-import { PaginationSchema } from "../schemas/common";
+import { NetworkSchema, PaginationSchema } from "../schemas/common";
 import { BadRequestError, handleError } from "@polygonlabs/servercore";
 import {
     ClaimProofQuerySchema,
@@ -14,9 +14,7 @@ export const validateTransactionQueryParams: MiddlewareHandler = async (
     context,
     next
 ) => {
-    const parsedParams = MappingsByOriginTokenQuerySchema.safeParse(
-        context.req.param()
-    );
+    const parsedParams = NetworkSchema.safeParse(context.req.param());
     const parsedQuery = TransactionsQuerySchema.safeParse(context.req.query());
     if (!parsedQuery.success) {
         const error = new BadRequestError(
@@ -67,9 +65,7 @@ export const validateMappingsQueryParams: MiddlewareHandler = async (
     context,
     next
 ) => {
-    const parsedParams = MappingsByOriginTokenQuerySchema.safeParse(
-        context.req.param()
-    );
+    const parsedParams = NetworkSchema.safeParse(context.req.param());
     const parsedQuery = MappingsQuerySchema.safeParse(context.req.query());
     if (!parsedQuery.success) {
         const error = new BadRequestError(
