@@ -8,8 +8,7 @@ export const MappingsQuerySchema = z
         originNetworkIds: networkIdsSchema.optional(),
         wrappedNetworkIds: networkIdsSchema.optional(),
     })
-    .merge(PaginationSchema)
-    .merge(NetworkSchema);
+    .merge(PaginationSchema);
 
 export const MappingsByOriginTokenQuerySchema = z
     .object({

@@ -7,8 +7,7 @@ export const TransactionsQuerySchema = z
         sourceNetworkIds: networkIdsSchema.optional(),
         destinationNetworkIds: networkIdsSchema.optional(),
     })
-    .merge(PaginationSchema)
-    .merge(NetworkSchema);
+    .merge(PaginationSchema);
 
 export const TransactionsByDepositCountQuerySchema = z
     .object({
