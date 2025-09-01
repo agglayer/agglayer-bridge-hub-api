@@ -6,7 +6,7 @@ import type { IClaimTx, IHubClaimTransaction } from "../interfaces/claim_tx";
 import type { IDecodedGlobalIndex } from "../interfaces/decoded_global_index";
 
 export default class TransactionMapper {
-    constructor(private networkId: number) {}
+    constructor(private readonly networkId: number) {}
 
     public mapBridgeTransactions(events: IBridgeTx[]): IHubBridgeTransaction[] {
         const formattedBridgeTransactions: IHubBridgeTransaction[] = [];

@@ -4,7 +4,7 @@ import type {
 } from "../interfaces/token_mapping";
 
 export default class TokenMappingsMapper {
-    constructor(private networkId: number) {}
+    constructor(private readonly networkId: number) {}
 
     public mapMappings(events: IMappingTx[]): IHubTokenMappings[] {
         const formattedMappings: IHubTokenMappings[] = [];
