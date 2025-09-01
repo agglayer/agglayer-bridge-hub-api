@@ -2,6 +2,7 @@ import {
     handleResponse,
     handleError,
     ExternalDependencyError,
+    ApiError,
 } from "@polygonlabs/servercore";
 import type { Context } from "hono";
 import { getResponseContext } from "../middlewares/response_context";
@@ -56,13 +57,10 @@ export const checkServiceHealth = async (c: Context) => {
         }
 
         return handleResponse(getResponseContext(c), {
-            status: "healthy",
-            message: "All proof services are working correctly",
+            status: "success",
+            message: "All services are working correctly",
         });
     } catch (error) {
-        return handleError(
-            getResponseContext(c),
-            error as ExternalDependencyError
-        );
+        return handleError(getResponseContext(c), error as ApiError);
     }
 };
