@@ -48,8 +48,7 @@ export const checkServiceHealth = async (c: Context) => {
         }
 
         if (failedServices.length > 0) {
-            throw new ExternalDependencyError(
-                "Proof apis",
+            throw new ApiError(
                 `One or more proof services are unhealthy: ${failedServices.join(
                     ", "
                 )}`

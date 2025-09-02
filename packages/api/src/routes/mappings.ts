@@ -1,17 +1,17 @@
 import { Hono } from "hono";
 import {
-    validateMappingsByOriginTokenQueryParams,
+    validateMappingsByTokenQueryParams,
     validateMappingsQueryParams,
 } from "../middlewares/validate_query_params";
-import { getMappings, getMappingsByOriginToken } from "../controllers/mappings";
+import { getMappings, getMappingsByToken } from "../controllers/mappings";
 
 const mappingsRoutes = new Hono();
 
 mappingsRoutes.get("/", validateMappingsQueryParams, getMappings);
 mappingsRoutes.get(
-    "/:originTokenNetwork/:originTokenAddress",
-    validateMappingsByOriginTokenQueryParams,
-    getMappingsByOriginToken
+    "/:tokenNetwork/:tokenAddress",
+    validateMappingsByTokenQueryParams,
+    getMappingsByToken
 );
 
 export default mappingsRoutes;

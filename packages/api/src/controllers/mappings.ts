@@ -52,7 +52,7 @@ export const getMappings = async (c: Context) => {
     return handleResponse(getResponseContext(c), mappings);
 };
 
-export const getMappingsByOriginToken = async (c: Context) => {
+export const getMappingsByToken = async (c: Context) => {
     const query = c.get("validatedQuery");
     const { originTokenNetwork, originTokenAddress, network } =
         c.get("validatedParams");
