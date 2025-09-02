@@ -3,7 +3,7 @@ import { NetworkSchema, PaginationSchema } from "../schemas/common";
 import { BadRequestError, handleError } from "@polygonlabs/servercore";
 import {
     ClaimProofQuerySchema,
-    MappingsByOriginTokenQuerySchema,
+    MappingsByTokenQuerySchema,
     MappingsQuerySchema,
     TransactionsByDepositCountQuerySchema,
     TransactionsQuerySchema,
@@ -92,46 +92,46 @@ export const validateMappingsQueryParams: MiddlewareHandler = async (
     await next();
 };
 
-export const validateMappingsByOriginTokenQueryParams: MiddlewareHandler =
-    async (context, next) => {
-        const parsedParams = MappingsByOriginTokenQuerySchema.safeParse(
-            context.req.param()
+export const validateMappingsByTokenQueryParams: MiddlewareHandler = async (
+    context,
+    next
+) => {
+    const parsedParams = MappingsByTokenQuerySchema.safeParse(
+        context.req.param()
+    );
+
+    const parsedQuery = PaginationSchema.safeParse(context.req.query());
+
+    if (!parsedQuery.success) {
+        const error = new BadRequestError(
+            parsedQuery.error.message,
+            parsedQuery.error.format(),
+            undefined,
+            "validateMappingsByOriginTokenQueryParams"
         );
 
-        const parsedQuery = PaginationSchema.safeParse(context.req.query());
+        return handleError(getResponseContext(context), error);
+    } else if (!parsedParams.success) {
+        const error = new BadRequestError(
+            parsedParams.error.message,
+            parsedParams.error.format(),
+            undefined,
+            "validateMappingsByOriginTokenQueryParams"
+        );
 
-        if (!parsedQuery.success) {
-            const error = new BadRequestError(
-                parsedQuery.error.message,
-                parsedQuery.error.format(),
-                undefined,
-                "validateMappingsByOriginTokenQueryParams"
-            );
+        return handleError(getResponseContext(context), error);
+    }
 
-            return handleError(getResponseContext(context), error);
-        } else if (!parsedParams.success) {
-            const error = new BadRequestError(
-                parsedParams.error.message,
-                parsedParams.error.format(),
-                undefined,
-                "validateMappingsByOriginTokenQueryParams"
-            );
-
-            return handleError(getResponseContext(context), error);
-        }
-
-        context.set("validatedQuery", parsedQuery.data);
-        context.set("validatedParams", parsedParams.data);
-        await next();
-    };
+    context.set("validatedQuery", parsedQuery.data);
+    context.set("validatedParams", parsedParams.data);
+    await next();
+};
 
 export const validateClaimProofQueryParams: MiddlewareHandler = async (
     context,
     next
 ) => {
-    const parsedParams = MappingsByOriginTokenQuerySchema.safeParse(
-        context.req.param()
-    );
+    const parsedParams = NetworkSchema.safeParse(context.req.param());
     const parsedQuery = ClaimProofQuerySchema.safeParse(context.req.query());
     if (!parsedQuery.success) {
         const error = new BadRequestError(

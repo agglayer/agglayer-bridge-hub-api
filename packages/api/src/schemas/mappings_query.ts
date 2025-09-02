@@ -10,14 +10,12 @@ export const MappingsQuerySchema = z
     })
     .merge(PaginationSchema);
 
-export const MappingsByOriginTokenQuerySchema = z
+export const MappingsByTokenQuerySchema = z
     .object({
-        originTokenNetwork: z.coerce.number().int().nonnegative(),
-        originTokenAddress: z.string().nonempty().optional(),
+        tokenNetwork: z.coerce.number().int().nonnegative(),
+        tokenAddress: z.string().nonempty().optional(),
     })
     .merge(NetworkSchema);
 
 export type MappingsQuery = z.infer<typeof MappingsQuerySchema>;
-export type mappingsByOriginTokenQuery = z.infer<
-    typeof MappingsByOriginTokenQuerySchema
->;
+export type mappingsByTokenQuery = z.infer<typeof MappingsByTokenQuerySchema>;
