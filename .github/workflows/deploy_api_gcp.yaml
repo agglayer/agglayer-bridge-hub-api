@@ -22,4 +22,4 @@ jobs:
       dockerfile_path: packages/api/Dockerfile
       dockerfile_context: packages/api
       image_tag: ${{ inputs.tag || github.ref_name }}
-      checkout_ref: ${{ github.ref_name }}
+      checkout_ref: ${{ inputs.tag || github.ref_name }}
