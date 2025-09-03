@@ -58,7 +58,7 @@ export default class TransactionsService {
             docIds.push(docId);
         }
         this.database.updateDocuments(
-            [this.collectionId],
+            this.collectionId,
             claimTransactions,
             docIds
         );
