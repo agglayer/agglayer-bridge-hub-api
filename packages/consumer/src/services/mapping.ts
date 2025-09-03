@@ -10,6 +10,6 @@ export default class TokenMappingsService {
     public async saveTokenMappings(
         mappings: IHubTokenMappings[]
     ): Promise<void> {
-        this.database.addDocuments([this.collectionId], mappings);
+        this.database.addDocuments(this.collectionId, mappings);
     }
 }
