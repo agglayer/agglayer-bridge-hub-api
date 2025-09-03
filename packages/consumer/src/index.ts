@@ -32,12 +32,12 @@ async function start(): Promise<void> {
             process.env.NETWORK === "mainnet"
                 ? {
                       transactions: "bridge_hub_api_transactions",
-                      tokenMappings: "bridge_hub_api_tokenMappings",
+                      tokenMappings: "bridge_hub_api_mappings",
                       metadata: "bridge_hub_api_metadata",
                   }
                 : {
                       transactions: "bridge_hub_api_transactions_testnet",
-                      tokenMappings: "bridge_hub_api_tokenMappings_testnet",
+                      tokenMappings: "bridge_hub_api_mappings_testnet",
                       metadata: "bridge_hub_api_metadata_testnet",
                   };
 
@@ -68,7 +68,7 @@ async function start(): Promise<void> {
             },
             {
                 apiUrl: new URL(`${process.env.BRIDGE_SERVICE_URL}/claims`),
-                startCount: { key: "block_number", value: 0 },
+                startCount: { key: "block_num", value: 0 },
                 cronExpr: "0/10 * * * * ?",
                 pollSize: 2,
                 method: "GET",
@@ -83,7 +83,7 @@ async function start(): Promise<void> {
                 apiUrl: new URL(
                     `${process.env.BRIDGE_SERVICE_URL}/token-mappings`
                 ),
-                startCount: { key: "block_number", value: 0 },
+                startCount: { key: "block_num", value: 0 },
                 cronExpr: "0/10 * * * * ?",
                 pollSize: 2,
                 method: "GET",
