@@ -22,7 +22,7 @@ export default class MetadataMapper {
         data: ILastIndexedClaimTransaction
     ): IHubMetadata {
         const formattedMetadata: IHubMetadata = {
-            lastIndexedClaimBlockNumber: data.block_number,
+            lastIndexedClaimBlockNumber: data.block_num,
         };
 
         return formattedMetadata;
@@ -32,7 +32,7 @@ export default class MetadataMapper {
         data: ILastIndexedMappingTransaction
     ): IHubMetadata {
         const formattedMetadata: IHubMetadata = {
-            lastIndexedMappingBlockNumber: data.block_number,
+            lastIndexedMappingBlockNumber: data.block_num,
         };
 
         return formattedMetadata;

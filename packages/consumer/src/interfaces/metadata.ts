@@ -9,9 +9,9 @@ export interface ILastIndexedBridgeTransaction {
 }
 
 export interface ILastIndexedClaimTransaction {
-    block_number: number;
+    block_num: number;
 }
 
 export interface ILastIndexedMappingTransaction {
-    block_number: number;
+    block_num: number;
 }
