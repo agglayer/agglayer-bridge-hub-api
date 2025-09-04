@@ -3,6 +3,7 @@ import { MappingsService } from "../services/mappings";
 import {
     handleResponse,
     type IQueryFilterOperationParams,
+    type IQueryOrFilterParams,
 } from "@polygonlabs/servercore";
 import { getResponseContext } from "../middlewares/response_context";
 
@@ -45,6 +46,7 @@ export const getMappings = async (c: Context) => {
     const mappings = await MappingsService.getMappings(
         network,
         queryParams,
+        undefined,
         query.limit,
         query.startAfter
     );
@@ -54,29 +56,47 @@ export const getMappings = async (c: Context) => {
 
 export const getMappingsByToken = async (c: Context) => {
     const query = c.get("validatedQuery");
-    const { originTokenNetwork, originTokenAddress, network } =
-        c.get("validatedParams");
+    const { tokenNetwork, tokenAddress, network } = c.get("validatedParams");
 
     // Create query params for db request
-    const queryParams: IQueryFilterOperationParams[] = [];
+    const queryParams: IQueryOrFilterParams[] = [];
 
-    if (query.originTokenAddress) {
+    if (tokenAddress) {
         queryParams.push({
-            field: "originTokenAddress",
-            operator: "==",
-            value: originTokenAddress,
+            or: [
+                {
+                    field: "originTokenAddress",
+                    operator: "==",
+                    value: tokenAddress,
+                },
+                {
+                    field: "wrappedTokenAddress",
+                    operator: "==",
+                    value: tokenAddress,
+                },
+            ],
         });
     }
-    if (query.originNetworkIds) {
+    if (tokenNetwork) {
         queryParams.push({
-            field: "originTokenNetwork",
-            operator: "in",
-            value: originTokenNetwork,
+            or: [
+                {
+                    field: "originTokenNetwork",
+                    operator: "in",
+                    value: tokenNetwork,
+                },
+                {
+                    field: "wrappedTokenNetwork",
+                    operator: "in",
+                    value: tokenNetwork,
+                },
+            ],
         });
     }
 
     const mappings = await MappingsService.getMappings(
         network,
+        undefined,
         queryParams,
         query.limit,
         query.startAfter

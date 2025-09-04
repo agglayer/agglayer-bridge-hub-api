@@ -2,7 +2,7 @@ import { Logger } from "@polygonlabs/servercore";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import router from "./routes";
-import { TransactionService } from "./services";
+import { MappingsService, TransactionService } from "./services";
 import { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import { logger } from "hono/logger";
 import { ProofService } from "./services/proof";
@@ -32,6 +32,14 @@ async function serve(): Promise<void> {
         new Map([
             ["mainnet", "bridge_hub_api_transactions"],
             ["testnet", "bridge_hub_api_transactions_testnet"],
+        ])
+    );
+
+    MappingsService.initializeMappingsService(
+        database,
+        new Map([
+            ["mainnet", "bridge_hub_api_mappings"],
+            ["testnet", "bridge_hub_api_mappings_testnet"],
         ])
     );
 
