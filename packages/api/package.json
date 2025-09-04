@@ -21,8 +21,8 @@
         "typescript": "^5"
     },
     "dependencies": {
-        "@polygonlabs/servercore": "1.0.0-dev.36",
-        "@polygonlabs/servercore-firestore": "1.0.0-dev.20",
+        "@polygonlabs/servercore": "1.0.0-dev.42",
+        "@polygonlabs/servercore-firestore": "1.0.0-dev.28",
         "hono": "^4.7.5",
         "zod": "^3.24.2"
     }

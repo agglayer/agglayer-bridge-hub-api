@@ -1,6 +1,7 @@
 import type {
     IQueryFilterOperationParams,
     IQueryOrderOperationParams,
+    IQueryOrFilterParams,
 } from "@polygonlabs/servercore";
 import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import type { IHubTransaction } from "../interfaces/hub_tx";
@@ -32,7 +33,8 @@ export class MappingsService {
 
     static async getMappings(
         network: string,
-        queryParams: IQueryFilterOperationParams[],
+        queryParams?: IQueryFilterOperationParams[],
+        orQueryParams?: IQueryOrFilterParams[],
         limit?: number | undefined,
         startAfter?: number | undefined
     ): Promise<IHubTransaction[]> {
