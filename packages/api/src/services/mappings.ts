@@ -43,7 +43,9 @@ export class MappingsService {
             queryParams,
             limit,
             orderParams,
-            startAfter
+            startAfter,
+            undefined,
+            orQueryParams
         );
     }
 }

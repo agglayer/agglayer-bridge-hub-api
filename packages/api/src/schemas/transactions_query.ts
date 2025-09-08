@@ -1,11 +1,15 @@
 import { z } from "zod";
 import { networkIdsSchema, NetworkSchema, PaginationSchema } from "./common";
+import { TransactionStatus } from "../enums";
 
 export const TransactionsQuerySchema = z
     .object({
         fromAddress: z.string().optional(),
         sourceNetworkIds: networkIdsSchema.optional(),
         destinationNetworkIds: networkIdsSchema.optional(),
+        status: z
+            .enum(Object.values(TransactionStatus) as [string, ...string[]])
+            .optional(),
     })
     .merge(PaginationSchema);
 

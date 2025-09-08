@@ -41,6 +41,14 @@ export const getTransactions = async (c: Context) => {
         });
     }
 
+    if (query.status) {
+        queryParams.push({
+            field: "status",
+            operator: "==",
+            value: query.status,
+        });
+    }
+
     const transactions = await TransactionService.getTransactions(
         network,
         queryParams,
