@@ -82,12 +82,12 @@ export const getMappingsByToken = async (c: Context) => {
             or: [
                 {
                     field: "originTokenNetwork",
-                    operator: "in",
+                    operator: "==",
                     value: tokenNetwork,
                 },
                 {
                     field: "wrappedTokenNetwork",
-                    operator: "in",
+                    operator: "==",
                     value: tokenNetwork,
                 },
             ],
