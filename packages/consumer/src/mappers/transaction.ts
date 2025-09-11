@@ -39,6 +39,7 @@ export default class TransactionMapper {
                 depositCount: bridgeTransaction.deposit_count,
                 bridgeHash: bridgeTransaction.bridge_hash,
                 status: TransactionStatus.BRIDGED,
+                lastUpdatedAt: Date.now(),
             });
         });
 
@@ -59,6 +60,7 @@ export default class TransactionMapper {
                 sourceNetwork: decodedGlobalIndex.sourceNetwork,
                 depositCount: decodedGlobalIndex.depositCount,
                 status: TransactionStatus.CLAIMED,
+                lastUpdatedAt: Date.now(),
             });
         });
 
