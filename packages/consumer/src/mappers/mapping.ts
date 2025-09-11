@@ -20,6 +20,7 @@ export default class TokenMappingsMapper {
                 wrappedTokenNetwork: this.networkId,
                 wrappedTokenAddress:
                     mappingEvent.wrapped_token_address.toLowerCase(),
+                lastUpdatedAt: Date.now(),
             });
         });
 

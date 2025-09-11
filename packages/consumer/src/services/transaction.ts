@@ -72,7 +72,7 @@ export default class TransactionsService {
         const docId = this.generateDocId(depositCount, sourceNetwork);
         this.database.conditionalUpdateDocuments(
             this.collectionId,
-            [{ leafIndex }],
+            [{ leafIndex, lastUpdatedAt: Date.now() }],
             [docId],
             [
                 {
@@ -98,7 +98,7 @@ export default class TransactionsService {
         const docId = this.generateDocId(depositCount, sourceNetwork);
         this.database.conditionalUpdateDocuments(
             this.collectionId,
-            [{}],
+            [{ lastUpdatedAt: Date.now() }],
             [docId],
             [
                 {

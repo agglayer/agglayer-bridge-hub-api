@@ -35,4 +35,5 @@ export interface IHubClaimTransaction {
     sourceNetwork: number;
     depositCount: number;
     status: TransactionStatus;
+    lastUpdatedAt: number;
 }

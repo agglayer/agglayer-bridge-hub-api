@@ -34,4 +34,5 @@ export interface IHubTokenMappings {
     originTokenAddress: string;
     wrappedTokenNetwork: number;
     wrappedTokenAddress: string;
+    lastUpdatedAt: number;
 }
