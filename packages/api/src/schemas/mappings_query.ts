@@ -17,5 +17,12 @@ export const MappingsByTokenQuerySchema = z
     })
     .merge(NetworkSchema);
 
+export const TokenMetadataQuerySchema = z
+    .object({
+        tokenAddress: z.string().nonempty().optional(),
+    })
+    .merge(NetworkSchema);
+
 export type MappingsQuery = z.infer<typeof MappingsQuerySchema>;
 export type mappingsByTokenQuery = z.infer<typeof MappingsByTokenQuerySchema>;
+export type TokenMetadataQuery = z.infer<typeof TokenMetadataQuerySchema>;

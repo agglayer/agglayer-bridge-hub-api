@@ -5,6 +5,7 @@ import {
     ClaimProofQuerySchema,
     MappingsByTokenQuerySchema,
     MappingsQuerySchema,
+    TokenMetadataQuerySchema,
     TransactionsByDepositCountQuerySchema,
     TransactionsQuerySchema,
 } from "../schemas";
@@ -123,6 +124,29 @@ export const validateMappingsByTokenQueryParams: MiddlewareHandler = async (
     }
 
     context.set("validatedQuery", parsedQuery.data);
+    context.set("validatedParams", parsedParams.data);
+    await next();
+};
+
+export const validateTokenMetadataQueryParams: MiddlewareHandler = async (
+    context,
+    next
+) => {
+    const parsedParams = TokenMetadataQuerySchema.safeParse(
+        context.req.param()
+    );
+
+    if (!parsedParams.success) {
+        const error = new BadRequestError(
+            parsedParams.error.message,
+            parsedParams.error.format(),
+            undefined,
+            "validateTokenMetadataQueryParams"
+        );
+
+        return handleError(getResponseContext(context), error);
+    }
+
     context.set("validatedParams", parsedParams.data);
     await next();
 };

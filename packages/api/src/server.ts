@@ -2,7 +2,11 @@ import { Logger } from "@polygonlabs/servercore";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import router from "./routes";
-import { MappingsService, TransactionService } from "./services";
+import {
+    MappingsService,
+    TokenMetadataService,
+    TransactionService,
+} from "./services";
 import { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import { logger } from "hono/logger";
 import { ProofService } from "./services/proof";
@@ -27,22 +31,6 @@ async function serve(): Promise<void> {
     });
     await database.connect();
 
-    TransactionService.initializeTransactionService(
-        database,
-        new Map([
-            ["mainnet", "bridge_hub_api_transactions"],
-            ["testnet", "bridge_hub_api_transactions_testnet"],
-        ])
-    );
-
-    MappingsService.initializeMappingsService(
-        database,
-        new Map([
-            ["mainnet", "bridge_hub_api_mappings"],
-            ["testnet", "bridge_hub_api_mappings_testnet"],
-        ])
-    );
-
     // Parse the CHAIN_CONFIG environment variable and convert it to a Map
     // Parse CHAIN_CONFIG as an object with "mainnet" and "testnet" keys, each mapping to an object of chainId -> url
     const rawConfig = JSON.parse(process.env.CHAIN_CONFIG || "{}");
@@ -60,6 +48,35 @@ async function serve(): Promise<void> {
     }
 
     // Initialize services
+    TransactionService.initializeTransactionService(
+        database,
+        new Map([
+            ["mainnet", "bridge_hub_api_transactions"],
+            ["testnet", "bridge_hub_api_transactions_testnet"],
+        ])
+    );
+
+    MappingsService.initializeMappingsService(
+        database,
+        new Map([
+            ["mainnet", "bridge_hub_api_mappings"],
+            ["testnet", "bridge_hub_api_mappings_testnet"],
+        ])
+    );
+
+    TokenMetadataService.initializeTokenMetadataService(
+        database,
+        new Map([
+            ["mainnet", "bridge_hub_api_mappings"],
+            ["testnet", "bridge_hub_api_mappings_testnet"],
+        ]),
+        chainConfig,
+        new Map([
+            ["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
+            ["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
+        ])
+    );
+
     ProofService.initializeService(chainConfig);
 
     // Middlewares
