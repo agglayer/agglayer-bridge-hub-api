@@ -49,4 +49,5 @@ export interface IHubBridgeTransaction {
     depositCount: number;
     bridgeHash: string;
     status: TransactionStatus;
+    lastUpdatedAt: number;
 }
