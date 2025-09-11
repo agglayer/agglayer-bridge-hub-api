@@ -117,7 +117,9 @@ export class TokenMetadataService {
                     decimals: Number(decimals),
                 };
             } catch (error) {
-                throw new ApiError("Failed to fetch token metadata");
+                throw new ApiError("Failed to fetch token metadata", {
+                    name: error instanceof Error ? error.message : "Unknown",
+                });
             }
         }
 
