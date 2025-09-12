@@ -41,6 +41,14 @@ export const getTransactions = async (c: Context) => {
         });
     }
 
+    if (query.updatedSince) {
+        queryParams.push({
+            field: "lastUpdatedAt",
+            operator: ">=",
+            value: query.updatedSince,
+        });
+    }
+
     if (query.status) {
         queryParams.push({
             field: "status",

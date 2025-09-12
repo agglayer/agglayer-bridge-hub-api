@@ -7,6 +7,7 @@ export const TransactionsQuerySchema = z
         fromAddress: z.string().optional(),
         sourceNetworkIds: networkIdsSchema.optional(),
         destinationNetworkIds: networkIdsSchema.optional(),
+        updatedSince: z.coerce.number().int().nonnegative().optional(),
         status: z
             .enum(Object.values(TransactionStatus) as [string, ...string[]])
             .optional(),
