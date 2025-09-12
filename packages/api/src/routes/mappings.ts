@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import {
     validateMappingsByTokenQueryParams,
     validateMappingsQueryParams,
-    validateTokenMetadataQueryParams,
 } from "../middlewares/validate_query_params";
 import { getMappings, getMappingsByToken } from "../controllers/mappings";
 
