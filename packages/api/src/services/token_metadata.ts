@@ -1,5 +1,6 @@
 import {
     ApiError,
+    Logger,
     type IQueryOrderOperationParams,
     type IQueryOrFilterParams,
 } from "@polygonlabs/servercore";
@@ -146,7 +147,7 @@ export class TokenMetadataService {
         }
 
         if (!bridgeAddr) {
-            console.warn(`Bridge address not found for network ${network}`);
+            Logger.warn(`Bridge address not found for network ${network}`);
             return undefined;
         }
 
@@ -157,29 +158,30 @@ export class TokenMetadataService {
                     transport: http(rpcUrl),
                 });
 
-                const [name, symbol, decimals, wrappedTokenAddress] = await Promise.all([
-                    client.readContract({
-                        address: tokenAddress as `0x${string}`,
-                        abi: ERC20_ABI,
-                        functionName: "name",
-                    }),
-                    client.readContract({
-                        address: tokenAddress as `0x${string}`,
-                        abi: ERC20_ABI,
-                        functionName: "symbol",
-                    }),
-                    client.readContract({
-                        address: tokenAddress as `0x${string}`,
-                        abi: ERC20_ABI,
-                        functionName: "decimals",
-                    }),
-                    client.readContract({
-                        address: bridgeAddr as `0x${string}`,
-                        abi: BRIDGE_ABI,
-                        functionName: "computeTokenProxyAddress",
-                        args: [networkId, tokenAddress as `0x${string}`],
-                    }),
-                ]);
+                const [name, symbol, decimals, wrappedTokenAddress] =
+                    await Promise.all([
+                        client.readContract({
+                            address: tokenAddress as `0x${string}`,
+                            abi: ERC20_ABI,
+                            functionName: "name",
+                        }),
+                        client.readContract({
+                            address: tokenAddress as `0x${string}`,
+                            abi: ERC20_ABI,
+                            functionName: "symbol",
+                        }),
+                        client.readContract({
+                            address: tokenAddress as `0x${string}`,
+                            abi: ERC20_ABI,
+                            functionName: "decimals",
+                        }),
+                        client.readContract({
+                            address: bridgeAddr as `0x${string}`,
+                            abi: BRIDGE_ABI,
+                            functionName: "computeTokenProxyAddress",
+                            args: [networkId, tokenAddress as `0x${string}`],
+                        }),
+                    ]);
 
                 // If successful, return the metadata
                 return {
@@ -192,10 +194,10 @@ export class TokenMetadataService {
                 };
             } catch (error) {
                 // Continue to next RPC if this one fails
-                console.warn(
-                    `Failed to fetch token metadata from RPC ${rpcUrl}:`,
-                    error
-                );
+                Logger.warn({
+                    message: `Failed to fetch token metadata from RPC ${rpcUrl}:`,
+                    error,
+                });
                 continue;
             }
         }
