@@ -280,6 +280,6 @@ export class BridgeAPIConsumer {
     }
 
     private onClosed(consumerName: string): void {
-        console.warn(`${consumerName} consumer has closed.`);
+        Logger.warn(`${consumerName} consumer has closed.`);
     }
 }

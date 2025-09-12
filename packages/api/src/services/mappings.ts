@@ -4,7 +4,7 @@ import type {
     IQueryOrFilterParams,
 } from "@polygonlabs/servercore";
 import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
-import type { IHubTransaction } from "../interfaces/hub_tx";
+import type { IHubTokenMapping } from "../interfaces/hub_mapping";
 
 let db: DatabaseClient;
 let collectionId: Map<string, string>;
@@ -37,7 +37,7 @@ export class MappingsService {
         orQueryParams?: IQueryOrFilterParams[],
         limit?: number | undefined,
         startAfter?: number | undefined
-    ): Promise<IHubTransaction[]> {
+    ): Promise<IHubTokenMapping[]> {
         return await db.getDocuments(
             collectionId.get(network) || "",
             queryParams,
