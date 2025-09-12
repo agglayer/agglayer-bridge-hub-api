@@ -7,6 +7,7 @@ import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import type { ITokenMetadata } from "../interfaces/hub_mapping";
 import { createPublicClient, http } from "viem";
 import { ERC20_ABI } from "../constants/erc20";
+import { BRIDGE_ABI } from "../constants/bridge";
 
 let db: DatabaseClient;
 let collectionId: Map<string, string>;
@@ -121,8 +122,85 @@ export class TokenMetadataService {
                     name: error instanceof Error ? error.message : "Unknown",
                 });
             }
+        } else if (!mapping) {
+            // If mapping is not found, try fetching from all available RPCs
+            tokenMetadata =
+                await TokenMetadataService.fetchTokenMetadataFromRPCs(
+                    network,
+                    tokenAddress
+                );
         }
 
         return tokenMetadata;
+    }
+
+    private static async fetchTokenMetadataFromRPCs(
+        network: string,
+        tokenAddress: string
+    ): Promise<ITokenMetadata | undefined> {
+        const networkChainConfig = chainConfig.get(network);
+        const bridgeAddr = bridgeAddress.get(network);
+
+        if (!networkChainConfig || networkChainConfig.size === 0) {
+            return undefined;
+        }
+
+        if (!bridgeAddr) {
+            console.warn(`Bridge address not found for network ${network}`);
+            return undefined;
+        }
+
+        // Try each RPC in the network configuration
+        for (const [networkId, rpcUrl] of networkChainConfig.entries()) {
+            try {
+                const client = createPublicClient({
+                    transport: http(rpcUrl),
+                });
+
+                const [name, symbol, decimals, wrappedTokenAddress] = await Promise.all([
+                    client.readContract({
+                        address: tokenAddress as `0x${string}`,
+                        abi: ERC20_ABI,
+                        functionName: "name",
+                    }),
+                    client.readContract({
+                        address: tokenAddress as `0x${string}`,
+                        abi: ERC20_ABI,
+                        functionName: "symbol",
+                    }),
+                    client.readContract({
+                        address: tokenAddress as `0x${string}`,
+                        abi: ERC20_ABI,
+                        functionName: "decimals",
+                    }),
+                    client.readContract({
+                        address: bridgeAddr as `0x${string}`,
+                        abi: BRIDGE_ABI,
+                        functionName: "computeTokenProxyAddress",
+                        args: [networkId, tokenAddress as `0x${string}`],
+                    }),
+                ]);
+
+                // If successful, return the metadata
+                return {
+                    originTokenNetwork: networkId,
+                    originTokenAddress: tokenAddress,
+                    wrappedTokenAddress: wrappedTokenAddress as string,
+                    name: name as string,
+                    symbol: symbol as string,
+                    decimals: Number(decimals),
+                };
+            } catch (error) {
+                // Continue to next RPC if this one fails
+                console.warn(
+                    `Failed to fetch token metadata from RPC ${rpcUrl}:`,
+                    error
+                );
+                continue;
+            }
+        }
+
+        // If all RPCs failed, return undefined
+        return undefined;
     }
 }
