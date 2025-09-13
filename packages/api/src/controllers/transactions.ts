@@ -7,6 +7,7 @@ import type {
 import {
     handleResponse,
     type IQueryFilterOperationParams,
+    type IQueryOrderOperationParams,
 } from "@polygonlabs/servercore";
 import { getResponseContext } from "../middlewares/response_context";
 
@@ -16,6 +17,7 @@ export const getTransactions = async (c: Context) => {
 
     // Create query params for db request
     const queryParams: IQueryFilterOperationParams[] = [];
+    let orderParams: IQueryOrderOperationParams[] | undefined = undefined;
 
     if (query.fromAddress) {
         queryParams.push({
@@ -47,6 +49,8 @@ export const getTransactions = async (c: Context) => {
             operator: ">=",
             value: query.updatedSince,
         });
+
+        orderParams = [{ field: "lastUpdatedAt", order: "asc" }];
     }
 
     if (query.status) {
@@ -61,7 +65,8 @@ export const getTransactions = async (c: Context) => {
         network,
         queryParams,
         query.limit,
-        query.startAfter
+        query.startAfter,
+        orderParams
     );
 
     return handleResponse(getResponseContext(c), transactions);

@@ -41,13 +41,14 @@ export class TransactionService {
         network: string,
         queryParams: IQueryFilterOperationParams[],
         limit?: number | undefined,
-        startAfter?: string | undefined
+        startAfter?: string | undefined,
+        orderParamsOverride?: IQueryOrderOperationParams[]
     ): Promise<IHubTransaction[]> {
         return await db.getDocuments(
             collectionId.get(network) || "",
             queryParams,
             limit,
-            orderParams,
+            orderParamsOverride || orderParams,
             startAfter
         );
     }
