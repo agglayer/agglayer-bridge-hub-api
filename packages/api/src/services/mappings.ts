@@ -37,15 +37,18 @@ export class MappingsService {
         orQueryParams?: IQueryOrFilterParams[],
         limit?: number | undefined,
         startAfter?: number | undefined
-    ): Promise<IHubTokenMapping[]> {
-        return await db.getDocuments(
-            collectionId.get(network) || "",
-            queryParams,
+    ): Promise<{
+        documents: IHubTokenMapping[];
+        totalDocumentsCount?: number;
+    }> {
+        return await db.getDocuments({
+            collectionPath: collectionId.get(network) || "",
+            filter: queryParams,
             limit,
-            orderParams,
-            startAfter,
-            undefined,
-            orQueryParams
-        );
+            order: orderParams,
+            startAfterCursor: startAfter,
+            orFilters: orQueryParams,
+            returnTotalDocumentsCount: true,
+        });
     }
 }

@@ -6,6 +6,7 @@ import {
     type IQueryOrFilterParams,
 } from "@polygonlabs/servercore";
 import { getResponseContext } from "../middlewares/response_context";
+import { map } from "zod/v4";
 
 export const getMappings = async (c: Context) => {
     const query = c.get("validatedQuery");
@@ -51,7 +52,14 @@ export const getMappings = async (c: Context) => {
         query.startAfter
     );
 
-    return handleResponse(getResponseContext(c), mappings);
+    return handleResponse(getResponseContext(c), mappings.documents, {
+        total: mappings.totalDocumentsCount || 0,
+        limit: query.limit,
+        nextStartAfterCursor:
+            query.offset === undefined
+                ? mappings.documents.at(-1)?.timestamp
+                : undefined,
+    });
 };
 
 export const getMappingsByToken = async (c: Context) => {
@@ -102,5 +110,12 @@ export const getMappingsByToken = async (c: Context) => {
         query.startAfter
     );
 
-    return handleResponse(getResponseContext(c), mappings);
+    return handleResponse(getResponseContext(c), mappings.documents, {
+        total: mappings.totalDocumentsCount || 0,
+        limit: query.limit,
+        nextStartAfterCursor:
+            query.offset === undefined
+                ? mappings.documents.at(-1)?.timestamp
+                : undefined,
+    });
 };

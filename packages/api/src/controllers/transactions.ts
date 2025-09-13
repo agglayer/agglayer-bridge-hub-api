@@ -69,7 +69,11 @@ export const getTransactions = async (c: Context) => {
         orderParams
     );
 
-    return handleResponse(getResponseContext(c), transactions);
+    return handleResponse(getResponseContext(c), transactions.documents, {
+        total: transactions?.totalDocumentsCount || 0,
+        limit: query.limit,
+        nextStartAfterCursor: transactions?.documents.at(-1)?.hubUID,
+    });
 };
 
 export const getTransactionByDepositCount = async (c: Context) => {

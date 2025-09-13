@@ -54,18 +54,15 @@ export class TokenMetadataService {
     ): Promise<ITokenMetadata | undefined> {
         let tokenMetadata: ITokenMetadata | undefined;
         const mapping = await db
-            .getDocuments(
-                collectionId.get(network) || "",
-                undefined,
-                1,
-                orderParams,
-                undefined,
-                undefined,
-                orQueryParams
-            )
-            .then((docs) => {
-                if (docs.length > 0) {
-                    return docs[0];
+            .getDocuments({
+                collectionPath: collectionId.get(network) || "",
+                limit: 1,
+                order: orderParams,
+                orFilters: orQueryParams,
+            })
+            .then((res) => {
+                if (res.documents.length > 0) {
+                    return res.documents[0];
                 }
                 return undefined;
             });

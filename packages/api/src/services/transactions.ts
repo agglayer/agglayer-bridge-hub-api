@@ -43,23 +43,24 @@ export class TransactionService {
         limit?: number | undefined,
         startAfter?: string | undefined,
         orderParamsOverride?: IQueryOrderOperationParams[]
-    ): Promise<IHubTransaction[]> {
-        return await db.getDocuments(
-            collectionId.get(network) || "",
-            queryParams,
+    ): Promise<{ documents: IHubTransaction[]; totalDocumentsCount?: number }> {
+        return await db.getDocuments({
+            collectionPath: collectionId.get(network) || "",
+            filter: queryParams,
             limit,
-            orderParamsOverride || orderParams,
-            startAfter
-        );
+            order: orderParamsOverride || orderParams,
+            startAfterCursor: startAfter,
+            returnTotalDocumentsCount: true,
+        });
     }
 
     static async getTransactionByDepositCount(
         network: string,
         docId: string
     ): Promise<IHubTransaction | null> {
-        return (await db.getDocument(
-            collectionId.get(network) || "",
-            docId
-        )) as IHubTransaction;
+        return (await db.getDocument({
+            collectionId: collectionId.get(network) || "",
+            docId,
+        })) as IHubTransaction;
     }
 }
