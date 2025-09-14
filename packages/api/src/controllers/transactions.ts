@@ -50,7 +50,11 @@ export const getTransactions = async (c: Context) => {
             value: query.updatedSince,
         });
 
-        orderParams = [{ field: "lastUpdatedAt", order: "asc" }];
+        orderParams = [{ field: "lastUpdatedAt", order: query.order || "asc" }];
+    }
+
+    if (query.order) {
+        orderParams = [{ field: "hubUID", order: query.order }];
     }
 
     if (query.status) {
