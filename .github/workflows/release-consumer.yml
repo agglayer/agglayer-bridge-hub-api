@@ -5,6 +5,7 @@ on:
         branches:
             - main
             - release
+            - 86abqfye1-last-updated-inclusion
         paths:
             - "packages/consumer/**"
             - ".github/workflows/release-consumer.yml"

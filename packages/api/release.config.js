@@ -1,5 +1,9 @@
 const _default = {
-    branches: ["release", { name: "main", prerelease: "beta" }],
+    branches: [
+        "release",
+        { name: "main", prerelease: "beta" },
+        { name: "86abqfye1-last-updated-inclusion", prerelease: "dev" },
+    ],
     tagFormat: "bridge-hub-api-v${version}",
     plugins: [
         "@semantic-release/commit-analyzer",
