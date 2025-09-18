@@ -10,8 +10,8 @@ import { CryptoHasher } from "bun";
 
 export default class TransactionsService {
     constructor(
-        private database: DatabaseClient,
-        private collectionId: string = "bridge_hub_api_transactions"
+        private readonly database: DatabaseClient,
+        private readonly collectionId: string = "bridge_hub_api_transactions"
     ) {}
 
     private generateDocId(depositCount: number, sourceNetwork: number): string {

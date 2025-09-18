@@ -34,15 +34,15 @@ export class BridgeAPIConsumer {
         | undefined = undefined;
 
     constructor(
-        private bridgeConsumerConfig: IRestAPIConsumerConfig,
-        private claimConsumerConfig: IRestAPIConsumerConfig,
-        private mappingConsumerConfig: IRestAPIConsumerConfig,
-        private transactionMapper: TransactionMapper,
-        private tokenMappingsMapper: TokenMappingsMapper,
-        private metadataMapper: MetadataMapper,
-        private transactionService: TransactionsService,
-        private tokenMappingsService: TokenMappingsService,
-        private metadataService: MetadataService
+        private readonly bridgeConsumerConfig: IRestAPIConsumerConfig,
+        private readonly claimConsumerConfig: IRestAPIConsumerConfig,
+        private readonly mappingConsumerConfig: IRestAPIConsumerConfig,
+        private readonly transactionMapper: TransactionMapper,
+        private readonly tokenMappingsMapper: TokenMappingsMapper,
+        private readonly metadataMapper: MetadataMapper,
+        private readonly transactionService: TransactionsService,
+        private readonly tokenMappingsService: TokenMappingsService,
+        private readonly metadataService: MetadataService
     ) {}
 
     public async start(): Promise<void> {
@@ -62,7 +62,7 @@ export class BridgeAPIConsumer {
         await Promise.all([
             // start bridge consumer
             this.bridgeConsumer.start({
-                next: async (data) => this.onBridgeData(data as IBridgeTx[]),
+                next: async (data) => this.onBridgeData(data),
                 summary: async (data: ILastIndexedBridgeTransaction) =>
                     this.onBridgeDataSummary(data),
                 error: (err: ConsumerError | ExternalDependencyError) =>
@@ -72,7 +72,7 @@ export class BridgeAPIConsumer {
 
             // start claim consumer
             this.claimConsumer.start({
-                next: async (data) => this.onClaimData(data as IClaimTx[]),
+                next: async (data) => this.onClaimData(data),
                 summary: async (data: ILastIndexedClaimTransaction) =>
                     this.onClaimDataSummary(data),
                 error: (err: ConsumerError | ExternalDependencyError) =>
@@ -82,7 +82,7 @@ export class BridgeAPIConsumer {
 
             // start mapping consumer
             this.mappingConsumer.start({
-                next: async (data) => this.onMappingData(data as IMappingTx[]),
+                next: async (data) => this.onMappingData(data),
                 summary: async (data: ILastIndexedMappingTransaction) =>
                     this.onMappingDataSummary(data),
                 error: (err: ConsumerError | ExternalDependencyError) =>

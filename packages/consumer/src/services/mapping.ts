@@ -4,8 +4,8 @@ import { CryptoHasher } from "bun";
 
 export default class TokenMappingsService {
     constructor(
-        private database: DatabaseClient,
-        private collectionId: string = "bridge_hub_api_tokenMappings"
+        private readonly database: DatabaseClient,
+        private readonly collectionId: string = "bridge_hub_api_tokenMappings"
     ) {}
 
     private generateDocId(

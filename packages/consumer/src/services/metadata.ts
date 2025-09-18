@@ -3,9 +3,9 @@ import type { IHubMetadata } from "../interfaces/metadata";
 
 export default class MetadataService {
     constructor(
-        private database: DatabaseClient,
-        private collectionId: string = "bridge_hub_api_metadata",
-        private docId: string = "lastIndexedTransactions"
+        private readonly database: DatabaseClient,
+        private readonly collectionId: string = "bridge_hub_api_metadata",
+        private readonly docId: string = "lastIndexedTransactions"
     ) {}
 
     public async saveLastIndexedTxs(data: IHubMetadata): Promise<void> {
