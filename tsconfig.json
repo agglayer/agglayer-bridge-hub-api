@@ -1,15 +1,15 @@
 {
-    "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "consumer": ["./packages/consumer"],
-            "api": ["./packages/api"]
-        },
-        "module": "ESNext",
-        "moduleResolution": "Bundler",
-        "target": "ESNext",
-        "lib": ["ESNext"],
-        "esModuleInterop": true,
-        "strict": true
-    }
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"consumer": ["./packages/consumer"],
+			"api": ["./packages/api"]
+		},
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"target": "ESNext",
+		"lib": ["ESNext"],
+		"esModuleInterop": true,
+		"strict": true
+	}
 }
