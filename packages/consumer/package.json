@@ -1,28 +1,19 @@
 {
-    "name": "bridge-hub-consumer",
-    "type": "module",
-    "module": "src/index.ts",
-    "exports": "./dist/",
-    "scripts": {
-        "tests": "echo 'Hello unit tests'",
-        "tests:integration": "echo 'Hello integration tests'",
-        "build": "tsup",
-        "start": "bun dist/index.js"
-    },
-    "devDependencies": {
-        "@semantic-release/commit-analyzer": "^13.0.1",
-        "@semantic-release/github": "^11.0.1",
-        "@semantic-release/release-notes-generator": "^14.0.3",
-        "@types/bun": "latest",
-        "semantic-release": "^24.2.3",
-        "tsup": "^8.4.0"
-    },
-    "peerDependencies": {
-        "typescript": "^5"
-    },
-    "dependencies": {
-        "@polygonlabs/servercore": "1.0.0-dev.34",
-        "@polygonlabs/servercore-firestore": "1.0.0-dev.18",
-        "dotenv": "^16.4.7"
-    }
+	"name": "bridge-hub-consumer",
+	"type": "module",
+	"module": "src/index.ts",
+	"exports": "./dist/",
+	"scripts": {
+		"build": "tsup",
+		"dev": "bun run --hot src/index.ts",
+		"start": "bun dist/index.js",
+		"test": "bun test"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {}
 }

@@ -1,0 +1,50 @@
+{
+	"name": "agglayer-bridge-hub",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Agglayer Bridge Hub API",
+	"type": "module",
+	"workspaces": [
+		"packages/*"
+	],
+	"scripts": {
+		"bootstrap": "lerna bootstrap --npm-client=bun",
+		"build": "lerna run build",
+		"build:api": "lerna run build --scope=bridge-hub-api",
+		"build:consumer": "lerna run build --scope=bridge-hub-consumer",
+		"dev": "lerna run dev --parallel",
+		"start": "lerna run start --parallel",
+		"test": "lerna run test",
+		"clean": "lerna clean && bun pm cache rm",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"lint": "eslint . --ext .ts,.js",
+		"lint:fix": "eslint . --ext .ts,.js --fix",
+		"style": "bun run format && bun run lint:fix",
+		"style:check": "bun run format:check && bun run lint",
+		"type-check": "lerna run type-check",
+		"prepare": "husky"
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^18.4.3",
+		"@commitlint/config-conventional": "^18.4.3",
+		"@eslint/js": "^9.32.0",
+		"@types/bun": "latest",
+		"@typescript-eslint/eslint-plugin": "^8.44.0",
+		"@typescript-eslint/parser": "^8.44.0",
+		"eslint": "^9.35.0",
+		"eslint-config-prettier": "^10.1.8",
+		"husky": "^9.1.7",
+		"lerna": "^8.0.0",
+		"prettier": "^3.6.2",
+		"typescript": "^5"
+	},
+	"engines": {
+		"bun": ">=1.0.0"
+	},
+	"dependencies": {
+		"@polygonlabs/servercore": "1.1.0",
+		"@polygonlabs/servercore-firestore": "1.1.0",
+		"tsup": "^8.5.0"
+	}
+}

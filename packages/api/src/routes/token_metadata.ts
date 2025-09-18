@@ -5,9 +5,9 @@ import { getTokenMetadata } from "../controllers/token_metadata";
 const tokenMetadataRoutes = new Hono();
 
 tokenMetadataRoutes.get(
-    "/:tokenAddress",
-    validateTokenMetadataQueryParams,
-    getTokenMetadata
+	"/:tokenAddress",
+	validateTokenMetadataQueryParams,
+	getTokenMetadata
 );
 
 export default tokenMetadataRoutes;
