@@ -15,5 +15,6 @@
 			"message": "chore(release): publish %s [skip ci]"
 		}
 	},
-	"packages": ["packages/*"]
+	"packages": ["packages/*"],
+	"$schema": "node_modules/lerna/schemas/lerna-schema.json"
 }

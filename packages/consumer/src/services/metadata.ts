@@ -9,7 +9,7 @@ export default class MetadataService {
 	) {}
 
 	public async saveLastIndexedTxs(data: IHubMetadata): Promise<void> {
-		this.database.updateDocuments({
+		await this.database.updateDocuments({
 			collectionPaths: [this.collectionId],
 			docDatas: [data],
 			docIds: [this.docId],
