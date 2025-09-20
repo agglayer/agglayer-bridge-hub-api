@@ -19,7 +19,6 @@ jobs:
         uses: 0xPolygon/pipelines/.github/workflows/gcp_pipeline_release_image.yaml@main
         with:
             image_name: bridge-hub-api
-            dockerfile_path: packages/api/Dockerfile
-            dockerfile_context: packages/api
+            dockerfile_path: Dockerfile.api
             image_tag: ${{ inputs.tag || github.ref_name }}
             checkout_ref: ${{ inputs.tag || github.ref_name }}
