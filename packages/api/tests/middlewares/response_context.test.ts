@@ -7,13 +7,16 @@ describe("Response Context Middleware", () => {
 	let mockJsonFunction: ReturnType<typeof mock>;
 
 	beforeEach(() => {
-		mockStatusFunction = mock(() => {});
+		mockStatusFunction = mock();
 		mockJsonFunction = mock(() => ({ json: "response" }));
 
 		mockContext = {
 			status: mockStatusFunction,
 			json: mockJsonFunction,
 		};
+
+		// Configure the mock to return the context for chaining
+		mockStatusFunction.mockImplementation(() => mockContext);
 	});
 
 	describe("getResponseContext", () => {
@@ -92,10 +95,15 @@ describe("Response Context Middleware", () => {
 		});
 
 		test("should work with empty context methods", () => {
+			const emptyStatusMock = mock();
+			const emptyJsonMock = mock(() => ({}));
 			const emptyMockContext = {
-				status: mock(() => {}),
-				json: mock(() => ({})),
+				status: emptyStatusMock,
+				json: emptyJsonMock,
 			};
+
+			// Configure the status mock to return the context for chaining
+			emptyStatusMock.mockImplementation(() => emptyMockContext);
 
 			const responseContext = getResponseContext(emptyMockContext as any);
 
@@ -169,13 +177,15 @@ describe("Response Context Middleware", () => {
 		});
 
 		test("should handle context methods that throw errors", () => {
+			const errorStatusMock = mock(() => {
+				throw new Error("Status error");
+			});
+			const errorJsonMock = mock(() => {
+				throw new Error("JSON error");
+			});
 			const errorContext = {
-				status: mock(() => {
-					throw new Error("Status error");
-				}),
-				json: mock(() => {
-					throw new Error("JSON error");
-				}),
+				status: errorStatusMock,
+				json: errorJsonMock,
 			};
 
 			const responseContext = getResponseContext(errorContext as any);
