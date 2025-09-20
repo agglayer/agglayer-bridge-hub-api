@@ -16,14 +16,13 @@ export const TransactionsQuerySchema = z
 			.number()
 			.int()
 			.nonnegative()
-			.refine(
-				(val) =>
-					val === undefined ||
-					(val >= 1000000000000 && val <= 9999999999999),
-				{
-					message:
-						"updatedSince must be a valid Unix timestamp in milliseconds (13 digits)",
-				}
+			.min(
+				1000000000000,
+				"updatedSince must be a valid Unix timestamp in milliseconds (13 digits)"
+			)
+			.max(
+				9999999999999,
+				"updatedSince must be a valid Unix timestamp in milliseconds (13 digits)"
 			)
 			.optional(),
 		order: z.enum(["asc", "desc"]).optional(),
@@ -37,11 +36,13 @@ export const TransactionsByDepositCountQuerySchema = z
 	.object({
 		sourceNetworkId: z
 			.string()
-			.regex(/^\d*$/, "sourceNetworkId must be a non-negative integer")
+			.max(18, "Network IDs string must not exceed 18 characters")
+			.regex(/^\d+$/, "sourceNetworkId must be a non-negative integer")
 			.transform((val) => parseInt(val, 10)),
 		depositCount: z
 			.string()
-			.regex(/^\d*$/, "depositCount must be a non-negative integer")
+			.max(18, "Network IDs string must not exceed 18 characters")
+			.regex(/^\d+$/, "depositCount must be a non-negative integer")
 			.transform((val) => parseInt(val, 10)),
 	})
 	.merge(NetworkSchema);

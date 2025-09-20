@@ -177,3 +177,6 @@ dist
 
 # Security rules
 *.rules
+
+# AI
+.claude
