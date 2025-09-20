@@ -7,7 +7,10 @@
 		"build": "tsup",
 		"dev": "bun run --hot src/server.ts",
 		"start": "bun dist/server.js",
-		"test": "bun test"
+		"test": "bun run test:services; bun run test:controllers; bun run test:middlewares",
+		"test:services": "bun test tests/services/",
+		"test:controllers": "bun test tests/controllers/",
+		"test:middlewares": "bun test tests/middlewares/"
 	},
 	"devDependencies": {
 		"@types/bun": "latest"

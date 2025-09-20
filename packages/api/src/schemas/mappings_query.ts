@@ -1,14 +1,17 @@
 import { z } from "zod";
-import { networkIdsSchema, NetworkSchema, PaginationSchema } from "./common";
+import {
+	address,
+	networkIdsSchema,
+	NetworkSchema,
+	PaginationSchema,
+} from "./common";
 
 export const MappingsQuerySchema = z
 	.object({
-		originTokenAddress: z
-			.string()
+		originTokenAddress: address
 			.optional()
 			.transform((val) => val?.toLowerCase()),
-		wrappedTokenAddress: z
-			.string()
+		wrappedTokenAddress: address
 			.optional()
 			.transform((val) => val?.toLowerCase()),
 		originNetworkIds: networkIdsSchema.optional(),
@@ -18,22 +21,17 @@ export const MappingsQuerySchema = z
 
 export const MappingsByTokenQuerySchema = z
 	.object({
-		tokenNetwork: z.coerce.number().int().nonnegative(),
-		tokenAddress: z
+		tokenNetwork: z
 			.string()
-			.nonempty()
-			.optional()
-			.transform((val) => val?.toLowerCase()),
+			.regex(/^\d*$/, "chainId must be a non-negative integer")
+			.transform((val) => parseInt(val, 10)),
+		tokenAddress: address.nonempty().transform((val) => val?.toLowerCase()),
 	})
 	.merge(NetworkSchema);
 
 export const TokenMetadataQuerySchema = z
 	.object({
-		tokenAddress: z
-			.string()
-			.nonempty()
-			.optional()
-			.transform((val) => val?.toLowerCase()),
+		tokenAddress: address.nonempty().transform((val) => val?.toLowerCase()),
 	})
 	.merge(NetworkSchema);
 

@@ -18,6 +18,11 @@ export class ProofService {
 		depositCount: number,
 		leaf: number
 	): Promise<IProof> {
+		if (!networkMap) {
+			throw new Error(
+				"ProofService not initialized. Call initializeService first."
+			);
+		}
 		try {
 			const networkURLMap = networkMap.get(network);
 			if (!networkURLMap) {
@@ -33,9 +38,23 @@ export class ProofService {
 					}
 				);
 			}
-			const targetUrl = `${networkURLMap.get(
-				sourceNetwork
-			)}?network_id=${sourceNetwork}&deposit_count=${depositCount}&leaf_index=${leaf}`;
+
+			const sourceNetworkUrl = networkURLMap.get(sourceNetwork);
+			if (!sourceNetworkUrl) {
+				throw new NotFoundError(
+					"Network URL isn't supported",
+					undefined,
+					undefined,
+					{
+						network: network,
+						sourceNetwork,
+						depositCount,
+						leaf,
+					}
+				);
+			}
+
+			const targetUrl = `${sourceNetworkUrl}?network_id=${sourceNetwork}&deposit_count=${depositCount}&leaf_index=${leaf}`;
 			const response = await fetch(targetUrl);
 			const data = await response.json();
 			if (!response.ok) {

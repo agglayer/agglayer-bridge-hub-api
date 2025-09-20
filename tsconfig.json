@@ -2,8 +2,8 @@
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
-			"consumer": ["./packages/consumer"],
-			"api": ["./packages/api"]
+			"api": ["./packages/api"],
+			"consumer": ["./packages/consumer"]
 		},
 		"module": "ESNext",
 		"moduleResolution": "Bundler",

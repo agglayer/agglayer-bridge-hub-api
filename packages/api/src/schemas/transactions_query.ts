@@ -1,10 +1,15 @@
 import { z } from "zod";
-import { networkIdsSchema, NetworkSchema, PaginationSchema } from "./common";
+import {
+	address,
+	networkIdsSchema,
+	NetworkSchema,
+	PaginationSchema,
+} from "./common";
 import { TransactionStatus } from "../enums";
 
 export const TransactionsQuerySchema = z
 	.object({
-		fromAddress: z.string().optional(),
+		fromAddress: address.optional(),
 		sourceNetworkIds: networkIdsSchema.optional(),
 		destinationNetworkIds: networkIdsSchema.optional(),
 		updatedSince: z.coerce
@@ -30,8 +35,14 @@ export const TransactionsQuerySchema = z
 
 export const TransactionsByDepositCountQuerySchema = z
 	.object({
-		sourceNetworkId: z.coerce.number().int().nonnegative(),
-		depositCount: z.coerce.number().int().nonnegative(),
+		sourceNetworkId: z
+			.string()
+			.regex(/^\d*$/, "sourceNetworkId must be a non-negative integer")
+			.transform((val) => parseInt(val, 10)),
+		depositCount: z
+			.string()
+			.regex(/^\d*$/, "depositCount must be a non-negative integer")
+			.transform((val) => parseInt(val, 10)),
 	})
 	.merge(NetworkSchema);
 
