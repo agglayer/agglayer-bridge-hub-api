@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { TransactionService } from "../services";
+import { TransactionService } from "../services/transactions";
 import type {
 	TransactionsByDepositCountQuery,
 	TransactionsQuery,

@@ -2,14 +2,12 @@ import { Logger } from "@polygonlabs/servercore";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import router from "./routes";
-import {
-	MappingsService,
-	TokenMetadataService,
-	TransactionService,
-} from "./services";
+import { MappingsService } from "./services/mappings";
+import { TokenMetadataService } from "./services/token_metadata";
+import { TransactionService } from "./services/transactions";
+import { ProofService } from "./services/proof";
 import { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import { logger } from "hono/logger";
-import { ProofService } from "./services/proof";
 import healthCheckRoutes from "./routes/health_check";
 
 const app = new Hono();

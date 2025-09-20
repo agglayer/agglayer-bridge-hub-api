@@ -52,6 +52,11 @@ export class TokenMetadataService {
 		tokenAddress: string,
 		orQueryParams: IQueryOrFilterParams[]
 	): Promise<ITokenMetadata | undefined> {
+		if (!db || !collectionId) {
+			throw new Error(
+				"TokenMetadataService not initialized. Call initializeTokenMetadataService first."
+			);
+		}
 		let tokenMetadata: ITokenMetadata | undefined;
 		const mapping = await db
 			.getDocuments({
@@ -116,6 +121,10 @@ export class TokenMetadataService {
 					decimals: Number(decimals),
 				};
 			} catch (error) {
+				// Re-throw ApiErrors as-is to preserve specific error messages
+				if (error instanceof ApiError) {
+					throw error;
+				}
 				throw new ApiError("Failed to fetch token metadata", {
 					name: error instanceof Error ? error.message : "Unknown",
 				});
@@ -136,6 +145,11 @@ export class TokenMetadataService {
 		network: string,
 		tokenAddress: string
 	): Promise<ITokenMetadata | undefined> {
+		if (!chainConfig || !bridgeAddress) {
+			throw new Error(
+				"TokenMetadataService not initialized. Call initializeTokenMetadataService first."
+			);
+		}
 		const networkChainConfig = chainConfig.get(network);
 		const bridgeAddr = bridgeAddress.get(network);
 

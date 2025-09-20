@@ -44,6 +44,11 @@ export class TransactionService {
 		startAfter?: string | undefined,
 		orderParamsOverride?: IQueryOrderOperationParams[]
 	): Promise<{ documents: IHubTransaction[]; totalDocumentsCount?: number }> {
+		if (!db || !collectionId) {
+			throw new Error(
+				"TransactionService not initialized. Call initializeTransactionService first."
+			);
+		}
 		return await db.getDocuments({
 			collectionPath: collectionId.get(network) || "",
 			filter: queryParams,
@@ -58,6 +63,11 @@ export class TransactionService {
 		network: string,
 		docId: string
 	): Promise<IHubTransaction | null> {
+		if (!db || !collectionId) {
+			throw new Error(
+				"TransactionService not initialized. Call initializeTransactionService first."
+			);
+		}
 		return (await db.getDocument({
 			collectionId: collectionId.get(network) || "",
 			docId,

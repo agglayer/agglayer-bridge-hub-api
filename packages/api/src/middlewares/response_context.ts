@@ -1,8 +1,9 @@
-import type { ResponseContext } from "@polygonlabs/servercore";
+import { ApiError, type ResponseContext } from "@polygonlabs/servercore";
 import type { Context } from "hono";
 import type { StatusCode } from "hono/utils/http-status";
 
 export const getResponseContext = (c: Context): ResponseContext => {
+	if (!c) throw new ApiError("Context is required");
 	const responseContext: ResponseContext = {
 		status: (statusCode: number) => {
 			c.status(statusCode as StatusCode);

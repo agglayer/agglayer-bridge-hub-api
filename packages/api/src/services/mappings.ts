@@ -51,6 +51,11 @@ export class MappingsService {
 		documents: IHubTokenMapping[];
 		totalDocumentsCount?: number;
 	}> {
+		if (!db || !collectionId) {
+			throw new Error(
+				"MappingsService not initialized. Call initializeMappingsService first."
+			);
+		}
 		const queryParams: IQueryFilterOperationParams[] = [];
 
 		if (originTokenAddress) {
@@ -100,6 +105,12 @@ export class MappingsService {
 		documents: IHubTokenMapping[];
 		totalDocumentsCount?: number;
 	}> {
+		if (!db || !collectionId) {
+			throw new Error(
+				"MappingsService not initialized. Call initializeMappingsService first."
+			);
+		}
+
 		// Create query params for db request
 		const queryParams: IQueryOrFilterParams[] = [];
 
