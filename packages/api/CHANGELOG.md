@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.1.1...bridge-hub-api@1.2.0) (2025-09-21)
+
+### Bug Fixes
+
+- add page title to docs ui ([4c278a2](https://github.com/agglayer/agglayer-bridge-hub-api/commit/4c278a2e91b4987abc3a2a8160460efc00541e3c))
+
+### Features
+
+- add openapi spec doc and docs ui ([6411bc0](https://github.com/agglayer/agglayer-bridge-hub-api/commit/6411bc015b1c407b334df438244b61455cbf33cc))
+
 ## [1.1.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.1.0...bridge-hub-api@1.1.1) (2025-09-21)
 
 ### Bug Fixes
