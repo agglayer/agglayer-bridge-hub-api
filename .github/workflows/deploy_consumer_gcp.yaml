@@ -2,7 +2,8 @@ name: Publish consumer docker images to GCP
 
 on:
     push:
-        tags: ["bridge-hub-consumer*"]
+        tags:
+            - "bridge-hub-consumer@*"
     workflow_dispatch:
         inputs:
             tag:

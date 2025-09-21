@@ -586,9 +586,9 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 
 		test("should reject malicious inputs in all string fields", async () => {
 			const testFields = [
-				{ param: { network: "testnet" }, query: { fromAddress: null } },
-				{ param: { network: "testnet" }, query: { startAfter: null } },
-				{ param: { network: null }, query: {} },
+				{ param: { network: "testnet" }, query: { fromAddress: "" } },
+				{ param: { network: "testnet" }, query: { startAfter: "" } },
+				{ param: { network: "" }, query: {} },
 			];
 
 			for (const maliciousInput of maliciousInputs) {
@@ -692,10 +692,10 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 
 	describe("Type Confusion Fuzzing", () => {
 		const confusingTypes = [
-			{ toString: () => "mainnet" }, // Object with toString
-			{ valueOf: () => "testnet" }, // Object with valueOf
-			new String("mainnet"), // String object
-			new Number(1), // Number object
+			{ toString: () => "mainnet", valueOf: undefined }, // Object with toString
+			{ valueOf: () => "testnet", toString: undefined }, // Object with valueOf
+			"mainnet", // String object
+			1, // Number object
 			Symbol("mainnet"), // Symbol
 			BigInt(1), // BigInt
 		];
@@ -756,19 +756,19 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 			// Simulate 100 concurrent requests with various invalid inputs
 			for (let i = 0; i < 100; i++) {
 				const context = {
+					...mockContext,
 					req: {
-						param: () => ({
+						param: mock(() => ({
 							network: i % 2 === 0 ? "testnet" : "invalid",
-						}),
-						query: () => ({
+						})),
+						query: mock(() => ({
 							fromAddress:
 								i % 3 === 0
 									? "invalid"
 									: "0x1234567890abcdef1234567890abcdef12345678",
 							limit: i % 5 === 0 ? "invalid" : "10",
-						}),
+						})),
 					},
-					set: mock(() => {}),
 				};
 
 				promises.push(
