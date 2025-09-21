@@ -120,6 +120,7 @@ async function serve(): Promise<void> {
 		Scalar({
 			theme: "kepler",
 			url: "/openapi",
+			pageTitle: "Agglayer Bridge Hub API Documentation",
 		})
 	);
 
