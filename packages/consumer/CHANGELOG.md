@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.1.0...bridge-hub-consumer@1.1.1) (2025-09-21)
+
+### Bug Fixes
+
+- add fuzzy tests on api package ([c86c37b](https://github.com/agglayer/agglayer-bridge-hub-api/commit/c86c37bda7eae48adf1aa2b7731492bae0f27e18))
+
 # 1.1.0 (2025-09-20)
 
 ### Bug Fixes
