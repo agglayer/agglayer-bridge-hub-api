@@ -23,7 +23,8 @@ export const MappingsByTokenQuerySchema = z
 	.object({
 		tokenNetwork: z
 			.string()
-			.regex(/^\d*$/, "chainId must be a non-negative integer")
+			.max(18, "Network IDs string must not exceed 18 characters")
+			.regex(/^\d+$/, "chainId must be a non-negative integer")
 			.transform((val) => parseInt(val, 10)),
 		tokenAddress: address.nonempty().transform((val) => val?.toLowerCase()),
 	})

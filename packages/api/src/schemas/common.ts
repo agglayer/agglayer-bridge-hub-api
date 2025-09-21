@@ -2,14 +2,33 @@ import { z } from "zod";
 
 export const networkIdsSchema = z
 	.string()
-	.transform((val) => val.split(",").map((v) => Number(v)))
-	.refine((arr) => arr.every((n) => Number.isInteger(n) && n >= 0), {
-		message: "Network IDs must be non-negative integers",
-	});
+	.max(18, "Network IDs string must not exceed 18 characters")
+	.refine(
+		(val) => {
+			// Check for empty string
+			if (val.trim() === "") return false;
+
+			// Split by comma and validate each part
+			const parts = val.split(",");
+			return parts.every((part) => {
+				const trimmed = part.trim();
+				// Each part must be non-empty and match digit-only regex
+				return trimmed !== "" && /^\d+$/.test(trimmed);
+			});
+		},
+		{
+			message:
+				"Network IDs must be comma-separated non-negative integers (no empty values, trailing commas, or non-digits)",
+		}
+	)
+	.transform((val) => val.split(",").map((v) => parseInt(v.trim(), 10)));
 
 export const PaginationSchema = z.object({
 	limit: z.coerce.number().int().nonnegative().default(20),
-	startAfter: z.coerce.string().optional(),
+	startAfter: z.coerce
+		.string()
+		.max(18, "Network IDs string must not exceed 18 characters")
+		.optional(),
 });
 
 export const NetworkSchema = z.object({

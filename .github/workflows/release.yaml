@@ -4,11 +4,16 @@ on:
     push:
         branches:
             - main
-            - release
         paths:
             - "packages/api/**"
             - ".github/workflows/release-api.yml"
             - ".github/workflows/deploy_api_gcp.yaml"
+    workflow_dispatch:
+        inputs:
+            branch:
+                description: "Branch to release from"
+                required: false
+                default: "main"
 
 jobs:
     release:
