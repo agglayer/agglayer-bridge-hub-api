@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@hono/zod-openapi";
 
 export const ClaimProofQuerySchema = z.object({
 	sourceNetworkId: z.coerce.number().int().nonnegative(),

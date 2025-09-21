@@ -1,16 +1,18 @@
 import { Logger } from "@polygonlabs/servercore";
-import { Hono } from "hono";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { Scalar } from "@scalar/hono-api-reference";
 import router from "./routes";
 import { MappingsService } from "./services/mappings";
 import { TokenMetadataService } from "./services/token_metadata";
 import { TransactionService } from "./services/transactions";
 import { ProofService } from "./services/proof";
 import { DatabaseClient } from "@polygonlabs/servercore-firestore";
-import { logger } from "hono/logger";
 import healthCheckRoutes from "./routes/health_check";
+import packageJson from "../package.json" with { type: "json" };
 
-const app = new Hono();
+const app = new OpenAPIHono();
 
 async function serve(): Promise<void> {
 	Logger.create({
@@ -95,8 +97,34 @@ async function serve(): Promise<void> {
 	app.use("*", logger()); // Logs all requests
 	app.use("*", cors()); // Enables CORS for all routes
 
-	// Register routes
-	app.route("/:network/", router);
+	// The OpenAPI documentation will be available at /openapi
+	app.doc("/openapi", {
+		openapi: "3.0.0",
+		info: {
+			version: packageJson.version,
+			title: "Agglayer Bridge Hub API",
+			description:
+				"API for accessing bridge transaction data, token mappings, claim proofs, and token metadata",
+		},
+		servers: [
+			{
+				url: process.env.API_BASE_URL || "http://localhost:3001",
+				description: "Development server",
+			},
+		],
+	});
+
+	// Scalar API Reference UI
+	app.get(
+		"/docs",
+		Scalar({
+			theme: "kepler",
+			url: "/openapi",
+		})
+	);
+
+	// Register routes with network parameter schema
+	app.route("/:network", router);
 	app.route("/health-check", healthCheckRoutes);
 }
 
