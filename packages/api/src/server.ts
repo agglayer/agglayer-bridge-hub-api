@@ -10,7 +10,6 @@ import { TransactionService } from "./services/transactions";
 import { ProofService } from "./services/proof";
 import { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import healthCheckRoutes from "./routes/health_check";
-import packageJson from "../package.json" with { type: "json" };
 
 const app = new OpenAPIHono();
 
@@ -101,7 +100,7 @@ async function serve(): Promise<void> {
 	app.doc("/openapi", {
 		openapi: "3.0.0",
 		info: {
-			version: packageJson.version,
+			version: "v1",
 			title: "Agglayer Bridge Hub API",
 			description:
 				"API for accessing bridge transaction data, token mappings, claim proofs, and token metadata",
