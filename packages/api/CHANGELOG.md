@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.2.0...bridge-hub-api@1.2.1) (2025-09-22)
+
+### Bug Fixes
+
+- remove dynamic versioning for openapi docs ([28cb684](https://github.com/agglayer/agglayer-bridge-hub-api/commit/28cb684cae52fb97b3db930ec364202f0986fad2))
+
 # [1.2.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.1.1...bridge-hub-api@1.2.0) (2025-09-21)
 
 ### Bug Fixes
