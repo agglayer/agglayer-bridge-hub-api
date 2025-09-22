@@ -1,25 +1,32 @@
 name: Publish api docker images to GCP
 
 on:
-    push:
-        tags:
-            - "bridge-hub-api@*"
-    workflow_dispatch:
-        inputs:
-            tag:
-                description: "Tag to build and push"
-                required: true
-                type: string
+  # Trigger for ANY published release
+  release:
+    types: [published]
+  
+  # Also allow manual runs
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build and push"
+        required: true
+        type: string
 
 permissions:
-    contents: read
-    id-token: write
+  contents: read
+  id-token: write
 
 jobs:
-    docker-release-api:
-        uses: 0xPolygon/pipelines/.github/workflows/gcp_pipeline_release_image.yaml@main
-        with:
-            image_name: bridge-hub-api
-            dockerfile_path: Dockerfile.api
-            image_tag: ${{ inputs.tag || github.ref_name }}
-            checkout_ref: ${{ inputs.tag || github.ref_name }}
+  docker-release-api:
+    # THIS IS THE KEY: It filters the jobs to run ONLY for matching tags
+    # OR if the workflow was triggered manually.
+    if: startsWith(github.event.release.tag_name, 'bridge-hub-api@') || github.event_name == 'workflow_dispatch'
+
+    uses: 0xPolygon/pipelines/.github/workflows/gcp_pipeline_release_image.yaml@main
+    with:
+      image_name: bridge-hub-api
+      dockerfile_path: Dockerfile.api
+      # Use the tag from the manual input OR from the release event that triggered the run
+      image_tag: ${{ inputs.tag || github.event.release.tag_name }}
+      checkout_ref: ${{ inputs.tag || github.event.release.tag_name }}
