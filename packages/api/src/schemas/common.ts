@@ -35,6 +35,9 @@ export const NetworkSchema = z.object({
 	network: z.enum(["mainnet", "testnet"]),
 });
 
-export const address = z.string().regex(/^0x[a-fA-F0-9]{40}$/, {
-	message: "Invalid address",
-});
+export const address = z
+	.string()
+	.regex(/^0x[a-fA-F0-9]{40}$/, {
+		message: "Invalid address",
+	})
+	.transform((val) => val.toLowerCase());
