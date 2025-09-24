@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.2.1...bridge-hub-api@1.2.2) (2025-09-24)
+
+### Bug Fixes
+
+- convert address to lowercase on schema ([46a3c01](https://github.com/agglayer/agglayer-bridge-hub-api/commit/46a3c016d43ecf5ebb2a05986bf4faeedccbbd66))
+- restore address transformation to lowercase in schema ([4e4aef1](https://github.com/agglayer/agglayer-bridge-hub-api/commit/4e4aef1126eb2ca4f723beb4b1768915c5c4d82d))
+
 ## [1.2.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.2.0...bridge-hub-api@1.2.1) (2025-09-22)
 
 ### Bug Fixes
