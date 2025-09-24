@@ -9,7 +9,10 @@ import { TransactionStatus } from "../enums";
 
 export const TransactionsQuerySchema = z
 	.object({
-		fromAddress: address.optional(),
+		fromAddress: address
+			.nonempty()
+			.transform((val) => val.toLowerCase())
+			.optional(),
 		sourceNetworkIds: networkIdsSchema.optional(),
 		destinationNetworkIds: networkIdsSchema.optional(),
 		updatedSince: z.coerce
