@@ -91,7 +91,7 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 						leafIndex
 					);
 				} catch (error) {
-					Logger.error({
+					Logger.info({
 						location: "ClaimReadinessConsumer",
 						function: "syncL1InfoTree",
 						networkId: this.config.networkId,
@@ -155,14 +155,14 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 
 					const injectedTreeData = await injectedTreeResponse.json();
 
-					if (injectedTreeData && injectedTreeData.global_exit_root) {
+					if (injectedTreeData?.global_exit_root) {
 						await this.transactionService.updateTransactionToReadyToClaim(
 							tx.depositCount,
 							tx.sourceNetwork
 						);
 					}
 				} catch (error) {
-					Logger.error({
+					Logger.info({
 						location: "ClaimReadinessConsumer",
 						function: "syncInjectedL1InfoTree",
 						networkId: this.config.networkId,
