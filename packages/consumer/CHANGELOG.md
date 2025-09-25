@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.1.1...bridge-hub-consumer@1.1.2) (2025-09-25)
+
+### Bug Fixes
+
+- change error logging to info level in ClaimReadinessConsumer ([9f973eb](https://github.com/agglayer/agglayer-bridge-hub-api/commit/9f973eb882160dbf5efb2251f8260f47464df2a4))
+
 ## [1.1.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.1.0...bridge-hub-consumer@1.1.1) (2025-09-21)
 
 ### Bug Fixes
