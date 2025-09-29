@@ -169,6 +169,25 @@ export default class TransactionsService {
 			.then((res) => res.documents as IHubBridgedStatusTransactions[]);
 	}
 
+	public async getClaim(
+		txHash: string
+	): Promise<IHubBridgedStatusTransactions[]> {
+		return await this.database
+			.getDocuments({
+				collectionPath: this.collectionId,
+				filter: [
+					{
+						field: "claimTransactionHash",
+						operator: "==",
+						value: txHash,
+					},
+				],
+				limit: 1,
+				selectFields: ["sourceNetwork", "depositCount", "hubUID"],
+			})
+			.then((res) => res.documents as IHubBridgedStatusTransactions[]);
+	}
+
 	public async getLeafIncludedTransactions(
 		destinationNetwork: number,
 		afterId?: string

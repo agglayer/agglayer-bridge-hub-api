@@ -140,6 +140,7 @@ async function start(): Promise<void> {
 						depositCount,
 						bridges,
 						mappings,
+						claims,
 						latestBridgeFromDB,
 					] = await Promise.all([
 						bridgeContract.depositCount(),
@@ -148,6 +149,9 @@ async function start(): Promise<void> {
 						),
 						axios.get(
 							`${process.env.BRIDGE_SERVICE_URL}/token-mappings?network_id=${process.env.NETWORK_ID}`
+						),
+						axios.get(
+							`${process.env.BRIDGE_SERVICE_URL}/claims?network_id=${process.env.NETWORK_ID}`
 						),
 						transactionService.getLatestBridgeTransactions(
 							Number(process.env.NETWORK_ID)
@@ -158,10 +162,15 @@ async function start(): Promise<void> {
 					const latestBridge = bridges?.data?.bridges?.[0] || null;
 					const latestMapping =
 						mappings?.data?.token_mappings?.[0] || null;
+					const latestClaims = claims?.data?.claims?.[0] || null;
 					const latestBridgeInDB = latestBridgeFromDB[0] || null;
 
 					if (!latestBridge) {
 						throw new ApiError("No bridges found from Aggkit API");
+					}
+
+					if (!latestClaims) {
+						throw new ApiError("No claims found from Aggkit API");
 					}
 
 					if (!latestMapping) {
@@ -194,11 +203,16 @@ async function start(): Promise<void> {
 						);
 					}
 
-					const mappingsFromDb =
-						await tokenMappingsService.getLatestTokenMapping(
+					const [mappingsFromDb, claimFromDb] = await Promise.all([
+						tokenMappingsService.getLatestTokenMapping(
 							latestMapping.tx_hash.toLowerCase(),
 							latestMapping.block_num
-						);
+						),
+						transactionService.getClaim(
+							latestClaims.tx_hash.toLowerCase()
+						),
+					]);
+
 					if (
 						(!mappingsFromDb || mappingsFromDb.length === 0) &&
 						Date.now() -
@@ -209,6 +223,19 @@ async function start(): Promise<void> {
 					) {
 						throw new ApiError(
 							`Mappings in DB not in sync. Aggkit: ${latestMapping.tx_hash}`
+						);
+					}
+
+					if (
+						(!claimFromDb || claimFromDb.length === 0) &&
+						Date.now() -
+							new Date(
+								latestClaims.block_timestamp * 1000
+							).getTime() >
+							5 * 60 * 1000
+					) {
+						throw new ApiError(
+							`Claims in DB not in sync. Aggkit: ${latestClaims.tx_hash}`
 						);
 					}
 
