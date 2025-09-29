@@ -144,6 +144,31 @@ export default class TransactionsService {
 			.then((res) => res.documents as IHubBridgedStatusTransactions[]);
 	}
 
+	public async getLatestBridgeTransactions(
+		sourceNetwork: number
+	): Promise<IHubBridgedStatusTransactions[]> {
+		return await this.database
+			.getDocuments({
+				collectionPath: this.collectionId,
+				filter: [
+					{
+						field: "sourceNetwork",
+						operator: "==",
+						value: sourceNetwork,
+					},
+				],
+				limit: 1,
+				order: [{ field: "hubUID", order: "desc" }],
+				selectFields: [
+					"sourceNetwork",
+					"depositCount",
+					"hubUID",
+					"timestamp",
+				],
+			})
+			.then((res) => res.documents as IHubBridgedStatusTransactions[]);
+	}
+
 	public async getLeafIncludedTransactions(
 		destinationNetwork: number,
 		afterId?: string

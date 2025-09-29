@@ -36,6 +36,7 @@ export interface IHubBridgedStatusTransactions {
 	sourceNetwork: number;
 	depositCount: number;
 	hubUID: string;
+	timestamp?: number;
 }
 
 /**

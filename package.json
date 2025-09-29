@@ -45,6 +45,8 @@
 	"dependencies": {
 		"@polygonlabs/servercore": "1.1.0",
 		"@polygonlabs/servercore-firestore": "1.1.0",
+		"axios": "^1.12.2",
+		"ethers": "^6.15.0",
 		"tsup": "^8.5.0"
 	}
 }

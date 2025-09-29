@@ -39,4 +39,29 @@ export default class TokenMappingsService {
 			docIds: docIds,
 		});
 	}
+
+	public async getLatestTokenMapping(
+		transactionHash: string,
+		blockNumber: number
+	): Promise<IHubTokenMappings[]> {
+		return await this.database
+			.getDocuments({
+				collectionPath: this.collectionId,
+				filter: [
+					{
+						field: "transactionHash",
+						operator: "==",
+						value: transactionHash,
+					},
+					{
+						field: "blockNumber",
+						operator: "==",
+						value: blockNumber,
+					},
+				],
+				limit: 1,
+				order: [{ field: "blockNumber", order: "desc" }],
+			})
+			.then((res) => res.documents as IHubTokenMappings[]);
+	}
 }
