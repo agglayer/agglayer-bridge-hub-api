@@ -25,10 +25,7 @@ export const networkIdsSchema = z
 
 export const PaginationSchema = z.object({
 	limit: z.coerce.number().int().nonnegative().default(20),
-	startAfter: z.coerce
-		.string()
-		.max(18, "Network IDs string must not exceed 18 characters")
-		.optional(),
+	startAfter: z.coerce.string().optional(),
 });
 
 export const NetworkSchema = z.object({
