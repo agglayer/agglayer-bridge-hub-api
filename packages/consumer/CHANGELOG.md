@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.3](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.1.2...bridge-hub-consumer@1.1.3) (2025-09-30)
+
+### Bug Fixes
+
+- decode pre etrog global index correctly ([5baad63](https://github.com/agglayer/agglayer-bridge-hub-api/commit/5baad63b16add02e8399952c4a3310ff488fb022))
+- update the global index unit test ([115c39b](https://github.com/agglayer/agglayer-bridge-hub-api/commit/115c39b65f7001f041edf1bcbf409ba6be65ca87))
+
 ## [1.1.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.1.1...bridge-hub-consumer@1.1.2) (2025-09-25)
 
 ### Bug Fixes
