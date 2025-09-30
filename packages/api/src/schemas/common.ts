@@ -38,3 +38,7 @@ export const NetworkSchema = z.object({
 export const address = z.string().regex(/^0x[a-fA-F0-9]{40}$/, {
 	message: "Invalid address",
 });
+
+export const networkIdSchema = z
+	.string()
+	.max(18, "Network IDs string must not exceed 18 characters");
