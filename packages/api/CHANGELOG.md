@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.3](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.2.2...bridge-hub-api@1.2.3) (2025-09-30)
+
+### Bug Fixes
+
+- change getMappingsByToken to fetch using where filters instead of or ([f4d05fb](https://github.com/agglayer/agglayer-bridge-hub-api/commit/f4d05fb8b95f5ac8af8464560fe7deb6c72e7bd2))
+- set pagination startAfter max string limit to 32 ([091c5df](https://github.com/agglayer/agglayer-bridge-hub-api/commit/091c5df47133e052badc90809f73fc22b265e5dc))
+- start after param validation ([7d326df](https://github.com/agglayer/agglayer-bridge-hub-api/commit/7d326dfd8845d5bd0c3a3f8ea9659f0ca027597e))
+
 ## [1.2.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.2.1...bridge-hub-api@1.2.2) (2025-09-24)
 
 ### Bug Fixes
