@@ -8,7 +8,7 @@ export interface IClaimTx {
 	block_num: number;
 	block_timestamp: number; // BN
 	tx_hash: string;
-	global_index: number; // BN
+	global_index: string;
 	origin_address: string;
 	origin_network: number; // origin token network
 	destination_address: string;
@@ -31,7 +31,7 @@ export interface IHubClaimTransaction {
 	claimTransactionHash: string;
 	claimBlockNumber: number;
 	claimTimestamp: number;
-	globalIndex: number;
+	globalIndex: string;
 	sourceNetwork: number;
 	depositCount: number;
 	status: TransactionStatus;

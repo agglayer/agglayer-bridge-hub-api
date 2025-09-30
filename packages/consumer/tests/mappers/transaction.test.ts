@@ -161,19 +161,31 @@ describe("TransactionMapper", () => {
 	describe("decodeGlobalIndex", () => {
 		test("should decode global index correctly for small values", () => {
 			// Test with a small global index (42)
-			const smallGlobalIndex = 42;
+			const smallGlobalIndex = "42";
 			const result = mapper.mapClaimTransactions([
 				{ ...mockClaimTx, global_index: smallGlobalIndex },
 			]);
 
-			expect(result[0].sourceNetwork).toBe(1); // 0 + 1
+			expect(result[0].sourceNetwork).toBe(0); // networkId !== 0, so returns 0
 			expect(result[0].depositCount).toBe(42); // 42 & 0xffffffff
+		});
+
+		test("should decode global index correctly for small values with networkId 0", () => {
+			// Test with networkId 0 (pre-etrog behavior)
+			const mapperNetworkId0 = new TransactionMapper(0);
+			const smallGlobalIndex = "42";
+			const result = mapperNetworkId0.mapClaimTransactions([
+				{ ...mockClaimTx, global_index: smallGlobalIndex },
+			]);
+
+			expect(result[0].sourceNetwork).toBe(1); // networkId === 0, so returns 1
+			expect(result[0].depositCount).toBe(42);
 		});
 
 		test("should decode global index correctly for large values", () => {
 			// Test with a large global index that encodes both network and deposit count
 			// Use a smaller value that has hex length <= 16
-			const largeGlobalIndex = 42 * Math.pow(2, 32) + 100; // This will be hex length <= 16
+			const largeGlobalIndex = (42 * Math.pow(2, 32) + 100).toString(); // This will be hex length <= 16
 			const result = mapper.mapClaimTransactions([
 				{ ...mockClaimTx, global_index: largeGlobalIndex },
 			]);
@@ -187,7 +199,10 @@ describe("TransactionMapper", () => {
 			// Use a value larger than what fits in 16 hex digits
 			const veryLargeGlobalIndex = BigInt("0x10000000000000000"); // 17 hex digits
 			const result = mapper.mapClaimTransactions([
-				{ ...mockClaimTx, global_index: Number(veryLargeGlobalIndex) },
+				{
+					...mockClaimTx,
+					global_index: veryLargeGlobalIndex.toString(),
+				},
 			]);
 
 			expect(result[0].sourceNetwork).toBe(0);

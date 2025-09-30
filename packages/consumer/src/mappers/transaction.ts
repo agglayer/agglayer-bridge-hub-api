@@ -67,9 +67,17 @@ export default class TransactionMapper {
 		return formattedClaimTransactions;
 	}
 
-	private decodeGlobalIndex(globalIndex: number): IDecodedGlobalIndex {
+	private decodeGlobalIndex(globalIndex: string): IDecodedGlobalIndex {
 		const globalIndexBigInt = BigInt(globalIndex);
-		const globalIndexInHex = globalIndex.toString(16);
+		const globalIndexInHex = globalIndexBigInt.toString(16);
+
+		if (globalIndexBigInt < 0xffffffffn) {
+			return {
+				sourceNetwork: this.networkId === 0 ? 1 : 0,
+				depositCount: Number(globalIndexBigInt),
+			};
+		}
+
 		return {
 			sourceNetwork:
 				globalIndexInHex.length > 16
