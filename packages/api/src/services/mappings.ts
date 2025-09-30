@@ -1,13 +1,14 @@
-import type {
-	IQueryFilterOperationParams,
-	IQueryOrderOperationParams,
-	IQueryOrFilterParams,
+import {
+	type IQueryFilterOperationParams,
+	type IQueryOrderOperationParams,
 } from "@polygonlabs/servercore";
 import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import type { IHubTokenMapping } from "../interfaces/hub_mapping";
 
 let db: DatabaseClient;
 let collectionId: Map<string, string>;
+// let chainConfig: Map<string, Map<number, string>>;
+// let bridgeAddress: Map<string, string>;
 
 // Order params for db request
 const orderParams: IQueryOrderOperationParams[] = [
@@ -24,10 +25,20 @@ export class MappingsService {
 			["mainnet", "mappings"],
 			["testnet", "mappings_testnet"],
 		])
+		// chainConfigParam: Map<string, Map<number, string>> = new Map([
+		// 	["mainnet", new Map([])],
+		// 	["testnet", new Map([])],
+		// ]),
+		// bridgeAddressParam: Map<string, string> = new Map([
+		// 	["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
+		// 	["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
+		// ])
 	) {
 		if (!db) {
 			db = database;
 			collectionId = collectionIdParam;
+			// chainConfig = chainConfigParam;
+			// bridgeAddress = bridgeAddressParam;
 		}
 	}
 
@@ -112,43 +123,50 @@ export class MappingsService {
 		}
 
 		// Create query params for db request
-		const queryParams: IQueryOrFilterParams[] = [];
+		const originTokenParams: IQueryFilterOperationParams[] = [
+			{
+				field: "originTokenAddress",
+				operator: "==",
+				value: tokenAddress,
+			},
+			{
+				field: "originTokenNetwork",
+				operator: "==",
+				value: Number(tokenNetwork),
+			},
+		];
 
-		if (tokenAddress) {
-			queryParams.push({
-				or: [
-					{
-						field: "originTokenAddress",
-						operator: "==",
-						value: tokenAddress,
-					},
-					{
-						field: "wrappedTokenAddress",
-						operator: "==",
-						value: tokenAddress,
-					},
-				],
-			});
-		}
-		if (tokenNetwork) {
-			queryParams.push({
-				or: [
-					{
-						field: "originTokenNetwork",
-						operator: "==",
-						value: tokenNetwork,
-					},
-					{
-						field: "wrappedTokenNetwork",
-						operator: "==",
-						value: tokenNetwork,
-					},
-				],
-			});
-		}
-		return await db.getDocuments({
-			collectionPath: collectionId.get(network) || "",
-			orFilters: queryParams,
-		});
+		const wrappedTokenParams: IQueryFilterOperationParams[] = [
+			{
+				field: "wrappedTokenAddress",
+				operator: "==",
+				value: tokenAddress,
+			},
+			{
+				field: "wrappedTokenNetwork",
+				operator: "==",
+				value: Number(tokenNetwork),
+			},
+		];
+
+		const [originTokens, wrappedTokens] = await Promise.all([
+			db.getDocuments({
+				collectionPath: collectionId.get(network) || "",
+				filter: originTokenParams,
+				returnTotalDocumentsCount: true,
+			}),
+			db.getDocuments({
+				collectionPath: collectionId.get(network) || "",
+				filter: wrappedTokenParams,
+				returnTotalDocumentsCount: true,
+			}),
+		]);
+
+		return {
+			documents: [...originTokens.documents, ...wrappedTokens.documents],
+			totalDocumentsCount:
+				(originTokens.totalDocumentsCount || 0) +
+				(wrappedTokens.totalDocumentsCount || 0),
+		};
 	}
 }

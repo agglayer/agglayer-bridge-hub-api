@@ -27,7 +27,7 @@ export const PaginationSchema = z.object({
 	limit: z.coerce.number().int().nonnegative().default(20),
 	startAfter: z.coerce
 		.string()
-		.max(18, "Network IDs string must not exceed 18 characters")
+		.max(32, "startAfter string must not exceed 32 characters")
 		.optional(),
 });
 
