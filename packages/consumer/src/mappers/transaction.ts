@@ -74,7 +74,7 @@ export default class TransactionMapper {
 		if (globalIndexBigInt < 0xffffffffn) {
 			return {
 				sourceNetwork: this.networkId === 0 ? 1 : 0,
-				depositCount: Number(globalIndex),
+				depositCount: Number(globalIndexBigInt),
 			};
 		}
 
