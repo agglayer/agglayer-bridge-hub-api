@@ -9,7 +9,7 @@ const healthCheckRoutes = new Hono();
 
 healthCheckRoutes.get("/", checkServiceHealth);
 healthCheckRoutes.get(
-	"/auto-claim",
+	"/auto-claim/:network",
 	validateAutoClaimHealthCheckQueryParams,
 	checkAutoClaimServiceHealth
 );
