@@ -4,7 +4,7 @@ import {
 	setupHealthCheckServer,
 } from "@polygonlabs/servercore";
 import axios from "axios";
-import { ethers } from "ethers";
+import { createPublicClient, http } from "viem";
 
 // Initialize the logger globally
 Logger.create({
@@ -130,12 +130,9 @@ async function start(): Promise<void> {
 			transactionService
 		);
 
-		const bridgeContract = new ethers.Contract(
-			process.env.BRIDGE_CONTRACT_ADDRESS ||
-				bridgeAddress.get(process.env.NETWORK || "mainnet")!,
-			bridgeAbi,
-			new ethers.JsonRpcProvider(process.env.RPC_URL)
-		);
+		const client = createPublicClient({
+			transport: http(process.env.RPC_URL || ""),
+		});
 
 		setupHealthCheckServer(
 			[],
@@ -149,7 +146,14 @@ async function start(): Promise<void> {
 						claims,
 						latestBridgeFromDB,
 					] = await Promise.all([
-						bridgeContract.depositCount(),
+						client.readContract({
+							address: (process.env.BRIDGE_CONTRACT_ADDRESS ||
+								bridgeAddress.get(
+									process.env.NETWORK || "mainnet"
+								)) as `0x${string}`,
+							abi: bridgeAbi,
+							functionName: "depositCount",
+						}),
 						axios.get(
 							`${process.env.BRIDGE_SERVICE_URL}/bridges?network_id=${process.env.NETWORK_ID}`
 						),
@@ -164,7 +168,8 @@ async function start(): Promise<void> {
 						),
 					]);
 
-					const depositCnt = Number(depositCount.toString()) - 1;
+					const depositCnt =
+						Number((depositCount as bigint).toString()) - 1;
 					const latestBridge = bridges?.data?.bridges?.[0] || null;
 					const latestMapping =
 						mappings?.data?.token_mappings?.[0] || null;

@@ -1,6 +1,6 @@
 import { ApiError } from "@polygonlabs/servercore";
 import { TransactionService } from "./transactions";
-import { ethers } from "ethers";
+import { createPublicClient, http } from "viem";
 
 let chainConfig: Map<string, Map<number, string>>;
 let autoclaimAddress: Map<string, string>;
@@ -58,10 +58,13 @@ export class HealthCheckService {
 			);
 		}
 
-		const provider = new ethers.JsonRpcProvider(rpc);
-		const balance = await provider.getBalance(autoClaimAddress);
-
-		if (balance < BigInt(ethers.parseEther("0.01"))) {
+		const client = createPublicClient({
+			transport: http(rpc),
+		});
+		const balance = await client.getBalance({
+			address: autoClaimAddress as `0x${string}`,
+		});
+		if (balance < BigInt("10000000000000000")) {
 			throw new ApiError(
 				`Auto-claim service might be unhealthy for Network ${networkId}: Insufficient balance`
 			);
