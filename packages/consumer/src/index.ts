@@ -30,6 +30,11 @@ import bridgeAbi from "./interfaces/PolygonZkEVMBridge";
 
 let database: DatabaseClient;
 
+const bridgeAddress = new Map([
+	["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
+	["testnet", "0x528e26b25a34a4A5d0dbDa1d57D318153d2ED582"],
+]);
+
 async function start(): Promise<void> {
 	try {
 		const collectionsConfig =
@@ -126,7 +131,8 @@ async function start(): Promise<void> {
 		);
 
 		const bridgeContract = new ethers.Contract(
-			process.env.BRIDGE_CONTRACT_ADDRESS as string,
+			process.env.BRIDGE_CONTRACT_ADDRESS ||
+				bridgeAddress.get(process.env.NETWORK || "mainnet")!,
 			bridgeAbi,
 			new ethers.JsonRpcProvider(process.env.RPC_URL)
 		);
