@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.4](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.2.3...bridge-hub-api@1.2.4) (2025-10-01)
+
+### Bug Fixes
+
+- set max pagination startAfter value limit to 40 ([5c8e34e](https://github.com/agglayer/agglayer-bridge-hub-api/commit/5c8e34e443cc8532168324b843003d4c2dd19ede))
+
 ## [1.2.3](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.2.2...bridge-hub-api@1.2.3) (2025-09-30)
 
 ### Bug Fixes
