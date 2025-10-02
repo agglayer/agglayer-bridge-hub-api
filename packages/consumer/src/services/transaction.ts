@@ -93,12 +93,13 @@ export default class TransactionsService {
 
 	public async updateTransactionToReadyToClaim(
 		depositCount: number,
-		sourceNetwork: number
+		sourceNetwork: number,
+		leafIndexForProof: number
 	): Promise<void> {
 		const docId = this.generateDocId(depositCount, sourceNetwork);
 		this.database.conditionalUpdateDocuments({
 			collectionPaths: this.collectionId,
-			docDatas: [{ lastUpdatedAt: Date.now() }],
+			docDatas: [{ lastUpdatedAt: Date.now(), leafIndexForProof }],
 			docIds: [docId],
 			conditions: [
 				{
