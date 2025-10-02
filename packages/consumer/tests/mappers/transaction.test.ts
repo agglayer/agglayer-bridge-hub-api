@@ -12,15 +12,20 @@ import {
 
 describe("TransactionMapper", () => {
 	let mapper: TransactionMapper;
+	const MOCK_ETROG_UPDATE_BLOCK = 1000;
 
 	beforeEach(() => {
-		mapper = new TransactionMapper(MOCK_NETWORK_ID);
+		mapper = new TransactionMapper(
+			MOCK_NETWORK_ID,
+			MOCK_ETROG_UPDATE_BLOCK
+		);
 	});
 
 	describe("constructor", () => {
-		test("should initialize with network ID", () => {
+		test("should initialize with network ID and etrog block", () => {
 			const networkId = 42;
-			const testMapper = new TransactionMapper(networkId);
+			const etrogBlock = 500;
+			const testMapper = new TransactionMapper(networkId, etrogBlock);
 			expect(testMapper).toBeInstanceOf(TransactionMapper);
 		});
 	});
@@ -104,7 +109,10 @@ describe("TransactionMapper", () => {
 
 		test("should set source network from constructor", () => {
 			const differentNetworkId = 1;
-			const differentMapper = new TransactionMapper(differentNetworkId);
+			const differentMapper = new TransactionMapper(
+				differentNetworkId,
+				MOCK_ETROG_UPDATE_BLOCK
+			);
 
 			const result = differentMapper.mapBridgeTransactions([
 				mockBridgeTx,
@@ -159,27 +167,48 @@ describe("TransactionMapper", () => {
 	});
 
 	describe("decodeGlobalIndex", () => {
-		test("should decode global index correctly for small values", () => {
-			// Test with a small global index (42)
+		test("should decode global index correctly for small values (post-etrog)", () => {
+			// Test with a small global index (42) for post-etrog block
 			const smallGlobalIndex = "42";
 			const result = mapper.mapClaimTransactions([
 				{ ...mockClaimTx, global_index: smallGlobalIndex },
 			]);
 
-			expect(result[0].sourceNetwork).toBe(0); // networkId !== 0, so returns 0
+			// Post-etrog logic: small hex length (<= 16), so sourceNetwork = (42 >> 32) + 1 = 1
+			expect(result[0].sourceNetwork).toBe(1);
 			expect(result[0].depositCount).toBe(42); // 42 & 0xffffffff
 		});
 
-		test("should decode global index correctly for small values with networkId 0", () => {
-			// Test with networkId 0 (pre-etrog behavior)
-			const mapperNetworkId0 = new TransactionMapper(0);
+		test("should decode global index correctly for pre-etrog blocks", () => {
+			// Test with pre-etrog block (below MOCK_ETROG_UPDATE_BLOCK)
+			const mapperNetworkId0 = new TransactionMapper(
+				0,
+				MOCK_ETROG_UPDATE_BLOCK
+			);
 			const smallGlobalIndex = "42";
+			const preEtrogClaimTx = {
+				...mockClaimTx,
+				block_num: 500,
+				global_index: smallGlobalIndex,
+			};
 			const result = mapperNetworkId0.mapClaimTransactions([
-				{ ...mockClaimTx, global_index: smallGlobalIndex },
+				preEtrogClaimTx,
 			]);
 
-			expect(result[0].sourceNetwork).toBe(1); // networkId === 0, so returns 1
+			// Pre-etrog logic: networkId === 0, so returns 1
+			expect(result[0].sourceNetwork).toBe(1);
 			expect(result[0].depositCount).toBe(42);
+
+			// Test with networkId !== 0 for pre-etrog
+			const mapperNetworkIdNonZero = new TransactionMapper(
+				137,
+				MOCK_ETROG_UPDATE_BLOCK
+			);
+			const result2 = mapperNetworkIdNonZero.mapClaimTransactions([
+				preEtrogClaimTx,
+			]);
+			expect(result2[0].sourceNetwork).toBe(0); // networkId !== 0, so returns 0
+			expect(result2[0].depositCount).toBe(42);
 		});
 
 		test("should decode global index correctly for large values", () => {
