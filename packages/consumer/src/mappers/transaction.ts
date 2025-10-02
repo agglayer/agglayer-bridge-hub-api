@@ -6,7 +6,10 @@ import type { IClaimTx, IHubClaimTransaction } from "../interfaces/claim_tx";
 import type { IDecodedGlobalIndex } from "../interfaces/decoded_global_index";
 
 export default class TransactionMapper {
-	constructor(private readonly networkId: number) {}
+	constructor(
+		private readonly networkId: number,
+		private readonly etrogUpdateBlockNumber: number
+	) {}
 
 	public mapBridgeTransactions(events: IBridgeTx[]): IHubBridgeTransaction[] {
 		const formattedBridgeTransactions: IHubBridgeTransaction[] = [];
@@ -50,7 +53,8 @@ export default class TransactionMapper {
 		const formattedClaimTransactions: IHubClaimTransaction[] = [];
 		events.forEach((claimTransaction) => {
 			const decodedGlobalIndex = this.decodeGlobalIndex(
-				claimTransaction.global_index
+				claimTransaction.global_index,
+				claimTransaction.block_num
 			);
 			formattedClaimTransactions.push({
 				claimTransactionHash: claimTransaction.tx_hash.toLowerCase(),
@@ -67,11 +71,14 @@ export default class TransactionMapper {
 		return formattedClaimTransactions;
 	}
 
-	private decodeGlobalIndex(globalIndex: string): IDecodedGlobalIndex {
+	private decodeGlobalIndex(
+		globalIndex: string,
+		blockNumber: number
+	): IDecodedGlobalIndex {
 		const globalIndexBigInt = BigInt(globalIndex);
 		const globalIndexInHex = globalIndexBigInt.toString(16);
 
-		if (globalIndexBigInt < 0xffffffffn) {
+		if (blockNumber < this.etrogUpdateBlockNumber) {
 			return {
 				sourceNetwork: this.networkId === 0 ? 1 : 0,
 				depositCount: Number(globalIndexBigInt),

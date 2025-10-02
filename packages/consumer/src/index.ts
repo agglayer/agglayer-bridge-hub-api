@@ -91,7 +91,10 @@ async function start(): Promise<void> {
 				paginationParam: "page_number",
 				resultPath: "token_mappings",
 			},
-			new TransactionMapper(Number(process.env.NETWORK_ID) || 0),
+			new TransactionMapper(
+				Number(process.env.NETWORK_ID) || 0,
+				Number(process.env.ETROG_UPDATE_BLOCK_NUMBER) || 0
+			),
 			new TokenMappingsMapper(Number(process.env.NETWORK_ID) || 0),
 			new MetadataMapper(),
 			transactionService,

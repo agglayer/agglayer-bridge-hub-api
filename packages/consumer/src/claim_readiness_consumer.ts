@@ -158,7 +158,8 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 					if (injectedTreeData?.global_exit_root) {
 						await this.transactionService.updateTransactionToReadyToClaim(
 							tx.depositCount,
-							tx.sourceNetwork
+							tx.sourceNetwork,
+							injectedTreeData.l1_info_tree_index
 						);
 					}
 				} catch (error) {
