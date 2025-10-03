@@ -1,4 +1,4 @@
-export const BRIDGE_ABI = [
+export const BRIDGE_ABI_V2 = [
 	{
 		inputs: [
 			{ internalType: "uint32", name: "originNetwork", type: "uint32" },

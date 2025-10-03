@@ -8,7 +8,7 @@ import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import type { ITokenMetadata } from "../interfaces/hub_mapping";
 import { createPublicClient, http } from "viem";
 import { ERC20_ABI } from "../constants/erc20";
-import { BRIDGE_ABI } from "../constants/bridge";
+import { BRIDGE_ABI_V2 } from "../constants/bridge";
 
 let db: DatabaseClient;
 let collectionId: Map<string, string>;
@@ -188,7 +188,7 @@ export class TokenMetadataService {
 						}),
 						client.readContract({
 							address: bridgeAddr as `0x${string}`,
-							abi: BRIDGE_ABI,
+							abi: BRIDGE_ABI_V2,
 							functionName: "computeTokenProxyAddress",
 							args: [networkId, tokenAddress as `0x${string}`],
 						}),
