@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.2.1...bridge-hub-consumer@1.3.0) (2025-10-03)
+
+### Bug Fixes
+
+- health check for deposit count contract call ([5a6c641](https://github.com/agglayer/agglayer-bridge-hub-api/commit/5a6c64177290d9cd4782f6b4c56db33705b06198))
+
+### Features
+
+- health check apis ([0695891](https://github.com/agglayer/agglayer-bridge-hub-api/commit/0695891f1002a00d567606d6c6fa30b70057d973))
+- health check for claims ([1113364](https://github.com/agglayer/agglayer-bridge-hub-api/commit/11133648a69bcdec1685549ff3b8b8ddb40c24fb))
+- shift to viem from ethers ([075878a](https://github.com/agglayer/agglayer-bridge-hub-api/commit/075878aefd2681b7ce66dc24a4a5c90674dcda5f))
+
 ## [1.2.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.2.0...bridge-hub-consumer@1.2.1) (2025-10-03)
 
 ### Bug Fixes

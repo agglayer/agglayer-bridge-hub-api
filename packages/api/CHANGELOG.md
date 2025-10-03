@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.2.4...bridge-hub-api@1.3.0) (2025-10-03)
+
+### Bug Fixes
+
+- health check auto claim ([d4a3e89](https://github.com/agglayer/agglayer-bridge-hub-api/commit/d4a3e8983208887708b2caad8648057b5ab63741))
+- health check for autoclaim ([f025917](https://github.com/agglayer/agglayer-bridge-hub-api/commit/f0259178e349977c4c1618d82dc94fe385ccabce))
+
+### Features
+
+- health check for auto claim ([4399b39](https://github.com/agglayer/agglayer-bridge-hub-api/commit/4399b397a3d4b0cbc0b488e5466eeb26c427c19d))
+- shift to viem from ethers ([075878a](https://github.com/agglayer/agglayer-bridge-hub-api/commit/075878aefd2681b7ce66dc24a4a5c90674dcda5f))
+
 ## [1.2.4](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.2.3...bridge-hub-api@1.2.4) (2025-10-01)
 
 ### Bug Fixes
