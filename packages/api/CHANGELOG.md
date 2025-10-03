@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.3.0...bridge-hub-api@1.4.0) (2025-10-03)
+
+### Bug Fixes
+
+- version BRIDGE_ABI ([5ff1335](https://github.com/agglayer/agglayer-bridge-hub-api/commit/5ff13350c6d1b9f395fa6aa3665f841620e1249c))
+
+### Features
+
+- add wrappedTokenAddress versioning to token metadata endpoint ([9652704](https://github.com/agglayer/agglayer-bridge-hub-api/commit/9652704d604927c7a818605aa378c74831b1b0bd))
+
 # [1.3.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.2.4...bridge-hub-api@1.3.0) (2025-10-03)
 
 ### Bug Fixes
