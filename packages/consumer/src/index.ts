@@ -255,6 +255,12 @@ async function start(): Promise<void> {
 
 					return true;
 				} catch (error: any) {
+					Logger.info({
+						location: "bridge_api_consumer_index",
+						function: "setupHealthCheckServer",
+						status: `ERROR encountered on health check`,
+						error: error,
+					});
 					throw error instanceof ApiError
 						? error
 						: new ApiError(error.message);
