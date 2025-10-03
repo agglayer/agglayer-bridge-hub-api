@@ -1,7 +1,8 @@
 export interface ITokenMetadata {
 	originTokenNetwork: number;
 	originTokenAddress: string;
-	wrappedTokenAddress: string;
+	wrappedTokenAddressV1: string;
+	wrappedTokenAddressV2: string;
 	name: string;
 	symbol: string;
 	decimals: number;

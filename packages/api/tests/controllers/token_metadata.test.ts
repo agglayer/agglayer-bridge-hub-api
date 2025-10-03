@@ -56,23 +56,7 @@ describe("Token Metadata Controller", () => {
 				mockTokenMetadataService.getTokenMetadata
 			).toHaveBeenCalledWith(
 				"testnet",
-				"0x1234567890abcdef1234567890abcdef12345678",
-				expect.arrayContaining([
-					expect.objectContaining({
-						or: expect.arrayContaining([
-							expect.objectContaining({
-								field: "originTokenAddress",
-								operator: "==",
-								value: "0x1234567890abcdef1234567890abcdef12345678",
-							}),
-							expect.objectContaining({
-								field: "wrappedTokenAddress",
-								operator: "==",
-								value: "0x1234567890abcdef1234567890abcdef12345678",
-							}),
-						]),
-					}),
-				])
+				"0x1234567890abcdef1234567890abcdef12345678"
 			);
 		});
 
@@ -88,7 +72,7 @@ describe("Token Metadata Controller", () => {
 
 			expect(
 				mockTokenMetadataService.getTokenMetadata
-			).toHaveBeenCalledWith("mainnet", undefined, []);
+			).toHaveBeenCalledWith("mainnet", undefined);
 		});
 
 		test("should call handleResponse with token metadata", async () => {
@@ -123,11 +107,7 @@ describe("Token Metadata Controller", () => {
 
 				expect(
 					mockTokenMetadataService.getTokenMetadata
-				).toHaveBeenCalledWith(
-					network,
-					tokenAddress,
-					expect.any(Array)
-				);
+				).toHaveBeenCalledWith(network, tokenAddress);
 
 				// Clear mock for next iteration
 				mockTokenMetadataService.getTokenMetadata.mockClear();
@@ -154,10 +134,10 @@ describe("Token Metadata Controller", () => {
 
 				const serviceCall =
 					mockTokenMetadataService.getTokenMetadata.mock.calls[0];
-				const [, , queryParams] = serviceCall as any;
+				const [network, tokenAddr] = serviceCall as any;
 
-				expect(queryParams[0].or[0].value).toBe(tokenAddress);
-				expect(queryParams[0].or[1].value).toBe(tokenAddress);
+				expect(network).toBe("testnet");
+				expect(tokenAddr).toBe(tokenAddress);
 
 				// Clear mock for next iteration
 				mockTokenMetadataService.getTokenMetadata.mockClear();
@@ -176,10 +156,10 @@ describe("Token Metadata Controller", () => {
 
 			const serviceCall =
 				mockTokenMetadataService.getTokenMetadata.mock.calls[0];
-			const [, tokenAddress, queryParams] = serviceCall as any;
+			const [network, tokenAddress] = serviceCall as any;
 
+			expect(network).toBe("testnet");
 			expect(tokenAddress).toBeNull();
-			expect(queryParams).toEqual([]); // Should not add OR filter for null address
 		});
 
 		test("should handle empty string tokenAddress", async () => {
@@ -194,10 +174,10 @@ describe("Token Metadata Controller", () => {
 
 			const serviceCall =
 				mockTokenMetadataService.getTokenMetadata.mock.calls[0];
-			const [, tokenAddress, queryParams] = serviceCall as any;
+			const [network, tokenAddress] = serviceCall as any;
 
+			expect(network).toBe("testnet");
 			expect(tokenAddress).toBe("");
-			expect(queryParams).toEqual([]); // Should not add OR filter for empty string
 		});
 
 		test("should pass through custom token metadata", async () => {
@@ -231,8 +211,8 @@ describe("Token Metadata Controller", () => {
 		});
 	});
 
-	describe("query parameter building", () => {
-		test("should build OR query correctly with valid tokenAddress", async () => {
+	describe("parameter validation", () => {
+		test("should pass correct network and tokenAddress to service", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const mockContext = createMockContext({
 				validatedParams: {
@@ -245,26 +225,13 @@ describe("Token Metadata Controller", () => {
 
 			const serviceCall =
 				mockTokenMetadataService.getTokenMetadata.mock.calls[0];
-			const [, , queryParams] = serviceCall as any;
+			const [network, tokenAddr] = serviceCall as any;
 
-			expect(queryParams).toHaveLength(1);
-			expect(queryParams[0]).toEqual({
-				or: [
-					{
-						field: "originTokenAddress",
-						operator: "==",
-						value: tokenAddress,
-					},
-					{
-						field: "wrappedTokenAddress",
-						operator: "==",
-						value: tokenAddress,
-					},
-				],
-			});
+			expect(network).toBe("testnet");
+			expect(tokenAddr).toBe(tokenAddress);
 		});
 
-		test("should have empty query params when tokenAddress is falsy", async () => {
+		test("should handle various falsy tokenAddress values", async () => {
 			const falsyValues = [null, undefined, "", false, 0];
 
 			for (const tokenAddress of falsyValues) {
@@ -279,9 +246,10 @@ describe("Token Metadata Controller", () => {
 
 				const serviceCall =
 					mockTokenMetadataService.getTokenMetadata.mock.calls[0];
-				const [, , queryParams] = serviceCall as any;
+				const [network, tokenAddr] = serviceCall as any;
 
-				expect(queryParams).toEqual([]);
+				expect(network).toBe("testnet");
+				expect(tokenAddr).toBe(tokenAddress);
 
 				// Clear mock for next iteration
 				mockTokenMetadataService.getTokenMetadata.mockClear();
