@@ -184,7 +184,7 @@ describe("MappingsService", () => {
 	});
 
 	describe("getMappingsByToken", () => {
-		test("should build OR query params correctly", async () => {
+		test("should build filter query params correctly", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const tokenNetwork = "1";
 			const network = "testnet";
@@ -195,38 +195,43 @@ describe("MappingsService", () => {
 				network
 			);
 
-			expect(mockDatabase.getDocuments).toHaveBeenCalledWith({
+			// Should make two separate calls - one for origin tokens and one for wrapped tokens
+			expect(mockDatabase.getDocuments).toHaveBeenCalledTimes(2);
+
+			// First call should be for origin tokens
+			expect(mockDatabase.getDocuments).toHaveBeenNthCalledWith(1, {
 				collectionPath: "mappings_testnet",
-				orFilters: [
+				filter: [
 					{
-						or: [
-							{
-								field: "originTokenAddress",
-								operator: "==",
-								value: tokenAddress,
-							},
-							{
-								field: "wrappedTokenAddress",
-								operator: "==",
-								value: tokenAddress,
-							},
-						],
+						field: "originTokenAddress",
+						operator: "==",
+						value: tokenAddress,
 					},
 					{
-						or: [
-							{
-								field: "originTokenNetwork",
-								operator: "==",
-								value: tokenNetwork,
-							},
-							{
-								field: "wrappedTokenNetwork",
-								operator: "==",
-								value: tokenNetwork,
-							},
-						],
+						field: "originTokenNetwork",
+						operator: "==",
+						value: 1,
 					},
 				],
+				returnTotalDocumentsCount: true,
+			});
+
+			// Second call should be for wrapped tokens
+			expect(mockDatabase.getDocuments).toHaveBeenNthCalledWith(2, {
+				collectionPath: "mappings_testnet",
+				filter: [
+					{
+						field: "wrappedTokenAddress",
+						operator: "==",
+						value: tokenAddress,
+					},
+					{
+						field: "wrappedTokenNetwork",
+						operator: "==",
+						value: 1,
+					},
+				],
+				returnTotalDocumentsCount: true,
 			});
 		});
 
@@ -241,25 +246,25 @@ describe("MappingsService", () => {
 				network
 			);
 
-			const databaseCall = (
-				mockDatabase.getDocuments.mock.calls as any
-			)[0][0];
+			// Should still make two separate calls even with null tokenAddress
+			expect(mockDatabase.getDocuments).toHaveBeenCalledTimes(2);
 
-			// Should only have tokenNetwork OR filter
-			expect(databaseCall.orFilters).toHaveLength(1);
-			expect(databaseCall.orFilters[0]).toEqual({
-				or: [
+			// First call should be for origin tokens with null address
+			expect(mockDatabase.getDocuments).toHaveBeenNthCalledWith(1, {
+				collectionPath: "mappings_testnet",
+				filter: [
+					{
+						field: "originTokenAddress",
+						operator: "==",
+						value: null,
+					},
 					{
 						field: "originTokenNetwork",
 						operator: "==",
-						value: tokenNetwork,
-					},
-					{
-						field: "wrappedTokenNetwork",
-						operator: "==",
-						value: tokenNetwork,
+						value: 1,
 					},
 				],
+				returnTotalDocumentsCount: true,
 			});
 		});
 
@@ -274,25 +279,25 @@ describe("MappingsService", () => {
 				network
 			);
 
-			const databaseCall = (
-				mockDatabase.getDocuments.mock.calls as any
-			)[0][0];
+			// Should still make two separate calls even with null tokenNetwork
+			expect(mockDatabase.getDocuments).toHaveBeenCalledTimes(2);
 
-			// Should only have tokenAddress OR filter
-			expect(databaseCall.orFilters).toHaveLength(1);
-			expect(databaseCall.orFilters[0]).toEqual({
-				or: [
+			// First call should be for origin tokens with null network (converted to NaN by Number())
+			expect(mockDatabase.getDocuments).toHaveBeenNthCalledWith(1, {
+				collectionPath: "mappings_testnet",
+				filter: [
 					{
 						field: "originTokenAddress",
 						operator: "==",
 						value: tokenAddress,
 					},
 					{
-						field: "wrappedTokenAddress",
+						field: "originTokenNetwork",
 						operator: "==",
-						value: tokenAddress,
+						value: 0,
 					},
 				],
+				returnTotalDocumentsCount: true,
 			});
 		});
 
@@ -307,21 +312,47 @@ describe("MappingsService", () => {
 				network
 			);
 
-			const databaseCall = (
-				mockDatabase.getDocuments.mock.calls as any
-			)[0][0];
+			// Should still make two separate calls even with both nulls
+			expect(mockDatabase.getDocuments).toHaveBeenCalledTimes(2);
 
-			// Should have empty OR filters array
-			expect(databaseCall.orFilters).toEqual([]);
+			// Both calls should have null/NaN values
+			expect(mockDatabase.getDocuments).toHaveBeenNthCalledWith(1, {
+				collectionPath: "mappings_testnet",
+				filter: [
+					{
+						field: "originTokenAddress",
+						operator: "==",
+						value: null,
+					},
+					{
+						field: "originTokenNetwork",
+						operator: "==",
+						value: 0,
+					},
+				],
+				returnTotalDocumentsCount: true,
+			});
 		});
 
-		test("should return database response", async () => {
+		test("should return combined database response", async () => {
+			// Mock database to return the service response for both calls
+			mockDatabase.getDocuments.mockResolvedValue(mockServiceResponse);
+
 			const result = await MappingsService.getMappingsByToken(
 				"0x1234",
 				"1",
 				"testnet"
 			);
-			expect(result).toBe(mockServiceResponse);
+
+			// Should return combined results from both calls
+			expect(result).toEqual({
+				documents: [
+					...mockServiceResponse.documents,
+					...mockServiceResponse.documents,
+				],
+				totalDocumentsCount:
+					(mockServiceResponse.totalDocumentsCount || 0) * 2,
+			});
 		});
 	});
 

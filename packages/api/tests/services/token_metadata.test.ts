@@ -13,8 +13,16 @@ class MockApiError extends Error {
 	}
 }
 
+class MockBadRequestError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = "BadRequestError";
+	}
+}
+
 mock.module("@polygonlabs/servercore", () => ({
 	ApiError: MockApiError,
+	BadRequestError: MockBadRequestError,
 	Logger: {
 		warn: mock(() => {}),
 	},
@@ -54,6 +62,7 @@ describe("TokenMetadataService", () => {
 				"testnet",
 				new Map([
 					[1, "https://rpc1.testnet.example.com"],
+					[20, "https://rpc20.testnet.example.com"],
 					[137, "https://rpc137.testnet.example.com"],
 				]),
 			],
@@ -61,6 +70,7 @@ describe("TokenMetadataService", () => {
 				"mainnet",
 				new Map([
 					[1, "https://rpc1.mainnet.example.com"],
+					[20, "https://rpc20.mainnet.example.com"],
 					[137, "https://rpc137.mainnet.example.com"],
 				]),
 			],
@@ -78,7 +88,23 @@ describe("TokenMetadataService", () => {
 				["testnet", "mappings_testnet"],
 			]),
 			testChainConfig,
-			testBridgeAddress
+			testBridgeAddress,
+			new Map([
+				[
+					"mainnet",
+					new Map([
+						[1, "v2"],
+						[20, "v2"],
+					]),
+				],
+				[
+					"testnet",
+					new Map([
+						[1, "v2"],
+						[20, "v2"],
+					]),
+				],
+			])
 		);
 	});
 
@@ -125,17 +151,6 @@ describe("TokenMetadataService", () => {
 		test("should return metadata when mapping found with matching originTokenAddress", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
-			const orQueryParams = [
-				{
-					or: [
-						{
-							field: "originTokenAddress",
-							operator: "==" as any,
-							value: tokenAddress,
-						},
-					],
-				},
-			] as any;
 
 			mockDatabase.getDocuments.mockResolvedValueOnce({
 				documents: [
@@ -150,49 +165,51 @@ describe("TokenMetadataService", () => {
 			mockReadContract
 				.mockResolvedValueOnce("TestToken") // name
 				.mockResolvedValueOnce("TEST") // symbol
-				.mockResolvedValueOnce("18"); // decimals
+				.mockResolvedValueOnce("18") // decimals
+				.mockResolvedValueOnce("0xwrappedv1address") // v1 wrapped address
+				.mockResolvedValueOnce("0xwrappedv2address"); // v2 wrapped address
 
 			const result = await TokenMetadataService.getTokenMetadata(
 				network,
-				tokenAddress,
-				orQueryParams
+				tokenAddress
 			);
 
 			expect(mockDatabase.getDocuments).toHaveBeenCalledWith({
 				collectionPath: "mappings_testnet",
 				limit: 1,
 				order: [{ field: "timestamp", order: "desc" }],
-				orFilters: orQueryParams,
-			});
-
-			expect(mockCreatePublicClient).toHaveBeenCalledWith({
-				transport: { url: "https://rpc1.testnet.example.com" },
+				orFilters: expect.arrayContaining([
+					expect.objectContaining({
+						or: expect.arrayContaining([
+							expect.objectContaining({
+								field: "originTokenAddress",
+								operator: "==",
+								value: tokenAddress,
+							}),
+							expect.objectContaining({
+								field: "wrappedTokenAddress",
+								operator: "==",
+								value: tokenAddress,
+							}),
+						]),
+					}),
+				]),
 			});
 
 			expect(result).toEqual({
-				originTokenNetwork: 1,
-				originTokenAddress: tokenAddress,
-				wrappedTokenAddress: mockTokenMapping.wrappedTokenAddress,
 				name: "TestToken",
 				symbol: "TEST",
 				decimals: 18,
+				originTokenAddress: tokenAddress,
+				originTokenNetwork: 1,
+				wrappedTokenAddressV1: "0xwrappedv1address",
+				wrappedTokenAddressV2: "0xwrappedv2address",
 			});
 		});
 
 		test("should return metadata when mapping found with matching wrappedTokenAddress", async () => {
 			const tokenAddress = "0xabcdef1234567890abcdef1234567890abcdef12";
 			const network = "testnet";
-			const orQueryParams = [
-				{
-					or: [
-						{
-							field: "wrappedTokenAddress",
-							operator: "==" as any,
-							value: tokenAddress,
-						},
-					],
-				},
-			] as any;
 
 			mockDatabase.getDocuments.mockResolvedValueOnce({
 				documents: [
@@ -207,32 +224,29 @@ describe("TokenMetadataService", () => {
 			mockReadContract
 				.mockResolvedValueOnce("WrappedToken")
 				.mockResolvedValueOnce("WRAP")
-				.mockResolvedValueOnce("6");
+				.mockResolvedValueOnce("6")
+				.mockResolvedValueOnce("0xwrappedv1addr")
+				.mockResolvedValueOnce("0xwrappedv2addr");
 
 			const result = await TokenMetadataService.getTokenMetadata(
 				network,
-				tokenAddress,
-				orQueryParams
+				tokenAddress
 			);
 
-			expect(mockCreatePublicClient).toHaveBeenCalledWith({
-				transport: { url: "https://rpc137.testnet.example.com" },
-			});
-
 			expect(result).toEqual({
-				originTokenNetwork: 137,
-				originTokenAddress: mockTokenMapping.originTokenAddress,
-				wrappedTokenAddress: tokenAddress,
 				name: "WrappedToken",
 				symbol: "WRAP",
 				decimals: 6,
+				originTokenAddress: mockTokenMapping.originTokenAddress,
+				originTokenNetwork: 137,
+				wrappedTokenAddressV1: "0xwrappedv1addr",
+				wrappedTokenAddressV2: "0xwrappedv2addr",
 			});
 		});
 
-		test("should throw ApiError when RPC URL not found", async () => {
+		test("should throw BadRequestError when RPC URL not found", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
-			const orQueryParams: any[] = [];
 
 			mockDatabase.getDocuments.mockResolvedValueOnce({
 				documents: [
@@ -245,20 +259,15 @@ describe("TokenMetadataService", () => {
 			});
 
 			expect(
-				TokenMetadataService.getTokenMetadata(
-					network,
-					tokenAddress,
-					orQueryParams
-				)
+				TokenMetadataService.getTokenMetadata(network, tokenAddress)
 			).rejects.toThrow(
-				"RPC URL not found for network testnet and chain 999"
+				"Unsupported origin token network 999 for testnet"
 			);
 		});
 
-		test("should throw ApiError when contract calls fail", async () => {
+		test("should throw error when contract calls fail", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
-			const orQueryParams: any[] = [];
 
 			mockDatabase.getDocuments.mockResolvedValueOnce({
 				documents: [
@@ -275,60 +284,56 @@ describe("TokenMetadataService", () => {
 			);
 
 			expect(
-				TokenMetadataService.getTokenMetadata(
-					network,
-					tokenAddress,
-					orQueryParams
-				)
-			).rejects.toThrow("Failed to fetch token metadata");
+				TokenMetadataService.getTokenMetadata(network, tokenAddress)
+			).rejects.toThrow("Contract call failed");
 		});
 
-		test("should call fetchTokenMetadataFromRPCs when no mapping found", async () => {
+		test("should call fetchTokenMetadataFromAllRPCs when no mapping found", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
-			const orQueryParams: any[] = [];
 
 			mockDatabase.getDocuments.mockResolvedValueOnce({
 				documents: [], // No mapping found
 			});
 
 			mockReadContract
-				.mockResolvedValueOnce("DirectToken") // name
-				.mockResolvedValueOnce("DIRECT") // symbol
-				.mockResolvedValueOnce("18") // decimals
-				.mockResolvedValueOnce("0xwrappedaddress123"); // wrappedTokenAddress
+				.mockResolvedValueOnce("TestToken") // name from first network
+				.mockResolvedValueOnce("TEST") // symbol from first network
+				.mockResolvedValueOnce("18") // decimals from first network
+				.mockResolvedValueOnce("0xwrappedv1address") // v1 wrapped address
+				.mockResolvedValueOnce("0xwrappedv2address"); // v2 wrapped address
 
 			const result = await TokenMetadataService.getTokenMetadata(
 				network,
-				tokenAddress,
-				orQueryParams
+				tokenAddress
 			);
 
 			expect(result).toEqual({
-				originTokenNetwork: 1, // First network in config
-				originTokenAddress: tokenAddress,
-				wrappedTokenAddress: "0xwrappedaddress123",
-				name: "DirectToken",
-				symbol: "DIRECT",
+				name: "TestToken",
+				symbol: "TEST",
 				decimals: 18,
+				originTokenAddress: tokenAddress,
+				originTokenNetwork: 1, // First network in config
+				wrappedTokenAddressV1: "0xwrappedv1address",
+				wrappedTokenAddressV2: "0xwrappedv2address",
 			});
 		});
 
 		test("should return undefined when no mapping and RPC calls fail", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
-			const orQueryParams: any[] = [];
 
 			mockDatabase.getDocuments.mockResolvedValueOnce({
 				documents: [],
 			});
 
+			// Clear all previous mocks and set them all to fail
+			mockReadContract.mockClear();
 			mockReadContract.mockRejectedValue(new Error("All RPCs failed"));
 
 			const result = await TokenMetadataService.getTokenMetadata(
 				network,
-				tokenAddress,
-				orQueryParams
+				tokenAddress
 			);
 
 			expect(result).toBeUndefined();
@@ -339,7 +344,6 @@ describe("TokenMetadataService", () => {
 			const mappingTokenAddress =
 				"0x1234567890abcdef1234567890abcdef12345678"; // Lowercase
 			const network = "testnet";
-			const orQueryParams: any[] = [];
 
 			mockDatabase.getDocuments.mockResolvedValueOnce({
 				documents: [
@@ -354,12 +358,13 @@ describe("TokenMetadataService", () => {
 			mockReadContract
 				.mockResolvedValueOnce("TestToken")
 				.mockResolvedValueOnce("TEST")
-				.mockResolvedValueOnce("18");
+				.mockResolvedValueOnce("18")
+				.mockResolvedValueOnce("0xwrappedv1")
+				.mockResolvedValueOnce("0xwrappedv2");
 
 			const result = await TokenMetadataService.getTokenMetadata(
 				network,
-				tokenAddress,
-				orQueryParams
+				tokenAddress
 			);
 
 			expect(result).toBeDefined();
@@ -384,12 +389,13 @@ describe("TokenMetadataService", () => {
 				mockReadContract
 					.mockResolvedValueOnce(`${network}Token`)
 					.mockResolvedValueOnce(`${network.toUpperCase()}`)
-					.mockResolvedValueOnce("18");
+					.mockResolvedValueOnce("18")
+					.mockResolvedValueOnce("0xwrappedv1")
+					.mockResolvedValueOnce("0xwrappedv2");
 
 				const result = await TokenMetadataService.getTokenMetadata(
 					network,
-					tokenAddress,
-					[]
+					tokenAddress
 				);
 
 				expect(result?.name).toBe(`${network}Token`);
@@ -406,7 +412,8 @@ describe("TokenMetadataService", () => {
 				mockDatabase as any,
 				new Map([["testnet", "mappings_testnet"]]),
 				new Map([["testnet", new Map()]]), // Empty chain config
-				testBridgeAddress
+				testBridgeAddress,
+				new Map([["testnet", new Map()]])
 			);
 
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
@@ -418,8 +425,7 @@ describe("TokenMetadataService", () => {
 
 			const result = await TokenMetadataService.getTokenMetadata(
 				network,
-				tokenAddress,
-				[]
+				tokenAddress
 			);
 
 			expect(result).toBeUndefined();
@@ -431,7 +437,8 @@ describe("TokenMetadataService", () => {
 				mockDatabase as any,
 				new Map([["testnet", "mappings_testnet"]]),
 				testChainConfig,
-				new Map([["mainnet", "0xbridge123"]]) // No testnet bridge
+				new Map([["mainnet", "0xbridge123"]]), // No testnet bridge
+				new Map([["testnet", new Map()]])
 			);
 
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
@@ -443,8 +450,7 @@ describe("TokenMetadataService", () => {
 
 			const result = await TokenMetadataService.getTokenMetadata(
 				network,
-				tokenAddress,
-				[]
+				tokenAddress
 			);
 
 			expect(result).toBeUndefined();
@@ -463,25 +469,25 @@ describe("TokenMetadataService", () => {
 				.mockRejectedValueOnce(new Error("First RPC failed"))
 				.mockRejectedValueOnce(new Error("First RPC failed"))
 				.mockRejectedValueOnce(new Error("First RPC failed"))
-				.mockRejectedValueOnce(new Error("First RPC failed"))
 				.mockResolvedValueOnce("SecondRPCToken") // Second RPC succeeds
 				.mockResolvedValueOnce("SECOND")
 				.mockResolvedValueOnce("18")
-				.mockResolvedValueOnce("0xwrapped456");
+				.mockResolvedValueOnce("0xwrappedv1addr")
+				.mockResolvedValueOnce("0xwrappedv2addr");
 
 			const result = await TokenMetadataService.getTokenMetadata(
 				network,
-				tokenAddress,
-				[]
+				tokenAddress
 			);
 
 			expect(result).toEqual({
-				originTokenNetwork: 137, // Second network in config
-				originTokenAddress: tokenAddress,
-				wrappedTokenAddress: "0xwrapped456",
 				name: "SecondRPCToken",
 				symbol: "SECOND",
 				decimals: 18,
+				originTokenAddress: tokenAddress,
+				originTokenNetwork: 20, // Second network in config (network 20)
+				wrappedTokenAddressV1: "0xwrappedv1addr",
+				wrappedTokenAddressV2: "0xwrappedv2addr",
 			});
 		});
 	});
