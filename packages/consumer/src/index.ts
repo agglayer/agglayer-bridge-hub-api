@@ -53,7 +53,7 @@ async function start(): Promise<void> {
 			{
 				apiUrl: new URL(`${process.env.BRIDGE_SERVICE_URL}/bridges`),
 				startCount: { key: "deposit_count", value: 0 },
-				cronExpr: "0/10 * * * * ?",
+				cronExpr: "0/10 * * * * *",
 				pollSize: 10,
 				method: "GET",
 				params: {
@@ -66,7 +66,7 @@ async function start(): Promise<void> {
 			{
 				apiUrl: new URL(`${process.env.BRIDGE_SERVICE_URL}/claims`),
 				startCount: { key: "block_num", value: 0 },
-				cronExpr: "0/10 * * * * ?",
+				cronExpr: "0/10 * * * * *",
 				pollSize: 2,
 				method: "GET",
 				params: {
@@ -81,7 +81,7 @@ async function start(): Promise<void> {
 					`${process.env.BRIDGE_SERVICE_URL}/token-mappings`
 				),
 				startCount: { key: "block_num", value: 0 },
-				cronExpr: "0/10 * * * * ?",
+				cronExpr: "0/10 * * * * *",
 				pollSize: 2,
 				method: "GET",
 				params: {
@@ -108,7 +108,7 @@ async function start(): Promise<void> {
 
 		const claimReadinessConsumer = new ClaimReadinessConsumer(
 			{
-				cronExpr: "0/30 * * * * ?",
+				cronExpr: "0/30 * * * * *",
 				networkId: Number(process.env.NETWORK_ID) || 0,
 				l1InfoTreeIndexUrl: `${process.env.BRIDGE_SERVICE_URL}/l1-info-tree-index`,
 				injectedL1InfoLeafUrl: `${process.env.BRIDGE_SERVICE_URL}/injected-l1-info-leaf`,
