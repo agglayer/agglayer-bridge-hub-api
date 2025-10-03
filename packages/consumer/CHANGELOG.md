@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.2.0...bridge-hub-consumer@1.2.1) (2025-10-03)
+
+### Bug Fixes
+
+- fix cron schedule for consumer ([88c3319](https://github.com/agglayer/agglayer-bridge-hub-api/commit/88c33196b5d690ed046914ffce22425a86271763))
+
 # [1.2.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.1.3...bridge-hub-consumer@1.2.0) (2025-10-02)
 
 ### Bug Fixes
