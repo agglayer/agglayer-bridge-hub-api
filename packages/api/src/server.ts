@@ -8,6 +8,7 @@ import { MappingsService } from "./services/mappings";
 import { TokenMetadataService } from "./services/token_metadata";
 import { TransactionService } from "./services/transactions";
 import { ProofService } from "./services/proof";
+import { HealthCheckService } from "./services";
 import { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import healthCheckRoutes from "./routes/health_check";
 
@@ -89,6 +90,8 @@ async function serve(): Promise<void> {
 			["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
 		])
 	);
+
+	HealthCheckService.initializeHealthCheckService(rpcConfig);
 
 	ProofService.initializeService(proofConfig);
 

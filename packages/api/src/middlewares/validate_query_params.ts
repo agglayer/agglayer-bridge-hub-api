@@ -1,5 +1,9 @@
 import type { MiddlewareHandler } from "hono";
-import { NetworkSchema, PaginationSchema } from "../schemas/common";
+import {
+	NetworkSchema,
+	PaginationSchema,
+	networkIdSchema,
+} from "../schemas/common";
 import { BadRequestError, handleError } from "@polygonlabs/servercore";
 import {
 	ClaimProofQuerySchema,
@@ -181,3 +185,34 @@ export const validateClaimProofQueryParams: MiddlewareHandler = async (
 	context.set("validatedParams", parsedParams.data);
 	await next();
 };
+
+export const validateAutoClaimHealthCheckQueryParams: MiddlewareHandler =
+	async (context, next) => {
+		const queryParams = context.req.query();
+		const parsedParams = NetworkSchema.safeParse(context.req.param());
+
+		const parsedQuery = networkIdSchema.safeParse(queryParams.networkId);
+		if (!parsedQuery.success) {
+			const error = new BadRequestError(
+				parsedQuery.error.message,
+				parsedQuery.error.format(),
+				undefined,
+				"validateAutoClaimHealthCheckQueryParams"
+			);
+
+			return handleError(getResponseContext(context), error);
+		} else if (!parsedParams.success) {
+			const error = new BadRequestError(
+				parsedParams.error.message,
+				parsedParams.error.format(),
+				undefined,
+				"validateAutoClaimHealthCheckQueryParams"
+			);
+
+			return handleError(getResponseContext(context), error);
+		}
+
+		context.set("validatedQuery", parsedQuery.data);
+		context.set("validatedParams", parsedParams.data);
+		await next();
+	};
