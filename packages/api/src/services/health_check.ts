@@ -22,7 +22,8 @@ export class HealthCheckService {
 
 	static async checkForAutoClaim(
 		network: string,
-		networkId: string
+		networkId: string,
+		sourceNetworkIds: Array<number>
 	): Promise<boolean> {
 		const transactions = await TransactionService.getTransactions(network, [
 			{
@@ -34,6 +35,11 @@ export class HealthCheckService {
 				field: "status",
 				operator: "==",
 				value: "READY_TO_CLAIM",
+			},
+			{
+				field: "sourceNetworkIds",
+				operator: "in",
+				value: sourceNetworkIds,
 			},
 		]);
 

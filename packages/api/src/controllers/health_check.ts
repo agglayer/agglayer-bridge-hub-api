@@ -62,10 +62,14 @@ export const checkServiceHealth = async (c: Context) => {
 
 export const checkAutoClaimServiceHealth = async (c: Context) => {
 	try {
-		const networkId = c.get("validatedQuery");
+		const { networkId, sourceNetworkIds } = c.get("validatedQuery");
 		const { network } = c.get("validatedParams");
 
-		await HealthCheckService.checkForAutoClaim(network, networkId);
+		await HealthCheckService.checkForAutoClaim(
+			network,
+			networkId,
+			sourceNetworkIds
+		);
 
 		return handleResponse(getResponseContext(c), {
 			status: "success",

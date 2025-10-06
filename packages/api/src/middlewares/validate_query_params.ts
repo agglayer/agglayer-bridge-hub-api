@@ -3,6 +3,7 @@ import {
 	NetworkSchema,
 	PaginationSchema,
 	networkIdSchema,
+	networkIdsSchema,
 } from "../schemas/common";
 import { BadRequestError, handleError } from "@polygonlabs/servercore";
 import {
@@ -192,6 +193,10 @@ export const validateAutoClaimHealthCheckQueryParams: MiddlewareHandler =
 		const parsedParams = NetworkSchema.safeParse(context.req.param());
 
 		const parsedQuery = networkIdSchema.safeParse(queryParams.networkId);
+		const parsedSourceNetworkIdsQuery = networkIdsSchema.safeParse(
+			queryParams.sourceNetworkIds
+		);
+
 		if (!parsedQuery.success) {
 			const error = new BadRequestError(
 				parsedQuery.error.message,
@@ -201,7 +206,20 @@ export const validateAutoClaimHealthCheckQueryParams: MiddlewareHandler =
 			);
 
 			return handleError(getResponseContext(context), error);
-		} else if (!parsedParams.success) {
+		}
+
+		if (!parsedSourceNetworkIdsQuery.success) {
+			const error = new BadRequestError(
+				parsedSourceNetworkIdsQuery.error.message,
+				parsedSourceNetworkIdsQuery.error.format(),
+				undefined,
+				"validateAutoClaimHealthCheckQueryParams"
+			);
+
+			return handleError(getResponseContext(context), error);
+		}
+
+		if (!parsedParams.success) {
 			const error = new BadRequestError(
 				parsedParams.error.message,
 				parsedParams.error.format(),
@@ -212,7 +230,10 @@ export const validateAutoClaimHealthCheckQueryParams: MiddlewareHandler =
 			return handleError(getResponseContext(context), error);
 		}
 
-		context.set("validatedQuery", parsedQuery.data);
+		context.set("validatedQuery", {
+			networkId: parsedQuery.data,
+			sourceNetworkIds: parsedSourceNetworkIdsQuery.data,
+		});
 		context.set("validatedParams", parsedParams.data);
 		await next();
 	};
