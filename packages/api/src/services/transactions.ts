@@ -1,6 +1,7 @@
 import type {
 	IQueryFilterOperationParams,
 	IQueryOrderOperationParams,
+	IQueryOrFilterParams,
 } from "@polygonlabs/servercore";
 import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import { CryptoHasher } from "bun";
@@ -37,24 +38,106 @@ export class TransactionService {
 		return hasher.digest("hex").slice(0, 32);
 	}
 
-	static async getTransactions(
-		network: string,
-		queryParams: IQueryFilterOperationParams[],
-		limit?: number | undefined,
-		startAfter?: string | undefined,
-		orderParamsOverride?: IQueryOrderOperationParams[]
-	): Promise<{ documents: IHubTransaction[]; totalDocumentsCount?: number }> {
+	static async getTransactions({
+		network,
+		fromAddress,
+		sourceNetworkIds,
+		destinationNetworkIds,
+		updatedSince,
+		status,
+		order,
+		startAfter,
+		limit,
+	}: {
+		network: string;
+		fromAddress?: string;
+		sourceNetworkIds?: number[];
+		destinationNetworkIds?: number[];
+		updatedSince?: number;
+		status?: string;
+		order?: "asc" | "desc";
+		startAfter?: string | number;
+		limit?: number | undefined;
+	}): Promise<{
+		documents: IHubTransaction[];
+		totalDocumentsCount?: number;
+	}> {
 		if (!db || !collectionId) {
 			throw new Error(
 				"TransactionService not initialized. Call initializeTransactionService first."
 			);
 		}
+
+		// Create query params for db request
+		const queryParams: IQueryFilterOperationParams[] = [];
+		let orderParamsOverride: IQueryOrderOperationParams[] | undefined =
+			undefined;
+		const orFilters: IQueryOrFilterParams[] = [];
+
+		if (fromAddress) {
+			orFilters.push({
+				or: [
+					{
+						field: "fromAddress",
+						operator: "==",
+						value: fromAddress,
+					},
+					{
+						field: "txSender",
+						operator: "==",
+						value: fromAddress,
+					},
+				],
+			});
+		}
+
+		if (sourceNetworkIds) {
+			queryParams.push({
+				field: "sourceNetwork",
+				operator: "in",
+				value: sourceNetworkIds,
+			});
+		}
+
+		if (destinationNetworkIds) {
+			queryParams.push({
+				field: "destinationNetwork",
+				operator: "in",
+				value: destinationNetworkIds,
+			});
+		}
+
+		if (updatedSince) {
+			queryParams.push({
+				field: "lastUpdatedAt",
+				operator: ">=",
+				value: updatedSince,
+			});
+
+			orderParamsOverride = [
+				{ field: "lastUpdatedAt", order: order || "asc" },
+			];
+		}
+
+		if (order) {
+			orderParamsOverride = [{ field: "hubUID", order: order }];
+		}
+
+		if (status) {
+			queryParams.push({
+				field: "status",
+				operator: "==",
+				value: status,
+			});
+		}
+
 		return await db.getDocuments({
 			collectionPath: collectionId.get(network) || "",
 			filter: queryParams,
 			limit,
 			order: orderParamsOverride || orderParams,
 			startAfterCursor: startAfter,
+			orFilters: orFilters,
 			returnTotalDocumentsCount: true,
 		});
 	}

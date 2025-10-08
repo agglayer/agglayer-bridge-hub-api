@@ -20,6 +20,7 @@ export interface IBridgeTx {
 	deposit_count: number; // BN
 	tx_hash: string;
 	from_address: string; // user address
+	tx_sender: string; // relayer address
 }
 
 /**
@@ -70,4 +71,5 @@ export interface IHubBridgeTransaction {
 	bridgeHash: string;
 	status: TransactionStatus;
 	lastUpdatedAt: number;
+	txSender: string;
 }
