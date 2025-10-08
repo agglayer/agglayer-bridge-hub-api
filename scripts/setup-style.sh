@@ -11,7 +11,7 @@ bunx husky init
 
 # Create pre-commit hook
 echo "📝 Creating pre-commit hook..."
-echo "echo '🎨 Formatting code...' && bun run style && git add ." > .husky/pre-commit
+echo "echo '🎨 Formatting code...' && bun run style && git add . && bun run test" > .husky/pre-commit
 
 # Make hook executable
 chmod +x .husky/pre-commit

@@ -1,1 +1,1 @@
-echo '🎨 Formatting code...' && bun run style && git add .
+echo '🎨 Formatting code...' && bun run style && git add . && bun run test
