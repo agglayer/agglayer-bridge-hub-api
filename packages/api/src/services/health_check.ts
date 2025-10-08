@@ -25,25 +25,14 @@ export class HealthCheckService {
 		networkId: string,
 		sourceNetworkIds: Array<number>
 	): Promise<boolean> {
-		const transactions = await TransactionService.getTransactions(network, [
-			{
-				field: "destinationNetwork",
-				operator: "==",
-				value: parseInt(networkId, 10),
-			},
-			{
-				field: "status",
-				operator: "==",
-				value: "READY_TO_CLAIM",
-			},
-			{
-				field: "sourceNetworkIds",
-				operator: "in",
-				value: sourceNetworkIds,
-			},
-		]);
+		const transactions = await TransactionService.getTransactions({
+			network,
+			destinationNetworkIds: [parseInt(networkId, 10)],
+			status: "READY_TO_CLAIM",
+			sourceNetworkIds,
+		});
 
-		if (transactions && transactions.documents?.length) {
+		if (transactions?.documents?.length) {
 			if (
 				transactions.documents[transactions.documents.length - 1]
 					.timestamp *
