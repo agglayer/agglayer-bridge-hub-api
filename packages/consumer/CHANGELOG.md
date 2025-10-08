@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.4.0...bridge-hub-consumer@1.4.1) (2025-10-08)
+
+### Bug Fixes
+
+- typo on txn_sender ([608fe3f](https://github.com/agglayer/agglayer-bridge-hub-api/commit/608fe3f0834c31615742c81abd746dbbed308ea4))
+
 # [1.4.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.3.1...bridge-hub-consumer@1.4.0) (2025-10-08)
 
 ### Bug Fixes
