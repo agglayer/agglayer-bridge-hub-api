@@ -50,4 +50,6 @@ export interface IHubBridgeTransaction {
 	bridgeHash: string;
 	status: TransactionStatus;
 	lastUpdatedAt: number;
+	txSender: string;
+	metadata: string;
 }

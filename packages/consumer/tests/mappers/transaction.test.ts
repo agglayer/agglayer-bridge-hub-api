@@ -58,6 +58,8 @@ describe("TransactionMapper", () => {
 				bridgeHash: mockBridgeTx.bridge_hash,
 				status: TransactionStatus.BRIDGED,
 				lastUpdatedAt: expect.any(Number),
+				txSender: mockBridgeTx.tx_sender.toLowerCase(),
+				metadata: mockBridgeTx.metadata,
 			});
 		});
 
@@ -87,6 +89,7 @@ describe("TransactionMapper", () => {
 				origin_address: "0xUPPERCASEORIGIN123",
 				destination_address: "0xUPPERCASEDEST123",
 				from_address: "0xUPPERCASEFROM123",
+				tx_sender: "0xUPPERCASESENDER123",
 			};
 
 			const result = mapper.mapBridgeTransactions([txWithUppercase]);
@@ -95,6 +98,7 @@ describe("TransactionMapper", () => {
 			expect(result[0].originTokenAddress).toBe("0xuppercaseorigin123");
 			expect(result[0].receiverAddress).toBe("0xuppercasedest123");
 			expect(result[0].fromAddress).toBe("0xuppercasefrom123");
+			expect(result[0].txSender).toBe("0xuppercasesender123");
 		});
 
 		test("should generate deterministic hubUID", () => {
