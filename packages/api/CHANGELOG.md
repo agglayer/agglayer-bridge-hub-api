@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.4.1...bridge-hub-api@1.5.0) (2025-10-08)
+
+### Bug Fixes
+
+- healthcheck for autoclaim ([1e405bc](https://github.com/agglayer/agglayer-bridge-hub-api/commit/1e405bcd7a3be629d02f9f33d86b56ec4486c78d))
+
+### Features
+
+- add metadata field to bridge transactions ([41784a6](https://github.com/agglayer/agglayer-bridge-hub-api/commit/41784a6c04367e6a631e23a26d54db263a960c13))
+- tx-sender in transactions ([b17517b](https://github.com/agglayer/agglayer-bridge-hub-api/commit/b17517b85d1ca836b0c5c9e40ad1b9bcd32a6fc1))
+
 ## [1.4.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.4.0...bridge-hub-api@1.4.1) (2025-10-06)
 
 ### Bug Fixes

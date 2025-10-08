@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.3.1...bridge-hub-consumer@1.4.0) (2025-10-08)
+
+### Bug Fixes
+
+- tests on tx_sender addition ([f6e5c01](https://github.com/agglayer/agglayer-bridge-hub-api/commit/f6e5c01b37570bb2d684df7dc8cfb732891ad81d))
+
+### Features
+
+- add metadata field to bridge transactions ([41784a6](https://github.com/agglayer/agglayer-bridge-hub-api/commit/41784a6c04367e6a631e23a26d54db263a960c13))
+- tx-sender in transactions ([b17517b](https://github.com/agglayer/agglayer-bridge-hub-api/commit/b17517b85d1ca836b0c5c9e40ad1b9bcd32a6fc1))
+
 ## [1.3.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.3.0...bridge-hub-consumer@1.3.1) (2025-10-03)
 
 ### Bug Fixes
