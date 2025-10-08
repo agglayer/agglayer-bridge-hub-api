@@ -20,7 +20,7 @@ export interface IBridgeTx {
 	deposit_count: number; // BN
 	tx_hash: string;
 	from_address: string; // user address
-	tx_sender: string; // relayer address
+	txn_sender: string; // relayer address
 }
 
 /**
