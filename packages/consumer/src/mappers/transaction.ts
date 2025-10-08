@@ -43,6 +43,7 @@ export default class TransactionMapper {
 				bridgeHash: bridgeTransaction.bridge_hash,
 				status: TransactionStatus.BRIDGED,
 				lastUpdatedAt: Date.now(),
+				txSender: bridgeTransaction.tx_sender.toLowerCase(),
 			});
 		});
 
