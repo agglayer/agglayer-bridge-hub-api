@@ -72,4 +72,5 @@ export interface IHubBridgeTransaction {
 	status: TransactionStatus;
 	lastUpdatedAt: number;
 	txSender: string;
+	metadata: string;
 }
