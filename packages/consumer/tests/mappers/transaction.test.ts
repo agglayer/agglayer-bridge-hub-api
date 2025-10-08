@@ -58,7 +58,7 @@ describe("TransactionMapper", () => {
 				bridgeHash: mockBridgeTx.bridge_hash,
 				status: TransactionStatus.BRIDGED,
 				lastUpdatedAt: expect.any(Number),
-				txSender: mockBridgeTx.tx_sender.toLowerCase(),
+				txSender: mockBridgeTx.txn_sender.toLowerCase(),
 				metadata: mockBridgeTx.metadata,
 			});
 		});
@@ -89,7 +89,7 @@ describe("TransactionMapper", () => {
 				origin_address: "0xUPPERCASEORIGIN123",
 				destination_address: "0xUPPERCASEDEST123",
 				from_address: "0xUPPERCASEFROM123",
-				tx_sender: "0xUPPERCASESENDER123",
+				txn_sender: "0xUPPERCASESENDER123",
 			};
 
 			const result = mapper.mapBridgeTransactions([txWithUppercase]);
