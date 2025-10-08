@@ -70,6 +70,7 @@ export const mockBridgeTx: IBridgeTx = {
 	deposit_count: 42,
 	tx_hash: "0xBRIDGETXHASH123456789",
 	from_address: "0xFROMUSER123456789ABCDEF",
+	tx_sender: "0xRELAYER123456789ABCDEF",
 };
 
 export const mockBridgeTxs: IBridgeTx[] = [
@@ -102,6 +103,8 @@ export const mockExpectedHubBridgeTransaction: IHubBridgeTransaction = {
 	bridgeHash: "0xBRIDGEHASH123456789",
 	status: TransactionStatus.BRIDGED,
 	lastUpdatedAt: expect.any(Number),
+	txSender: "0xrelayer123456789abcdef",
+	metadata: "0x",
 };
 
 export const mockClaimTx: IClaimTx = {
