@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.0...bridge-hub-api@1.5.1) (2025-10-09)
+
+### Bug Fixes
+
+- remove txSender filtering till indexes are added ([2fb55e5](https://github.com/agglayer/agglayer-bridge-hub-api/commit/2fb55e5d91b7de903fd9680216f56844f659987a))
+
 # [1.5.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.4.1...bridge-hub-api@1.5.0) (2025-10-08)
 
 ### Bug Fixes
