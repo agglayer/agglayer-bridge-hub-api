@@ -75,49 +75,20 @@ describe("Transactions Controller", () => {
 
 			await getTransactions(mockContext);
 
-			// Check that the service was called with correct query params
+			// Check that the service was called with correct parameters
 			const serviceCall =
 				mockTransactionService.getTransactions.mock.calls[0];
-			const [network, queryParams, limit, startAfter, orderParams] =
-				serviceCall as any;
+			const [params] = serviceCall as any;
 
-			expect(network).toBe("testnet");
-			expect(limit).toBe(20);
-			expect(startAfter).toBe("hub-uid-123");
-
-			// Check query parameters
-			expect(queryParams).toContainEqual({
-				field: "fromAddress",
-				operator: "==",
-				value: "0xfrom123",
-			});
-			expect(queryParams).toContainEqual({
-				field: "sourceNetwork",
-				operator: "in",
-				value: [1, 2],
-			});
-			expect(queryParams).toContainEqual({
-				field: "destinationNetwork",
-				operator: "in",
-				value: [137, 42],
-			});
-			expect(queryParams).toContainEqual({
-				field: "lastUpdatedAt",
-				operator: ">=",
-				value: 1700000000,
-			});
-			expect(queryParams).toContainEqual({
-				field: "status",
-				operator: "==",
-				value: "BRIDGED",
-			});
-
-			// Check order parameters - when both updatedSince and order are provided,
-			// the order field takes precedence and uses hubUID field
-			expect(orderParams).toContainEqual({
-				field: "hubUID",
-				order: "desc",
-			});
+			expect(params.network).toBe("testnet");
+			expect(params.fromAddress).toBe("0xfrom123");
+			expect(params.sourceNetworkIds).toEqual([1, 2]);
+			expect(params.destinationNetworkIds).toEqual([137, 42]);
+			expect(params.updatedSince).toBe(1700000000);
+			expect(params.status).toBe("BRIDGED");
+			expect(params.order).toBe("desc");
+			expect(params.limit).toBe(20);
+			expect(params.startAfter).toBe("hub-uid-123");
 		});
 
 		test("should handle empty query parameters", async () => {
@@ -130,14 +101,17 @@ describe("Transactions Controller", () => {
 
 			const serviceCall =
 				mockTransactionService.getTransactions.mock.calls[0];
-			const [network, queryParams, limit, startAfter, orderParams] =
-				serviceCall as any;
+			const [params] = serviceCall as any;
 
-			expect(network).toBe("mainnet");
-			expect(queryParams).toEqual([]);
-			expect(limit).toBeUndefined();
-			expect(startAfter).toBeUndefined();
-			expect(orderParams).toBeUndefined();
+			expect(params.network).toBe("mainnet");
+			expect(params.fromAddress).toBeUndefined();
+			expect(params.sourceNetworkIds).toBeUndefined();
+			expect(params.destinationNetworkIds).toBeUndefined();
+			expect(params.updatedSince).toBeUndefined();
+			expect(params.status).toBeUndefined();
+			expect(params.order).toBeUndefined();
+			expect(params.startAfter).toBeUndefined();
+			expect(params.limit).toBeUndefined();
 		});
 
 		test("should handle updatedSince with default order", async () => {
@@ -154,12 +128,10 @@ describe("Transactions Controller", () => {
 
 			const serviceCall =
 				mockTransactionService.getTransactions.mock.calls[0];
-			const [, , , , orderParams] = serviceCall as any;
+			const [params] = serviceCall as any;
 
-			expect(orderParams).toContainEqual({
-				field: "lastUpdatedAt",
-				order: "asc",
-			});
+			expect(params.updatedSince).toBe(1700000000);
+			expect(params.order).toBeUndefined(); // No explicit order provided, will use default "asc" in service
 		});
 
 		test("should handle order without updatedSince", async () => {
@@ -176,12 +148,9 @@ describe("Transactions Controller", () => {
 
 			const serviceCall =
 				mockTransactionService.getTransactions.mock.calls[0];
-			const [, , , , orderParams] = serviceCall as any;
+			const [params] = serviceCall as any;
 
-			expect(orderParams).toContainEqual({
-				field: "hubUID",
-				order: "desc",
-			});
+			expect(params.order).toBe("desc");
 		});
 
 		test("should call handleResponse with correct parameters", async () => {
@@ -395,10 +364,16 @@ describe("Transactions Controller", () => {
 
 			const serviceCall =
 				mockTransactionService.getTransactions.mock.calls[0];
-			const [, queryParams] = serviceCall as any;
+			const [params] = serviceCall as any;
 
-			// Should have 5 query parameters (fromAddress, sourceNetwork, destinationNetwork, lastUpdatedAt, status)
-			expect(queryParams).toHaveLength(5);
+			// Should have all the complex query parameters
+			expect(params.fromAddress).toBe("0xcomplex");
+			expect(params.sourceNetworkIds).toEqual([1, 2, 3, 4, 5]);
+			expect(params.destinationNetworkIds).toEqual([137, 42, 56, 80001]);
+			expect(params.updatedSince).toBe(1700000000);
+			expect(params.status).toBe("CLAIMED");
+			expect(params.order).toBe("asc");
+			expect(params.limit).toBe(100);
 		});
 	});
 });

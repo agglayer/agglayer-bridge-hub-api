@@ -24,7 +24,7 @@ export const networkIdsSchema = z
 	.transform((val) => val.split(",").map((v) => parseInt(v.trim(), 10)));
 
 export const PaginationSchema = z.object({
-	limit: z.coerce.number().int().nonnegative().default(20),
+	limit: z.coerce.number().int().nonnegative().max(50).default(20),
 	startAfter: z.coerce
 		.string()
 		.max(40, "startAfter string must not exceed 40 characters")
