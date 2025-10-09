@@ -107,59 +107,58 @@ describe("TransactionService", () => {
 	describe("getTransactions", () => {
 		test("should call database with correct parameters", async () => {
 			const network = "testnet";
-			const queryParams = [
-				{
-					field: "fromAddress",
-					operator: "==" as any,
-					value: "0xfrom123",
-				},
-				{ field: "status", operator: "==" as any, value: "BRIDGED" },
-			] as any;
+			const fromAddress = "0xfrom123";
+			const status = "BRIDGED";
 			const limit = 10;
 			const startAfter = "hub-uid-123";
-			const orderParamsOverride = [
-				{ field: "lastUpdatedAt", order: "asc" as any },
-			] as any;
+			const updatedSince = 1700000000;
 
-			await TransactionService.getTransactions(
+			await TransactionService.getTransactions({
 				network,
-				queryParams,
+				fromAddress,
+				status,
 				limit,
 				startAfter,
-				orderParamsOverride
-			);
+				updatedSince,
+			});
+
+			const expectedFilters = [
+				{ field: "fromAddress", operator: "==", value: fromAddress },
+				{ field: "lastUpdatedAt", operator: ">=", value: updatedSince },
+				{ field: "status", operator: "==", value: status },
+			];
 
 			expect(mockDatabase.getDocuments).toHaveBeenCalledWith({
 				collectionPath: "custom_transactions_testnet",
-				filter: queryParams,
+				filter: expectedFilters,
 				limit,
-				order: orderParamsOverride,
+				order: [{ field: "lastUpdatedAt", order: "asc" }],
 				startAfterCursor: startAfter,
+				orFilters: [],
 				returnTotalDocumentsCount: true,
 			});
 		});
 
 		test("should use default order params when override not provided", async () => {
 			const network = "testnet";
-			const queryParams: any[] = [];
 
-			await TransactionService.getTransactions(network, queryParams);
+			await TransactionService.getTransactions({ network });
 
 			expect(mockDatabase.getDocuments).toHaveBeenCalledWith({
 				collectionPath: "custom_transactions_testnet",
-				filter: queryParams,
+				filter: [],
 				limit: undefined,
 				order: [{ field: "hubUID", order: "desc" }], // Default order params
 				startAfterCursor: undefined,
+				orFilters: [],
 				returnTotalDocumentsCount: true,
 			});
 		});
 
 		test("should handle empty query parameters", async () => {
 			const network = "mainnet";
-			const queryParams: any[] = [];
 
-			await TransactionService.getTransactions(network, queryParams);
+			await TransactionService.getTransactions({ network });
 
 			expect(mockDatabase.getDocuments).toHaveBeenCalledWith({
 				collectionPath: "custom_transactions",
@@ -167,15 +166,15 @@ describe("TransactionService", () => {
 				limit: undefined,
 				order: [{ field: "hubUID", order: "desc" }],
 				startAfterCursor: undefined,
+				orFilters: [],
 				returnTotalDocumentsCount: true,
 			});
 		});
 
 		test("should return database response", async () => {
-			const result = await TransactionService.getTransactions(
-				"testnet",
-				[]
-			);
+			const result = await TransactionService.getTransactions({
+				network: "testnet",
+			});
 
 			expect(result).toBe(mockTransactionServiceResponse);
 		});
@@ -184,7 +183,7 @@ describe("TransactionService", () => {
 			const networks = ["mainnet", "testnet", "custom"];
 
 			for (const network of networks) {
-				await TransactionService.getTransactions(network, []);
+				await TransactionService.getTransactions({ network });
 
 				let expectedCollectionPath = "";
 				if (network === "mainnet") {
@@ -308,22 +307,15 @@ describe("TransactionService", () => {
 
 		test("should handle typical transaction flow", async () => {
 			const network = "testnet";
-			const queryParams = [
-				{
-					field: "fromAddress",
-					operator: "==" as any,
-					value: "0xuser123",
-				},
-				{ field: "status", operator: "==" as any, value: "BRIDGED" },
-			] as any;
 			const limit = 10;
 
 			// Get transactions list
-			const result = await TransactionService.getTransactions(
+			const result = await TransactionService.getTransactions({
 				network,
-				queryParams,
-				limit
-			);
+				fromAddress: "0xuser123",
+				status: "BRIDGED",
+				limit,
+			});
 
 			// Generate docId for a specific transaction
 			const docId = TransactionService.generateDocId(42, 1);
@@ -346,7 +338,7 @@ describe("TransactionService", () => {
 			mockDatabase.getDocuments.mockRejectedValueOnce(error);
 
 			expect(
-				TransactionService.getTransactions("testnet", [])
+				TransactionService.getTransactions({ network: "testnet" })
 			).rejects.toThrow("Database connection failed");
 		});
 

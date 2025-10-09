@@ -57,7 +57,7 @@ export class TransactionService {
 		status?: string;
 		order?: "asc" | "desc";
 		startAfter?: string | number;
-		limit?: number | undefined;
+		limit?: number;
 	}): Promise<{
 		documents: IHubTransaction[];
 		totalDocumentsCount?: number;
@@ -75,19 +75,10 @@ export class TransactionService {
 		const orFilters: IQueryOrFilterParams[] = [];
 
 		if (fromAddress) {
-			orFilters.push({
-				or: [
-					{
-						field: "fromAddress",
-						operator: "==",
-						value: fromAddress,
-					},
-					{
-						field: "txSender",
-						operator: "==",
-						value: fromAddress,
-					},
-				],
+			queryParams.push({
+				field: "fromAddress",
+				operator: "==",
+				value: fromAddress,
 			});
 		}
 
