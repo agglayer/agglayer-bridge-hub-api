@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.4.1...bridge-hub-consumer@1.4.2) (2025-10-09)
+
+### Bug Fixes
+
+- return health-check true till resync is complete ([207855b](https://github.com/agglayer/agglayer-bridge-hub-api/commit/207855b2013e2ad3a0a44371c27487fc07fe03cf))
+
 ## [1.4.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.4.0...bridge-hub-consumer@1.4.1) (2025-10-08)
 
 ### Bug Fixes
