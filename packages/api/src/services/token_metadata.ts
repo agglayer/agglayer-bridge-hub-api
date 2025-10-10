@@ -1,5 +1,6 @@
 import {
 	BadRequestError,
+	Logger,
 	type IQueryOrderOperationParams,
 	type IQueryOrFilterParams,
 } from "@polygonlabs/servercore";
@@ -159,9 +160,6 @@ export class TokenMetadataService {
 			});
 
 		if (!mappings) {
-			console.log(
-				"No mappings found for the token, querying all RPC configs"
-			);
 			return await this.fetchTokenMetadataFromAllRPCs(
 				network,
 				tokenAddress
@@ -234,6 +232,10 @@ export class TokenMetadataService {
 		network: string,
 		tokenAddress: string
 	): Promise<ITokenMetadata | undefined> {
+		if (tokenAddress === "0x0000000000000000000000000000000000000000") {
+			return undefined;
+		}
+
 		if (!chainConfig || !bridgeAddress) {
 			throw new Error(
 				"TokenMetadataService not initialized. Call initializeTokenMetadataService first."
@@ -247,7 +249,7 @@ export class TokenMetadataService {
 
 		const bridgeAddr = bridgeAddress.get(network);
 		if (!bridgeAddr) {
-			console.log(`Bridge address not found for network ${network}`);
+			Logger.warn(`Bridge address not found for network ${network}`);
 			return undefined;
 		}
 
@@ -311,10 +313,11 @@ export class TokenMetadataService {
 							: "",
 				};
 			} catch (error) {
-				console.log(
-					`Failed to fetch token details from network ${networkId}:`,
-					error
-				);
+				Logger.warn({
+					location: "fetchTokenMetadataFromAllRPCs",
+					message: `Failed to fetch token details from network ${networkId}:`,
+					error,
+				});
 				continue;
 			}
 		}

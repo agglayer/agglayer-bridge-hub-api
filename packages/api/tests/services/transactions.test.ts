@@ -125,6 +125,7 @@ describe("TransactionService", () => {
 			const expectedFilters = [
 				{ field: "fromAddress", operator: "==", value: fromAddress },
 				{ field: "lastUpdatedAt", operator: ">=", value: updatedSince },
+				{ field: "transactionHash", operator: "!=", value: "" },
 				{ field: "status", operator: "==", value: status },
 			];
 
