@@ -109,6 +109,12 @@ export class TransactionService {
 				value: updatedSince,
 			});
 
+			queryParams.push({
+				field: "transactionHash",
+				operator: "!=",
+				value: "",
+			});
+
 			orderParamsOverride = [
 				{ field: "lastUpdatedAt", order: order || "asc" },
 			];
