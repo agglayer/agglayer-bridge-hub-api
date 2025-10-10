@@ -74,6 +74,10 @@ export class TransactionService {
 			undefined;
 		const orFilters: IQueryOrFilterParams[] = [];
 
+		if (order) {
+			orderParamsOverride = [{ field: "hubUID", order: order }];
+		}
+
 		if (fromAddress) {
 			queryParams.push({
 				field: "fromAddress",
@@ -108,10 +112,6 @@ export class TransactionService {
 			orderParamsOverride = [
 				{ field: "lastUpdatedAt", order: order || "asc" },
 			];
-		}
-
-		if (order) {
-			orderParamsOverride = [{ field: "hubUID", order: order }];
 		}
 
 		if (status) {
