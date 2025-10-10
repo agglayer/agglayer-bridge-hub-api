@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.1...bridge-hub-api@1.5.2) (2025-10-10)
+
+### Bug Fixes
+
+- reorder param additions to transactions query ([8499267](https://github.com/agglayer/agglayer-bridge-hub-api/commit/84992676f544b23e4b0caad2d4ecb03881ba8be5))
+
 ## [1.5.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.0...bridge-hub-api@1.5.1) (2025-10-09)
 
 ### Bug Fixes
