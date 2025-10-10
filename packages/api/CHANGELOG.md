@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.3](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.2...bridge-hub-api@1.5.3) (2025-10-10)
+
+### Bug Fixes
+
+- add filtering for transactionHash on getTransactions ([fe8cb9e](https://github.com/agglayer/agglayer-bridge-hub-api/commit/fe8cb9ea468cdb2ca13f8b1e044d9a89e96b9776))
+
 ## [1.5.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.1...bridge-hub-api@1.5.2) (2025-10-10)
 
 ### Bug Fixes
