@@ -71,7 +71,7 @@ async function start(): Promise<void> {
 				apiUrl: new URL(`${process.env.BRIDGE_SERVICE_URL}/bridges`),
 				startCount: { key: "deposit_count", value: 0 },
 				cronExpr: "0/10 * * * * *",
-				pollSize: 10,
+				pollSize: 2,
 				method: "GET",
 				params: {
 					network_id: process.env.NETWORK_ID || "0",
