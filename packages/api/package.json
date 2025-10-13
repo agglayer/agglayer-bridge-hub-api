@@ -23,6 +23,7 @@
 		"@hono/zod-openapi": "^1.1.2",
 		"@scalar/hono-api-reference": "^0.9.19",
 		"hono": "^4.9.0",
-		"zod": "^4.0.17"
+		"zod": "^4.0.17",
+		"viem": "2.38.1"
 	}
 }
