@@ -114,10 +114,6 @@ export class TransactionService {
 				operator: "!=",
 				value: "",
 			});
-
-			orderParamsOverride = [
-				{ field: "lastUpdatedAt", order: order || "asc" },
-			];
 		}
 
 		if (status) {
