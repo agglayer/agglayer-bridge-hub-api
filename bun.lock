@@ -8,6 +8,7 @@
         "@polygonlabs/servercore-firestore": "^1.1.0",
         "axios": "^1.12.2",
         "tsup": "^8.5.0",
+        "viem": "^2.38.1",
       },
       "devDependencies": {
         "@commitlint/cli": "^18.4.3",
