@@ -133,7 +133,7 @@ describe("TransactionService", () => {
 				collectionPath: "custom_transactions_testnet",
 				filter: expectedFilters,
 				limit,
-				order: [{ field: "lastUpdatedAt", order: "asc" }],
+				order: [{ field: "hubUID", order: "desc" }],
 				startAfterCursor: startAfter,
 				orFilters: [],
 				returnTotalDocumentsCount: true,
