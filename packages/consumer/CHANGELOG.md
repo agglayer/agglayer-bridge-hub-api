@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.4.2...bridge-hub-consumer@1.5.0) (2025-10-13)
+
+### Bug Fixes
+
+- bridges pol size ([fe36203](https://github.com/agglayer/agglayer-bridge-hub-api/commit/fe362030d4fdcc0e6d19870f0af26b66659fa719))
+
+### Features
+
+- resyncing health check flag ([7957634](https://github.com/agglayer/agglayer-bridge-hub-api/commit/7957634d7839c47c1b698bfdb174b4c0700f3370))
+
 ## [1.4.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.4.1...bridge-hub-consumer@1.4.2) (2025-10-09)
 
 ### Bug Fixes
