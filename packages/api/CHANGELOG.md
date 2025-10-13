@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.4](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.3...bridge-hub-api@1.5.4) (2025-10-13)
+
+### Bug Fixes
+
+- do not override order params on updatedSince query ([0b52177](https://github.com/agglayer/agglayer-bridge-hub-api/commit/0b52177ac51cf7c3cf3336e3e9536d2c05ef981b))
+- handle removal of orderParams in updatedSince in tests ([d3d6061](https://github.com/agglayer/agglayer-bridge-hub-api/commit/d3d60613e72c1291d8ee6ec5f28a8c7aa5f9f698))
+- install viem as dependency ([d72b94e](https://github.com/agglayer/agglayer-bridge-hub-api/commit/d72b94e7cf15ae6946b95b059bf941962f9068c6))
+
 ## [1.5.3](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.2...bridge-hub-api@1.5.3) (2025-10-10)
 
 ### Bug Fixes
