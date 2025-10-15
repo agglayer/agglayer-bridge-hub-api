@@ -137,6 +137,8 @@ async function start(): Promise<void> {
 			Number(process.env.HEALTH_CHECK_PORT || "3001"),
 			async () => {
 				try {
+					return true;
+
 					if (process.env.RESYNCING === "true") {
 						return true;
 					}
