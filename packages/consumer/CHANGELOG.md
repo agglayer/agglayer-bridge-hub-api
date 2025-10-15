@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.5.0...bridge-hub-consumer@1.5.1) (2025-10-15)
+
+### Bug Fixes
+
+- bridge address ([24c45ba](https://github.com/agglayer/agglayer-bridge-hub-api/commit/24c45ba865fd4ae582da31dce2fd92a93470845c))
+
 # [1.5.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.4.2...bridge-hub-consumer@1.5.0) (2025-10-13)
 
 ### Bug Fixes
