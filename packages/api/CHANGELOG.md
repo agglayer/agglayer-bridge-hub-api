@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.6](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.5...bridge-hub-api@1.5.6) (2025-10-16)
+
+### Bug Fixes
+
+- health auto claim ([a339e04](https://github.com/agglayer/agglayer-bridge-hub-api/commit/a339e0484917b6c1a2769d2070a30e4def1830b3))
+
 ## [1.5.5](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.4...bridge-hub-api@1.5.5) (2025-10-13)
 
 ### Bug Fixes
