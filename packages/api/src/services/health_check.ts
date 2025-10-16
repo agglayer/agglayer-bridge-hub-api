@@ -32,8 +32,9 @@ export class HealthCheckService {
 				(obj) => obj.leafType === "ASSET"
 			);
 			if (
+				filteredTxns &&
 				filteredTxns[filteredTxns.length - 1].timestamp * 1000 <
-				Date.now() - 60 * 60 * 1000
+					Date.now() - 60 * 60 * 1000
 			) {
 				throw new ApiError(
 					`Auto-claim service might be unhealthy for Network ${networkId}: Last READY_TO_CLAIM transaction is older than 1 hour`
