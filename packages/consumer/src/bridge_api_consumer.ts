@@ -21,6 +21,7 @@ import type MetadataMapper from "./mappers/metadata";
 import type TransactionsService from "./services/transaction";
 import type TokenMappingsService from "./services/mapping";
 import type MetadataService from "./services/metadata";
+import { MetadataFields } from "./enums/metadata_fields";
 
 export class BridgeAPIConsumer {
 	private bridgeConsumer:
@@ -58,6 +59,22 @@ export class BridgeAPIConsumer {
 			IMappingTx[],
 			ILastIndexedMappingTransaction
 		>(this.mappingConsumerConfig);
+
+		this.bridgeConsumer.setStartValue(
+			await this.getStartValues(
+				MetadataFields.LAST_INDEXED_BRIDGE_DEPOSIT_COUNT
+			)
+		);
+		this.claimConsumer.setStartValue(
+			await this.getStartValues(
+				MetadataFields.LAST_INDEXED_CLAIM_BLOCK_NUMBER
+			)
+		);
+		this.mappingConsumer.setStartValue(
+			await this.getStartValues(
+				MetadataFields.LAST_INDEXED_MAPPING_BLOCK_NUMBER
+			)
+		);
 
 		await Promise.all([
 			// start bridge consumer
@@ -266,6 +283,11 @@ export class BridgeAPIConsumer {
 				}
 			);
 		}
+	}
+
+	private async getStartValues(field: MetadataFields): Promise<number> {
+		const metadataDoc = await this.metadataService.getLastIndexedTxs();
+		return metadataDoc ? (metadataDoc[field] as number) : 0;
 	}
 
 	private onError(
