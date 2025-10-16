@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.5.1...bridge-hub-consumer@1.6.0) (2025-10-16)
+
+### Features
+
+- apply start offset values to consumers ([300a906](https://github.com/agglayer/agglayer-bridge-hub-api/commit/300a906d04e4ea8660a518c29cfa503b39d4b4e7))
+
 ## [1.5.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.5.0...bridge-hub-consumer@1.5.1) (2025-10-15)
 
 ### Bug Fixes
