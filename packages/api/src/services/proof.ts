@@ -1,5 +1,5 @@
 import { ApiError, NotFoundError } from "@polygonlabs/servercore";
-import type { IProof } from "../interfaces/proof";
+import type { ClaimProofResponse } from "../schemas/proof_query";
 
 let networkMap: Map<string, Map<number, string>>;
 
@@ -17,7 +17,7 @@ export class ProofService {
 		sourceNetwork: number,
 		depositCount: number,
 		leaf: number
-	): Promise<IProof> {
+	): Promise<ClaimProofResponse> {
 		if (!networkMap) {
 			throw new Error(
 				"ProofService not initialized. Call initializeService first."
