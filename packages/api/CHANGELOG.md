@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.7](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.6...bridge-hub-api@1.5.7) (2025-10-28)
+
+### Bug Fixes
+
+- change server url on the docs and fix proof response schema ([6d80927](https://github.com/agglayer/agglayer-bridge-hub-api/commit/6d8092737e572da056c04b2509b6e1629e15ea39))
+
 ## [1.5.6](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.5...bridge-hub-api@1.5.6) (2025-10-16)
 
 ### Bug Fixes
