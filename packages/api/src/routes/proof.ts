@@ -1,7 +1,11 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { validateClaimProofQueryParams } from "../middlewares/validate_query_params";
 import { getProof } from "../controllers/proof";
-import { ClaimProofQuerySchema, NetworkSchema } from "../schemas";
+import {
+	ClaimProofQuerySchema,
+	ClaimProofResponseSchema,
+	NetworkSchema,
+} from "../schemas";
 
 const proofRoutes = new OpenAPIHono();
 
@@ -20,12 +24,7 @@ const getClaimProofRoute = createRoute({
 		200: {
 			content: {
 				"application/json": {
-					schema: z.object({
-						success: z.boolean(),
-						data: z.object({
-							proof: z.string(),
-						}),
-					}),
+					schema: ClaimProofResponseSchema,
 				},
 			},
 			description: "Successful response with claim proof",
