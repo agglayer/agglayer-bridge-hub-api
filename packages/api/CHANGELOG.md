@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.8](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.7...bridge-hub-api@1.5.8) (2025-11-04)
+
+### Bug Fixes
+
+- make leafIndex param optional for proof generation ([b265f1a](https://github.com/agglayer/agglayer-bridge-hub-api/commit/b265f1adf4575bc191e8964d70afbbe050c63d5f))
+
 ## [1.5.7](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.6...bridge-hub-api@1.5.7) (2025-10-28)
 
 ### Bug Fixes

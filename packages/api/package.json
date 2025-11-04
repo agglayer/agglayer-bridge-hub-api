@@ -1,7 +1,7 @@
 {
 	"name": "bridge-hub-api",
 	"type": "module",
-	"version": "1.5.7",
+	"version": "1.5.8",
 	"module": "src/server.ts",
 	"exports": "./dist/",
 	"scripts": {
