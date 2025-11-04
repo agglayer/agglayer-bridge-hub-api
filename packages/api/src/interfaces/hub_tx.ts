@@ -3,4 +3,7 @@ import type { IHubClaimTransaction } from "./claim_tx";
 
 export interface IHubTransaction
 	extends IHubClaimTransaction,
-		IHubBridgeTransaction {}
+		IHubBridgeTransaction {
+	leafIndex?: number;
+	leafIndexForProof?: number;
+}
