@@ -29,7 +29,7 @@ export class HealthCheckService {
 
 		if (transactions?.documents?.length) {
 			const filteredTxns = transactions.documents.filter(
-				(obj) => obj.leafType === "ASSET"
+				(obj) => obj.leafType === "ASSET" && !obj.claimTransactionHash
 			);
 			if (
 				filteredTxns &&
