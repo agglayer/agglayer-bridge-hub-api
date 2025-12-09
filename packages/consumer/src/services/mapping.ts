@@ -40,7 +40,7 @@ export default class TokenMappingsService {
 		});
 	}
 
-	public async getLatestTokenMapping(
+	public async getTokenMapping(
 		transactionHash: string,
 		blockNumber: number
 	): Promise<IHubTokenMappings[]> {
