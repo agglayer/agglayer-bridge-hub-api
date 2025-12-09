@@ -3,7 +3,6 @@ import {
 	Logger,
 	setupHealthCheckServer,
 } from "@polygonlabs/servercore";
-import axios from "axios";
 import { createPublicClient, http } from "viem";
 
 // Initialize the logger globally
@@ -30,10 +29,36 @@ import bridgeAbi from "./interfaces/PolygonZkEVMBridge";
 
 let database: DatabaseClient;
 
+// Static configuration and cached environment variables
+const BRIDGE_ADDRESSES = new Map([
+	["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
+	["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
+]);
+
+const NETWORK_ID = process.env.NETWORK_ID || "0";
+const BRIDGE_SERVICE_URL = process.env.BRIDGE_SERVICE_URL;
+const NETWORK = process.env.NETWORK || "mainnet";
+const BRIDGE_CONTRACT_ADDRESS = process.env.BRIDGE_CONTRACT_ADDRESS;
+const ETROG_UPDATE_BLOCK_NUMBER = process.env.ETROG_UPDATE_BLOCK_NUMBER || "0";
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+
+// Helper function to build Bridge API URLs
+const buildBridgeApiUrl = (endpoint: string, limit = 1): string =>
+	`${BRIDGE_SERVICE_URL}/${endpoint}?network_id=${NETWORK_ID}&limit=${limit}`;
+
+// Helper function to fetch with validation
+const fetchWithValidation = async (url: string): Promise<any> => {
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new ApiError(`Failed to fetch ${url}: ${response.statusText}`);
+	}
+	return response.json();
+};
+
 async function start(): Promise<void> {
 	try {
 		const collectionsConfig =
-			process.env.NETWORK === "mainnet"
+			NETWORK === "mainnet"
 				? {
 						transactions: "bridge_hub_api_transactions",
 						tokenMappings: "bridge_hub_api_mappings",
@@ -63,51 +88,49 @@ async function start(): Promise<void> {
 
 		const bridgeAPIConsumer = new BridgeAPIConsumer(
 			{
-				apiUrl: new URL(`${process.env.BRIDGE_SERVICE_URL}/bridges`),
+				apiUrl: new URL(`${BRIDGE_SERVICE_URL}/bridges`),
 				startCount: { key: "deposit_count", value: 0 },
 				cronExpr: "0/10 * * * * *",
 				pollSize: 2,
 				method: "GET",
 				params: {
-					network_id: process.env.NETWORK_ID || "0",
+					network_id: NETWORK_ID || "0",
 					page_size: "2",
 				},
 				paginationParam: "page_number",
 				resultPath: "bridges",
 			},
 			{
-				apiUrl: new URL(`${process.env.BRIDGE_SERVICE_URL}/claims`),
+				apiUrl: new URL(`${BRIDGE_SERVICE_URL}/claims`),
 				startCount: { key: "block_num", value: 0 },
 				cronExpr: "0/10 * * * * *",
 				pollSize: 2,
 				method: "GET",
 				params: {
-					network_id: process.env.NETWORK_ID || "0",
+					network_id: NETWORK_ID || "0",
 					page_size: "2",
 				},
 				paginationParam: "page_number",
 				resultPath: "claims",
 			},
 			{
-				apiUrl: new URL(
-					`${process.env.BRIDGE_SERVICE_URL}/token-mappings`
-				),
+				apiUrl: new URL(`${BRIDGE_SERVICE_URL}/token-mappings`),
 				startCount: { key: "block_num", value: 0 },
 				cronExpr: "0/10 * * * * *",
 				pollSize: 2,
 				method: "GET",
 				params: {
-					network_id: process.env.NETWORK_ID || "0",
+					network_id: NETWORK_ID || "0",
 					page_size: "2",
 				},
 				paginationParam: "page_number",
 				resultPath: "token_mappings",
 			},
 			new TransactionMapper(
-				Number(process.env.NETWORK_ID) || 0,
-				Number(process.env.ETROG_UPDATE_BLOCK_NUMBER) || 0
+				Number(NETWORK_ID) || 0,
+				Number(ETROG_UPDATE_BLOCK_NUMBER)
 			),
-			new TokenMappingsMapper(Number(process.env.NETWORK_ID) || 0),
+			new TokenMappingsMapper(Number(NETWORK_ID) || 0),
 			new MetadataMapper(),
 			transactionService,
 			tokenMappingsService,
@@ -121,9 +144,9 @@ async function start(): Promise<void> {
 		const claimReadinessConsumer = new ClaimReadinessConsumer(
 			{
 				cronExpr: "0/30 * * * * *",
-				networkId: Number(process.env.NETWORK_ID) || 0,
-				l1InfoTreeIndexUrl: `${process.env.BRIDGE_SERVICE_URL}/l1-info-tree-index`,
-				injectedL1InfoLeafUrl: `${process.env.BRIDGE_SERVICE_URL}/injected-l1-info-leaf`,
+				networkId: Number(NETWORK_ID) || 0,
+				l1InfoTreeIndexUrl: `${BRIDGE_SERVICE_URL}/l1-info-tree-index`,
+				injectedL1InfoLeafUrl: `${BRIDGE_SERVICE_URL}/injected-l1-info-leaf`,
 			},
 			transactionService
 		);
@@ -141,17 +164,6 @@ async function start(): Promise<void> {
 						return true;
 					}
 
-					const bridgeAddress = new Map([
-						[
-							"mainnet",
-							"0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe",
-						],
-						[
-							"testnet",
-							"0x1348947e282138d8f377b467F7D9c2EB0F335d1f",
-						],
-					]);
-
 					const [
 						depositCount,
 						bridges,
@@ -160,50 +172,31 @@ async function start(): Promise<void> {
 						latestBridgeFromDB,
 					] = await Promise.all([
 						client.readContract({
-							address: (process.env.BRIDGE_CONTRACT_ADDRESS ||
-								bridgeAddress.get(
-									process.env.NETWORK || "mainnet"
-								)) as `0x${string}`,
+							address: (BRIDGE_CONTRACT_ADDRESS ||
+								BRIDGE_ADDRESSES.get(NETWORK)) as `0x${string}`,
 							abi: bridgeAbi,
 							functionName: "depositCount",
 						}),
-						axios.get(
-							`${process.env.BRIDGE_SERVICE_URL}/bridges?network_id=${process.env.NETWORK_ID}`
+						fetchWithValidation(buildBridgeApiUrl("bridges")),
+						fetchWithValidation(
+							buildBridgeApiUrl("token-mappings")
 						),
-						axios.get(
-							`${process.env.BRIDGE_SERVICE_URL}/token-mappings?network_id=${process.env.NETWORK_ID}`
-						),
-						axios.get(
-							`${process.env.BRIDGE_SERVICE_URL}/claims?network_id=${process.env.NETWORK_ID}`
-						),
+						fetchWithValidation(buildBridgeApiUrl("claims")),
 						transactionService.getLatestBridgeTransactions(
-							Number(process.env.NETWORK_ID)
+							Number(NETWORK_ID)
 						),
 					]);
 
-					const depositCnt =
-						Number((depositCount as bigint).toString()) - 1;
-					const latestBridge = bridges?.data?.bridges?.[0] || null;
-					const latestMapping =
-						mappings?.data?.token_mappings?.[0] || null;
-					const latestClaims = claims?.data?.claims?.[0] || null;
+					const depositCnt = Number(depositCount) - 1;
+					const latestBridge = bridges?.bridges?.[0] || null;
+					const latestMapping = mappings?.token_mappings?.[0] || null;
+					const latestClaims = claims?.claims?.[0] || null;
 					const latestBridgeInDB = latestBridgeFromDB[0] || null;
 
-					if (!latestBridge) {
-						throw new ApiError("No bridges found from Aggkit API");
-					}
-
-					if (!latestClaims) {
-						throw new ApiError("No claims found from Aggkit API");
-					}
-
-					if (!latestMapping) {
-						throw new ApiError(
-							"No token mappings found from Aggkit API"
-						);
-					}
-
-					if (!latestBridgeInDB || !latestBridgeInDB.timestamp) {
+					if (
+						latestBridge &&
+						(!latestBridgeInDB || !latestBridgeInDB.timestamp)
+					) {
 						throw new ApiError(
 							"No bridges saved in DB but bridges found in Aggkit API"
 						);
@@ -214,13 +207,16 @@ async function start(): Promise<void> {
 						throw new ApiError(`Aggkit not in sync`);
 					}
 
+					// Cache current timestamp for multiple comparisons
+					const now = Date.now();
+
 					// if deposit count from contract is larger then saved
 					if (
 						latestBridge.deposit_count >
 							latestBridgeInDB.depositCount &&
-						Date.now() -
+						now -
 							new Date(latestBridge.timestamp * 1000).getTime() >
-							5 * 60 * 1000
+							FIVE_MINUTES_MS
 					) {
 						throw new ApiError(
 							`Deposits in DB not in sync. Aggkit: ${latestBridge.deposit_count}, DB: ${latestBridgeInDB.depositCount}`
@@ -228,22 +224,27 @@ async function start(): Promise<void> {
 					}
 
 					const [mappingsFromDb, claimFromDb] = await Promise.all([
-						tokenMappingsService.getLatestTokenMapping(
-							latestMapping.tx_hash.toLowerCase(),
-							latestMapping.block_num
-						),
-						transactionService.getClaim(
-							latestClaims.tx_hash.toLowerCase()
-						),
+						latestMapping
+							? tokenMappingsService.getTokenMapping(
+									latestMapping.tx_hash.toLowerCase(),
+									latestMapping.block_num
+								)
+							: Promise.resolve(null),
+						latestClaims
+							? transactionService.getClaim(
+									latestClaims.tx_hash.toLowerCase()
+								)
+							: Promise.resolve(null),
 					]);
 
 					if (
+						latestMapping &&
 						(!mappingsFromDb || mappingsFromDb.length === 0) &&
-						Date.now() -
+						now -
 							new Date(
 								latestMapping.block_timestamp * 1000
 							).getTime() >
-							5 * 60 * 1000
+							FIVE_MINUTES_MS
 					) {
 						throw new ApiError(
 							`Mappings in DB not in sync. Aggkit: ${latestMapping.tx_hash}`
@@ -251,12 +252,13 @@ async function start(): Promise<void> {
 					}
 
 					if (
+						latestClaims &&
 						(!claimFromDb || claimFromDb.length === 0) &&
-						Date.now() -
+						now -
 							new Date(
 								latestClaims.block_timestamp * 1000
 							).getTime() >
-							5 * 60 * 1000
+							FIVE_MINUTES_MS
 					) {
 						throw new ApiError(
 							`Claims in DB not in sync. Aggkit: ${latestClaims.tx_hash}`
@@ -280,9 +282,7 @@ async function start(): Promise<void> {
 		await bridgeAPIConsumer.start();
 		await claimReadinessConsumer.start();
 
-		Logger.info(
-			`Consumer for network id ${process.env.NETWORK_ID} started`
-		);
+		Logger.info(`Consumer for network id ${NETWORK_ID} started`);
 	} catch (error) {
 		Logger.error(error as Error);
 	}
