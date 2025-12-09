@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.0...bridge-hub-consumer@1.6.1) (2025-12-09)
+
+### Bug Fixes
+
+- handle health-check case where there is no data present on aggkit ([22b68b1](https://github.com/agglayer/agglayer-bridge-hub-api/commit/22b68b1c17fa256d35a3a8d05c900ba5f2642132))
+
 # [1.6.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.5.1...bridge-hub-consumer@1.6.0) (2025-10-16)
 
 ### Features
