@@ -24,6 +24,7 @@ export class MappingsService {
 		collectionIdParam: Map<string, string> = new Map([
 			["mainnet", "mappings"],
 			["testnet", "mappings_testnet"],
+			["devnet", "mappings_testnet"],
 		])
 		// chainConfigParam: Map<string, Map<number, string>> = new Map([
 		// 	["mainnet", new Map([])],

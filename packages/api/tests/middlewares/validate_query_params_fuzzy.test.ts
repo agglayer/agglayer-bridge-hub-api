@@ -162,7 +162,6 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 			"testnet-v2", // Invalid format
 			"MAINNET", // Wrong case
 			"TESTNET", // Wrong case
-			"devnet", // Not allowed
 			"localnet", // Not allowed
 			"polygon", // Wrong network name
 			"ethereum", // Wrong network name

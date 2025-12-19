@@ -24,6 +24,7 @@ export class TransactionService {
 		collectionIdParams: Map<string, string> = new Map([
 			["mainnet", "transactions"],
 			["testnet", "transactions_testnet"],
+			["devnet", "transactions_testnet"],
 		])
 	) {
 		if (!db) {

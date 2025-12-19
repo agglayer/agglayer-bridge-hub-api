@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { Networks } from "../enums";
 
 export const networkIdsSchema = z
 	.string()
@@ -32,7 +33,7 @@ export const PaginationSchema = z.object({
 });
 
 export const NetworkSchema = z.object({
-	network: z.enum(["mainnet", "testnet"]),
+	network: z.enum(Networks),
 });
 
 export const address = z.string().regex(/^0x[a-fA-F0-9]{40}$/, {

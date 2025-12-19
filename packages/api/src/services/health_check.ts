@@ -10,6 +10,7 @@ export class HealthCheckService {
 		chainConfigParam: Map<string, Map<number, string>> = new Map([
 			["mainnet", new Map([])],
 			["testnet", new Map([])],
+			["devnet", new Map([])],
 		])
 	) {
 		chainConfig = chainConfigParam;
