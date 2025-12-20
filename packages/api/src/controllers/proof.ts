@@ -17,7 +17,7 @@ export const getProof = async (c: Context) => {
 		const validatedQuery: ClaimProofQuery = c.get("validatedQuery");
 		const { network } = c.get("validatedParams");
 
-		if (!validatedQuery.leafIndex) {
+		if (validatedQuery.leafIndex == null) {
 			const docId = TransactionService.generateDocId(
 				validatedQuery.depositCount,
 				validatedQuery.sourceNetworkId

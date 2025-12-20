@@ -31,14 +31,17 @@ export class TokenMetadataService {
 		collectionIdParam: Map<string, string> = new Map([
 			["mainnet", "mappings"],
 			["testnet", "mappings_testnet"],
+			["devnet", "mappings_testnet"],
 		]),
 		chainConfigParam: Map<string, Map<number, string>> = new Map([
 			["mainnet", new Map([])],
 			["testnet", new Map([])],
+			["devnet", new Map([])],
 		]),
 		bridgeAddressParam: Map<string, string> = new Map([
 			["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
 			["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
+			["devnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
 		])
 	) {
 		if (!db) {

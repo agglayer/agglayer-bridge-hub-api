@@ -32,7 +32,7 @@ async function serve(): Promise<void> {
 	await database.connect();
 
 	// Parse the PROOF_CONFIG and RPC_CONFIG environment variable and convert it to a Map
-	// Parse PROOF_CONFIG and RPC_CONFIG as an objects with "mainnet" and "testnet" keys, each mapping to an object of chainId -> url
+	// Parse PROOF_CONFIG and RPC_CONFIG as an objects with "mainnet", "testnet" and "devnet" keys, each mapping to an object of chainId -> url
 	const rawProofConfig = JSON.parse(process.env.PROOF_CONFIG || "{}");
 	// Convert each network's config to a Map<number, string>
 	const proofConfig: Map<string, Map<number, string>> = new Map();
@@ -67,6 +67,7 @@ async function serve(): Promise<void> {
 		new Map([
 			["mainnet", "bridge_hub_api_transactions"],
 			["testnet", "bridge_hub_api_transactions_testnet"],
+			["devnet", "bridge_hub_api_transactions_testnet"],
 		])
 	);
 
@@ -75,6 +76,7 @@ async function serve(): Promise<void> {
 		new Map([
 			["mainnet", "bridge_hub_api_mappings"],
 			["testnet", "bridge_hub_api_mappings_testnet"],
+			["devnet", "bridge_hub_api_mappings_testnet"],
 		])
 	);
 
@@ -83,11 +85,13 @@ async function serve(): Promise<void> {
 		new Map([
 			["mainnet", "bridge_hub_api_mappings"],
 			["testnet", "bridge_hub_api_mappings_testnet"],
+			["devnet", "bridge_hub_api_mappings_testnet"],
 		]),
 		rpcConfig,
 		new Map([
 			["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
 			["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
+			["devnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
 		])
 	);
 
