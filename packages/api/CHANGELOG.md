@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.9](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.8...bridge-hub-api@1.5.9) (2025-12-20)
+
+### Bug Fixes
+
+- add new devnet network ([405f0d2](https://github.com/agglayer/agglayer-bridge-hub-api/commit/405f0d276dbbe80eac7203ebd692fcc421a48745))
+
 ## [1.5.8](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.7...bridge-hub-api@1.5.8) (2025-11-04)
 
 ### Bug Fixes
