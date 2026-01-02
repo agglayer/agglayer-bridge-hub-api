@@ -42,4 +42,9 @@ export const address = z.string().regex(/^0x[a-fA-F0-9]{40}$/, {
 
 export const networkIdSchema = z
 	.string()
-	.max(18, "Network IDs string must not exceed 18 characters");
+	.max(18, "Network ID string must not exceed 18 characters")
+	.transform((val) => val.split(",").map((v) => v.trim()))
+	.refine((arr) => arr.every((v) => /^\d+$/.test(v)), {
+		message: "networkIds must be non-negative integers",
+	})
+	.transform((arr) => arr.map((v) => Number(v)));
