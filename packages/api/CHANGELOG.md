@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.10](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.9...bridge-hub-api@1.5.10) (2026-01-04)
+
+### Bug Fixes
+
+- check on source network ids to be non negetive integers ([26ac74b](https://github.com/agglayer/agglayer-bridge-hub-api/commit/26ac74b17dbdc8a212c42af05754e04c770ecfef))
+
 ## [1.5.9](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.8...bridge-hub-api@1.5.9) (2025-12-20)
 
 ### Bug Fixes

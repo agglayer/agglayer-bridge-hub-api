@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.1...bridge-hub-consumer@1.6.2) (2026-01-04)
+
+### Bug Fixes
+
+- convert to globalIndex to bigInt in to a try-catch block ([66d0d3d](https://github.com/agglayer/agglayer-bridge-hub-api/commit/66d0d3d27fe8812a124e9ec87a163d218690b86c))
+
 ## [1.6.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.0...bridge-hub-consumer@1.6.1) (2025-12-09)
 
 ### Bug Fixes
