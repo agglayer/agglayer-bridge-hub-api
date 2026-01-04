@@ -36,6 +36,23 @@ export const TokenMetadataQuerySchema = z
 	})
 	.merge(NetworkSchema);
 
+export const TokenMetadataSchema = z.object({
+	name: z.string(),
+	symbol: z.string(),
+	decimals: z.number(),
+	originTokenAddress: address,
+	originTokenNetwork: z.number(),
+	wrappedTokenAddressV1: address,
+	wrappedTokenAddressV2: address,
+});
+
+export const TokenMetadataResponseSchema = z.object({
+	success: z.boolean(),
+	data: TokenMetadataSchema,
+});
+
 export type MappingsQuery = z.infer<typeof MappingsQuerySchema>;
 export type mappingsByTokenQuery = z.infer<typeof MappingsByTokenQuerySchema>;
 export type TokenMetadataQuery = z.infer<typeof TokenMetadataQuerySchema>;
+export type TokenMetadataResponse = z.infer<typeof TokenMetadataResponseSchema>;
+export type TokenMetadata = z.infer<typeof TokenMetadataSchema>;

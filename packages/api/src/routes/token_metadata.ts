@@ -1,23 +1,12 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { validateTokenMetadataQueryParams } from "../middlewares/validate_query_params";
 import { getTokenMetadata } from "../controllers/token_metadata";
-import { TokenMetadataQuerySchema } from "../schemas";
+import {
+	TokenMetadataQuerySchema,
+	TokenMetadataResponseSchema,
+} from "../schemas";
 
 const tokenMetadataRoutes = new OpenAPIHono();
-
-// Response schemas for OpenAPI
-const TokenMetadataResponseSchema = z.object({
-	success: z.boolean(),
-	data: z.object({
-		name: z.string(),
-		symbol: z.string(),
-		decimals: z.number(),
-		tokenAddress: z.string(),
-		network: z.number(),
-		totalSupply: z.string().optional(),
-		logoURI: z.string().optional(),
-	}),
-});
 
 const ErrorResponseSchema = z.object({
 	success: z.boolean(),
