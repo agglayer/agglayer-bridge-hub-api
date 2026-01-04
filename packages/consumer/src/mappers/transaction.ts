@@ -77,22 +77,28 @@ export default class TransactionMapper {
 		globalIndex: string,
 		blockNumber: number
 	): IDecodedGlobalIndex {
-		const globalIndexBigInt = BigInt(globalIndex);
-		const globalIndexInHex = globalIndexBigInt.toString(16);
+		try {
+			const globalIndexBigInt = BigInt(globalIndex);
+			const globalIndexInHex = globalIndexBigInt.toString(16);
 
-		if (blockNumber < this.etrogUpdateBlockNumber) {
+			if (blockNumber < this.etrogUpdateBlockNumber) {
+				return {
+					sourceNetwork: this.networkId === 0 ? 1 : 0,
+					depositCount: Number(globalIndexBigInt),
+				};
+			}
+
 			return {
-				sourceNetwork: this.networkId === 0 ? 1 : 0,
-				depositCount: Number(globalIndexBigInt),
+				sourceNetwork:
+					globalIndexInHex.length > 16
+						? 0
+						: Number(globalIndexBigInt >> 32n) + 1,
+				depositCount: Number(globalIndexBigInt & 0xffffffffn),
 			};
+		} catch (error) {
+			throw new Error(
+				`Failed to decode global index: ${globalIndex}. Error: ${error instanceof Error ? error.message : String(error)}`
+			);
 		}
-
-		return {
-			sourceNetwork:
-				globalIndexInHex.length > 16
-					? 0
-					: Number(globalIndexBigInt >> 32n) + 1,
-			depositCount: Number(globalIndexBigInt & 0xffffffffn),
-		};
 	}
 }

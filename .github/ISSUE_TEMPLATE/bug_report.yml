@@ -1,0 +1,52 @@
+name: Bug report
+description: Report a reproducible problem
+title: "[Bug]: "
+labels: ["bug"]
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Thanks for reporting! Please fill out the details below to help us reproduce and fix the issue.
+
+    - type: textarea
+      id: summary
+      attributes:
+          label: What happened?
+          description: Describe the bug and what you expected to happen.
+          placeholder: "When I call X endpoint with Y, it returns Z..."
+      validations:
+          required: true
+
+    - type: textarea
+      id: reproduction
+      attributes:
+          label: Steps to reproduce
+          description: Provide steps we can follow to reproduce the issue.
+          placeholder: |
+              1. Run ...
+              2. Call ...
+              3. Observe ...
+      validations:
+          required: true
+
+    - type: textarea
+      id: environment
+      attributes:
+          label: Environment
+          description: Share runtime details (versions matter).
+          placeholder: |
+              OS:
+              Node:
+              MongoDB:
+              Commit/Tag:
+      validations:
+          required: true
+
+    - type: textarea
+      id: logs
+      attributes:
+          label: Logs / error output
+          description: Paste relevant logs or error messages (redact secrets).
+          render: shell
+      validations:
+          required: false
