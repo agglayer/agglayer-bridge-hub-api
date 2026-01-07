@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { ResponseSchema } from "./common";
 
 export const ClaimProofQuerySchema = z.object({
 	sourceNetworkId: z.coerce.number().int().nonnegative(),
@@ -6,7 +7,7 @@ export const ClaimProofQuerySchema = z.object({
 	depositCount: z.coerce.number().int().nonnegative(),
 });
 
-export const ClaimProofResponseSchema = z.object({
+export const ClaimProofSchema = z.object({
 	proof_local_exit_root: z.array(z.string()),
 	proof_rollup_exit_root: z.array(z.string()),
 	l1_info_tree_leaf: z.object({
@@ -22,5 +23,8 @@ export const ClaimProofResponseSchema = z.object({
 	}),
 });
 
+export const ClaimProofResponseSchema = ResponseSchema(ClaimProofSchema);
+
 export type ClaimProofQuery = z.infer<typeof ClaimProofQuerySchema>;
 export type ClaimProofResponse = z.infer<typeof ClaimProofResponseSchema>;
+export type ClaimProof = z.infer<typeof ClaimProofSchema>;

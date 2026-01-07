@@ -3,6 +3,8 @@ import {
 	TransactionsQuerySchema,
 	TransactionsByDepositCountQuerySchema,
 	NetworkSchema,
+	TransactionResponseSchema,
+	TransactionByDepositCountResponseSchema,
 } from "../schemas";
 import {
 	validateTransactionQueryParams,
@@ -14,28 +16,6 @@ import {
 } from "../controllers/transactions";
 
 const transactionsRoutes = new OpenAPIHono();
-
-// Schema definitions for OpenAPI
-const TransactionResponseSchema = z.object({
-	success: z.boolean(),
-	data: z.array(
-		z.object({
-			hubUID: z.string(),
-			fromAddress: z.string(),
-			toAddress: z.string(),
-			sourceNetwork: z.number(),
-			destinationNetwork: z.number(),
-			amount: z.string(),
-			status: z.string(),
-			lastUpdatedAt: z.number(),
-		})
-	),
-	meta: z.object({
-		total: z.number(),
-		limit: z.number(),
-		nextStartAfterCursor: z.string().optional(),
-	}),
-});
 
 const ErrorResponseSchema = z.object({
 	success: z.boolean(),
@@ -91,19 +71,7 @@ const getTransactionByDepositCountRoute = createRoute({
 		200: {
 			content: {
 				"application/json": {
-					schema: z.object({
-						success: z.boolean(),
-						data: z.object({
-							hubUID: z.string(),
-							fromAddress: z.string(),
-							toAddress: z.string(),
-							sourceNetwork: z.number(),
-							destinationNetwork: z.number(),
-							amount: z.string(),
-							status: z.string(),
-							lastUpdatedAt: z.number(),
-						}),
-					}),
+					schema: TransactionByDepositCountResponseSchema,
 				},
 			},
 			description: "Successful response with transaction details",

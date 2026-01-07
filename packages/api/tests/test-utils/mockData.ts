@@ -1,8 +1,7 @@
-import type { IHubTokenMapping } from "../../src/interfaces/hub_mapping";
-import type { IHubTransaction } from "../../src/interfaces/hub_tx";
+import type { HubTokenMapping, IHubTransaction } from "../../src/schemas";
 
 // Mock mappings data
-export const mockMapping: IHubTokenMapping = {
+export const mockMapping: HubTokenMapping = {
 	originTokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
 	originTokenNetwork: 1,
 	wrappedTokenAddress: "0xabcdef1234567890abcdef1234567890abcdef12",
@@ -17,7 +16,7 @@ export const mockMapping: IHubTokenMapping = {
 // Alias for compatibility with existing tests
 export const mockTokenMapping = mockMapping;
 
-export const mockMappings: IHubTokenMapping[] = [
+export const mockMappings: HubTokenMapping[] = [
 	mockMapping,
 	{
 		...mockMapping,

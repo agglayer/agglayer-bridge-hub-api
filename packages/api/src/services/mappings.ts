@@ -3,7 +3,7 @@ import {
 	type IQueryOrderOperationParams,
 } from "@polygonlabs/servercore";
 import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
-import type { IHubTokenMapping } from "../interfaces/hub_mapping";
+import type { HubTokenMapping } from "../schemas";
 
 let db: DatabaseClient;
 let collectionId: Map<string, string>;
@@ -60,7 +60,7 @@ export class MappingsService {
 		limit?: number | undefined;
 		startAfter?: number | undefined;
 	}): Promise<{
-		documents: IHubTokenMapping[];
+		documents: HubTokenMapping[];
 		totalDocumentsCount?: number;
 	}> {
 		if (!db || !collectionId) {
@@ -114,7 +114,7 @@ export class MappingsService {
 		tokenNetwork: string,
 		network: string
 	): Promise<{
-		documents: IHubTokenMapping[];
+		documents: HubTokenMapping[];
 		totalDocumentsCount?: number;
 	}> {
 		if (!db || !collectionId) {

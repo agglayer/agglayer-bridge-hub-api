@@ -4,6 +4,7 @@ import {
 	networkIdsSchema,
 	NetworkSchema,
 	PaginationSchema,
+	ResponseSchema,
 } from "./common";
 
 export const MappingsQuerySchema = z
@@ -46,13 +47,29 @@ export const TokenMetadataSchema = z.object({
 	wrappedTokenAddressV2: address,
 });
 
-export const TokenMetadataResponseSchema = z.object({
-	success: z.boolean(),
-	data: TokenMetadataSchema,
+export const TokenMetadataResponseSchema = ResponseSchema(TokenMetadataSchema);
+
+export const HubTokenMappingSchema = z.object({
+	blockNumber: z.number(),
+	transactionIndex: z.number(),
+	timestamp: z.number(),
+	transactionHash: z.string(),
+	originTokenNetwork: z.number(),
+	originTokenAddress: z.string(),
+	wrappedTokenNetwork: z.number(),
+	wrappedTokenAddress: z.string(),
+	lastUpdatedAt: z.number(),
 });
+
+export const MappingsResponseSchema = ResponseSchema(
+	z.array(HubTokenMappingSchema),
+	true
+);
 
 export type MappingsQuery = z.infer<typeof MappingsQuerySchema>;
 export type mappingsByTokenQuery = z.infer<typeof MappingsByTokenQuerySchema>;
 export type TokenMetadataQuery = z.infer<typeof TokenMetadataQuerySchema>;
 export type TokenMetadataResponse = z.infer<typeof TokenMetadataResponseSchema>;
 export type TokenMetadata = z.infer<typeof TokenMetadataSchema>;
+export type HubTokenMapping = z.infer<typeof HubTokenMappingSchema>;
+export type MappingsResponse = z.infer<typeof MappingsResponseSchema>;

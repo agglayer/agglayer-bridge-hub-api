@@ -110,7 +110,7 @@ async function serve(): Promise<void> {
 			version: "v1",
 			title: "Agglayer Bridge Hub API",
 			description:
-				"API for accessing bridge transaction data, token mappings, claim proofs, and token metadata",
+				"The Agglayer Bridge Hub API provides access to query agglayer bridge transaction statuses, retrieve token address mappings across chains, generate claim proofs for asset withdrawals, and access comprehensive token metadata. Supports mainnet, testnet, and devnet environments for seamless integration with bridge-enabled applications.",
 		},
 		servers: [
 			{
