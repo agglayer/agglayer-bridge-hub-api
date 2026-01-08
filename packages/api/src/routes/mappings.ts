@@ -4,55 +4,14 @@ import {
 	validateMappingsQueryParams,
 } from "../middlewares/validate_query_params";
 import { getMappings, getMappingsByToken } from "../controllers/mappings";
-import { MappingsByTokenQuerySchema, MappingsQuerySchema } from "../schemas";
+import {
+	MappingsByTokenQuerySchema,
+	MappingsQuerySchema,
+	MappingsResponseSchema,
+} from "../schemas";
 import { NetworkSchema, PaginationSchema } from "../schemas/common";
 
 const mappingsRoutes = new OpenAPIHono();
-
-// Response schemas for OpenAPI
-const MappingResponseSchema = z.object({
-	success: z.boolean(),
-	data: z.array(
-		z.object({
-			originTokenNetwork: z.number(),
-			originTokenAddress: z.string(),
-			wrappedTokenNetwork: z.number(),
-			wrappedTokenAddress: z.string(),
-			blockNumber: z.number(),
-			transactionIndex: z.number(),
-			timestamp: z.number(),
-			transactionHash: z.string(),
-			lastUpdatedAt: z.number(),
-		})
-	),
-	pagination: z.object({
-		total: z.number(),
-		limit: z.number(),
-		nextStartAfterCursor: z.string().optional(),
-	}),
-});
-
-const MappingsByTokenResponseSchema = z.object({
-	success: z.boolean(),
-	data: z.array(
-		z.object({
-			originTokenNetwork: z.number(),
-			originTokenAddress: z.string(),
-			wrappedTokenNetwork: z.number(),
-			wrappedTokenAddress: z.string(),
-			blockNumber: z.number(),
-			transactionIndex: z.number(),
-			timestamp: z.number(),
-			transactionHash: z.string(),
-			lastUpdatedAt: z.number(),
-		})
-	),
-	pagination: z.object({
-		total: z.number(),
-		limit: z.number(),
-		nextStartAfterCursor: z.string().optional(),
-	}),
-});
 
 const ErrorResponseSchema = z.object({
 	success: z.boolean(),
@@ -75,7 +34,7 @@ const getMappingsRoute = createRoute({
 		200: {
 			content: {
 				"application/json": {
-					schema: MappingResponseSchema,
+					schema: MappingsResponseSchema,
 				},
 			},
 			description: "Successful response with token mappings",
@@ -108,7 +67,7 @@ const getMappingsByTokenRoute = createRoute({
 		200: {
 			content: {
 				"application/json": {
-					schema: MappingsByTokenResponseSchema,
+					schema: MappingsResponseSchema,
 				},
 			},
 			description: "Successful response with token mappings",

@@ -4,6 +4,8 @@ import {
 	networkIdsSchema,
 	NetworkSchema,
 	PaginationSchema,
+	PaginatedResponseSchema,
+	ResponseSchema,
 } from "./common";
 import { TransactionStatus } from "../enums";
 
@@ -50,7 +52,56 @@ export const TransactionsByDepositCountQuerySchema = z
 	})
 	.merge(NetworkSchema);
 
+export const HubBridgeTransactionSchema = z.object({
+	hubUID: z.string(),
+	transactionHash: z.string(),
+	blockNumber: z.number(),
+	transactionIndex: z.number(),
+	timestamp: z.number(),
+	leafType: z.enum(["ASSET", "MESSAGE"]),
+	originTokenNetwork: z.number(),
+	originTokenAddress: z.string(),
+	sourceNetwork: z.number(),
+	destinationNetwork: z.number(),
+	receiverAddress: z.string(),
+	fromAddress: z.string(),
+	amount: z.number(),
+	depositCount: z.number(),
+	bridgeHash: z.string(),
+	status: z.enum(Object.values(TransactionStatus) as [string, ...string[]]),
+	lastUpdatedAt: z.number(),
+	txSender: z.string(),
+	metadata: z.string(),
+});
+
+export const HubClaimTransactionSchema = z.object({
+	claimTransactionHash: z.string(),
+	claimBlockNumber: z.number(),
+	claimTimestamp: z.number(),
+	globalIndex: z.number(),
+	sourceNetwork: z.number(),
+	depositCount: z.number(),
+	status: z.enum(Object.values(TransactionStatus) as [string, ...string[]]),
+	lastUpdatedAt: z.number(),
+});
+
+export const HubTransactionSchema = z.object({
+	...HubBridgeTransactionSchema.shape,
+	...HubClaimTransactionSchema.shape,
+	leafIndex: z.number().optional(),
+	leafIndexForProof: z.number().optional(),
+});
+
+export const TransactionResponseSchema =
+	PaginatedResponseSchema(HubTransactionSchema);
+
+export const TransactionByDepositCountResponseSchema =
+	ResponseSchema(HubTransactionSchema);
+
 export type TransactionsByDepositCountQuery = z.infer<
 	typeof TransactionsByDepositCountQuerySchema
 >;
 export type TransactionsQuery = z.infer<typeof TransactionsQuerySchema>;
+export type IHubBridgeTransaction = z.infer<typeof HubBridgeTransactionSchema>;
+export type IHubClaimTransaction = z.infer<typeof HubClaimTransactionSchema>;
+export type IHubTransaction = z.infer<typeof HubTransactionSchema>;

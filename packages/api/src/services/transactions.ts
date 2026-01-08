@@ -5,7 +5,7 @@ import type {
 } from "@polygonlabs/servercore";
 import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import { CryptoHasher } from "bun";
-import type { IHubTransaction } from "../interfaces/hub_tx";
+import type { IHubTransaction } from "../schemas";
 
 let db: DatabaseClient;
 let collectionId: Map<string, string>;

@@ -5,10 +5,10 @@ import {
 	type IQueryOrFilterParams,
 } from "@polygonlabs/servercore";
 import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
-import type { ITokenMetadata } from "../interfaces/hub_mapping";
 import { createPublicClient, http } from "viem";
 import { ERC20_ABI } from "../constants/erc20";
 import { BRIDGE_ABI_V2, BRIDGE_ABI_V1 } from "../constants/bridge";
+import type { TokenMetadata } from "../schemas";
 
 let db: DatabaseClient;
 let collectionId: Map<string, string>;
@@ -121,7 +121,7 @@ export class TokenMetadataService {
 	static async getTokenMetadata(
 		network: string,
 		tokenAddress: string
-	): Promise<ITokenMetadata | undefined> {
+	): Promise<TokenMetadata | undefined> {
 		if (!db || !collectionId) {
 			throw new Error(
 				"TokenMetadataService not initialized. Call initializeTokenMetadataService first."
@@ -234,7 +234,7 @@ export class TokenMetadataService {
 	private static async fetchTokenMetadataFromAllRPCs(
 		network: string,
 		tokenAddress: string
-	): Promise<ITokenMetadata | undefined> {
+	): Promise<TokenMetadata | undefined> {
 		if (tokenAddress === "0x0000000000000000000000000000000000000000") {
 			return undefined;
 		}
