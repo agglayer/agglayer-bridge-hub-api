@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.11](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.10...bridge-hub-api@1.5.11) (2026-01-08)
+
+**Note:** Version bump only for package bridge-hub-api
+
 ## [1.5.10](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.9...bridge-hub-api@1.5.10) (2026-01-04)
 
 ### Bug Fixes
