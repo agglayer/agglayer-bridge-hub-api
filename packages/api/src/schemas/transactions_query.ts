@@ -4,6 +4,7 @@ import {
 	networkIdsSchema,
 	NetworkSchema,
 	PaginationSchema,
+	PaginatedResponseSchema,
 	ResponseSchema,
 } from "./common";
 import { TransactionStatus } from "../enums";
@@ -91,10 +92,8 @@ export const HubTransactionSchema = z.object({
 	leafIndexForProof: z.number().optional(),
 });
 
-export const TransactionResponseSchema = ResponseSchema(
-	HubTransactionSchema,
-	true
-);
+export const TransactionResponseSchema =
+	PaginatedResponseSchema(HubTransactionSchema);
 
 export const TransactionByDepositCountResponseSchema =
 	ResponseSchema(HubTransactionSchema);

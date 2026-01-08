@@ -3,6 +3,7 @@ import {
 	address,
 	networkIdsSchema,
 	NetworkSchema,
+	PaginatedResponseSchema,
 	PaginationSchema,
 	ResponseSchema,
 } from "./common";
@@ -61,9 +62,8 @@ export const HubTokenMappingSchema = z.object({
 	lastUpdatedAt: z.number(),
 });
 
-export const MappingsResponseSchema = ResponseSchema(
-	z.array(HubTokenMappingSchema),
-	true
+export const MappingsResponseSchema = PaginatedResponseSchema(
+	z.array(HubTokenMappingSchema)
 );
 
 export type MappingsQuery = z.infer<typeof MappingsQuerySchema>;

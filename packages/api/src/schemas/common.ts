@@ -55,12 +55,17 @@ export const PaginationResponseSchema = z.object({
 	nextStartAfterCursor: z.string().optional(),
 });
 
-export const ResponseSchema = <T extends z.ZodTypeAny>(
-	dataSchema: T,
-	includePagination: boolean = false
+export const ResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+	z.object({
+		success: z.boolean(),
+		data: dataSchema,
+	});
+
+export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(
+	dataSchema: T
 ) =>
 	z.object({
 		success: z.boolean(),
 		data: dataSchema,
-		...(includePagination ? { pagination: PaginationResponseSchema } : {}),
+		pagination: PaginationResponseSchema,
 	});
