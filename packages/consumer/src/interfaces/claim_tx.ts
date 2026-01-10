@@ -1,5 +1,10 @@
-import type { TransactionStatus } from "../enums/transaction_status";
 import type { IBridgeAPIResult } from "./bridge_api_result";
+
+// Re-export shared types from @agglayer/bridge-hub-types
+export type {
+	TransactionStatus,
+	IHubClaimTransaction,
+} from "@agglayer/bridge-hub-types";
 
 /**
  * Interface for the Aggkit Claim Tx element
@@ -22,18 +27,4 @@ export interface IClaimTx {
  */
 export interface IClaimsBridgeAPIResult extends IBridgeAPIResult {
 	claims: IClaimTx[];
-}
-
-/**
- * Interface for the Hub API's Claim Transaction entitiy
- */
-export interface IHubClaimTransaction {
-	claimTransactionHash: string;
-	claimBlockNumber: number;
-	claimTimestamp: number;
-	globalIndex: string;
-	sourceNetwork: number;
-	depositCount: number;
-	status: TransactionStatus;
-	lastUpdatedAt: number;
 }

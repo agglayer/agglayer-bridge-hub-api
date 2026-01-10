@@ -14,6 +14,12 @@ lerna-debug.log*
 
 .cache
 
+# Nx/Lerna/Turborepo cache
+
+.nx
+.nx/cache
+.turbo
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
@@ -66,6 +72,13 @@ web_modules/
 # TypeScript cache
 
 *.tsbuildinfo
+
+# Build artifacts and temp files
+
+*.backup
+*.tmp
+*.swp
+*~
 
 # Optional npm cache directory
 
@@ -160,6 +173,9 @@ dist
 # Stores VSCode versions used for testing VSCode extensions
 
 .vscode-test
+
+# VSCode workspace settings (optional - keep if team uses shared settings)
+# .vscode/
 
 # yarn v2
 

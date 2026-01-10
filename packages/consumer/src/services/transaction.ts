@@ -1,10 +1,10 @@
 import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
-import { TransactionStatus } from "../enums/transaction_status";
-import type {
-	IHubBridgedStatusTransactions,
-	IHubBridgeTransaction,
-	IHubLeafIncludedStatusTransactions,
-} from "../interfaces/bridge_tx";
+import {
+	TransactionStatus,
+	type IHubBridgedStatusTransactions,
+	type IHubBridgeTransaction,
+	type IHubLeafIncludedStatusTransactions,
+} from "@agglayer/bridge-hub-types";
 import type { IHubClaimTransaction } from "../interfaces/claim_tx";
 import { CryptoHasher } from "bun";
 

@@ -1,0 +1,31 @@
+{
+	"name": "@agglayer/bridge-hub-types",
+	"type": "module",
+	"version": "1.0.0",
+	"description": "Shared types for Agglayer Bridge Hub",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsup",
+		"type-check": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@hono/zod-openapi": "^1.1.2"
+	}
+}

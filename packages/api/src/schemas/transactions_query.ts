@@ -7,7 +7,13 @@ import {
 	PaginatedResponseSchema,
 	ResponseSchema,
 } from "./common";
-import { TransactionStatus } from "../enums";
+import {
+	TransactionStatusSchema,
+	HubBridgeTransactionSchema,
+	HubClaimTransactionSchema,
+	type IHubBridgeTransaction,
+	type IHubClaimTransaction,
+} from "@agglayer/bridge-hub-types";
 
 export const TransactionsQuerySchema = z
 	.object({
@@ -31,9 +37,7 @@ export const TransactionsQuerySchema = z
 			)
 			.optional(),
 		order: z.enum(["asc", "desc"]).optional(),
-		status: z
-			.enum(Object.values(TransactionStatus) as [string, ...string[]])
-			.optional(),
+		status: TransactionStatusSchema.optional(),
 	})
 	.merge(PaginationSchema);
 
@@ -52,39 +56,10 @@ export const TransactionsByDepositCountQuerySchema = z
 	})
 	.merge(NetworkSchema);
 
-export const HubBridgeTransactionSchema = z.object({
-	hubUID: z.string(),
-	transactionHash: z.string(),
-	blockNumber: z.number(),
-	transactionIndex: z.number(),
-	timestamp: z.number(),
-	leafType: z.enum(["ASSET", "MESSAGE"]),
-	originTokenNetwork: z.number(),
-	originTokenAddress: z.string(),
-	sourceNetwork: z.number(),
-	destinationNetwork: z.number(),
-	receiverAddress: z.string(),
-	fromAddress: z.string(),
-	amount: z.number(),
-	depositCount: z.number(),
-	bridgeHash: z.string(),
-	status: z.enum(Object.values(TransactionStatus) as [string, ...string[]]),
-	lastUpdatedAt: z.number(),
-	txSender: z.string(),
-	metadata: z.string(),
-});
+// Re-export schemas from shared types package
+export { HubBridgeTransactionSchema, HubClaimTransactionSchema };
 
-export const HubClaimTransactionSchema = z.object({
-	claimTransactionHash: z.string(),
-	claimBlockNumber: z.number(),
-	claimTimestamp: z.number(),
-	globalIndex: z.number(),
-	sourceNetwork: z.number(),
-	depositCount: z.number(),
-	status: z.enum(Object.values(TransactionStatus) as [string, ...string[]]),
-	lastUpdatedAt: z.number(),
-});
-
+// API-specific schema that combines bridge + claim with optional fields
 export const HubTransactionSchema = z.object({
 	...HubBridgeTransactionSchema.shape,
 	...HubClaimTransactionSchema.shape,
@@ -102,6 +77,9 @@ export type TransactionsByDepositCountQuery = z.infer<
 	typeof TransactionsByDepositCountQuerySchema
 >;
 export type TransactionsQuery = z.infer<typeof TransactionsQuerySchema>;
-export type IHubBridgeTransaction = z.infer<typeof HubBridgeTransactionSchema>;
-export type IHubClaimTransaction = z.infer<typeof HubClaimTransactionSchema>;
+
+// Re-export types from shared package
+export type { IHubBridgeTransaction, IHubClaimTransaction };
+
+// API-specific type that combines bridge + claim fields
 export type IHubTransaction = z.infer<typeof HubTransactionSchema>;

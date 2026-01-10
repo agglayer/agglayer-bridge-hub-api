@@ -7,6 +7,10 @@ import {
 	PaginationSchema,
 	ResponseSchema,
 } from "./common";
+import {
+	HubTokenMappingsSchema,
+	type IHubTokenMappings,
+} from "@agglayer/bridge-hub-types";
 
 export const MappingsQuerySchema = z
 	.object({
@@ -50,17 +54,8 @@ export const TokenMetadataSchema = z.object({
 
 export const TokenMetadataResponseSchema = ResponseSchema(TokenMetadataSchema);
 
-export const HubTokenMappingSchema = z.object({
-	blockNumber: z.number(),
-	transactionIndex: z.number(),
-	timestamp: z.number(),
-	transactionHash: z.string(),
-	originTokenNetwork: z.number(),
-	originTokenAddress: z.string(),
-	wrappedTokenNetwork: z.number(),
-	wrappedTokenAddress: z.string(),
-	lastUpdatedAt: z.number(),
-});
+// Re-export schema from shared types package
+export const HubTokenMappingSchema = HubTokenMappingsSchema;
 
 export const MappingsResponseSchema = PaginatedResponseSchema(
 	z.array(HubTokenMappingSchema)
@@ -71,5 +66,8 @@ export type mappingsByTokenQuery = z.infer<typeof MappingsByTokenQuerySchema>;
 export type TokenMetadataQuery = z.infer<typeof TokenMetadataQuerySchema>;
 export type TokenMetadataResponse = z.infer<typeof TokenMetadataResponseSchema>;
 export type TokenMetadata = z.infer<typeof TokenMetadataSchema>;
-export type HubTokenMapping = z.infer<typeof HubTokenMappingSchema>;
+
+// Re-export type from shared package with alias for backwards compatibility
+export type { IHubTokenMappings as HubTokenMapping };
+
 export type MappingsResponse = z.infer<typeof MappingsResponseSchema>;

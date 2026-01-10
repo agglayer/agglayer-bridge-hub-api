@@ -1,5 +1,12 @@
-import type { TransactionStatus } from "../enums/transaction_status";
 import type { IBridgeAPIResult } from "./bridge_api_result";
+
+// Re-export shared types from @agglayer/bridge-hub-types
+export type {
+	TransactionStatus,
+	IHubBridgeTransaction,
+	IHubBridgedStatusTransactions,
+	IHubLeafIncludedStatusTransactions,
+} from "@agglayer/bridge-hub-types";
 
 /**
  * Interface for the Aggkit Bridge Tx element
@@ -28,49 +35,4 @@ export interface IBridgeTx {
  */
 export interface IBridgesBridgeAPIResult extends IBridgeAPIResult {
 	bridges: IBridgeTx[];
-}
-
-/**
- * Interface for the Hub API's Transaction entity with BRIDGED status
- */
-export interface IHubBridgedStatusTransactions {
-	sourceNetwork: number;
-	depositCount: number;
-	hubUID: string;
-	timestamp?: number;
-}
-
-/**
- * Interface for the Hub API's Transaction entity with LEAF_INCLUDED status
- */
-export interface IHubLeafIncludedStatusTransactions {
-	sourceNetwork: number;
-	depositCount: number;
-	leafIndex: number;
-	hubUID: string;
-}
-
-/**
- * Interface for the Hub API's Bridge Transaction entity
- */
-export interface IHubBridgeTransaction {
-	hubUID: string;
-	transactionHash: string;
-	blockNumber: number;
-	transactionIndex: number;
-	timestamp: number;
-	leafType: "ASSET" | "MESSAGE";
-	originTokenNetwork: number;
-	originTokenAddress: string;
-	sourceNetwork: number;
-	destinationNetwork: number;
-	receiverAddress: string;
-	fromAddress: string;
-	amount: number;
-	depositCount: number;
-	bridgeHash: string;
-	status: TransactionStatus;
-	lastUpdatedAt: number;
-	txSender: string;
-	metadata: string;
 }
