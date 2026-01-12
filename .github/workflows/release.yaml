@@ -5,9 +5,10 @@ on:
         branches:
             - main
         paths:
-            - "packages/api/**"
-            - ".github/workflows/release-api.yml"
+            - "packages/**" # Watch all packages (api, consumer, types)
+            - ".github/workflows/release.yaml"
             - ".github/workflows/deploy_api_gcp.yaml"
+            - ".github/workflows/deploy_consumer_gcp.yaml"
     workflow_dispatch:
         inputs:
             branch:

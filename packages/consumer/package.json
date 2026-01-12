@@ -15,5 +15,8 @@
 	},
 	"peerDependencies": {
 		"typescript": "^5"
+	},
+	"dependencies": {
+		"@agglayer/bridge-hub-types": "workspace:*"
 	}
 }

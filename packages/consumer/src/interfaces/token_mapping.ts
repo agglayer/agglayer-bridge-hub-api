@@ -1,5 +1,8 @@
 import type { IBridgeAPIResult } from "./bridge_api_result";
 
+// Re-export shared types from @agglayer/bridge-hub-types
+export type { IHubTokenMappings } from "@agglayer/bridge-hub-types";
+
 /**
  * Interface for the Aggkit Mapping Tx element
  */
@@ -20,19 +23,4 @@ export interface IMappingTx {
  */
 export interface IMappingsBridgeAPIResult extends IBridgeAPIResult {
 	tokenMappings: IMappingTx[];
-}
-
-/**
- * Interface for the Hub API's Token Mappings entitiy
- */
-export interface IHubTokenMappings {
-	blockNumber: number;
-	transactionIndex: number;
-	timestamp: number;
-	transactionHash: string;
-	originTokenNetwork: number;
-	originTokenAddress: string;
-	wrappedTokenNetwork: number;
-	wrappedTokenAddress: string;
-	lastUpdatedAt: number;
 }
