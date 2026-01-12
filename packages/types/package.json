@@ -1,7 +1,7 @@
 {
 	"name": "@agglayer/bridge-hub-types",
 	"type": "module",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Shared types for Agglayer Bridge Hub",
 	"main": "./dist/index.js",
 	"module": "./dist/index.js",
