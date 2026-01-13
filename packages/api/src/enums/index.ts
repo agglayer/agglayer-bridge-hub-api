@@ -1,4 +1,4 @@
-// Re-export shared enum from types package
-export { TransactionStatus } from "@agglayer/bridge-hub-types";
+// Re-export shared enum from commons package
+export { TransactionStatus } from "@agglayer/bridge-hub-commons";
 
 export * from "./networks";

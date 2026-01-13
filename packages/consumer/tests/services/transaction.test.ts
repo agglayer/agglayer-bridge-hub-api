@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, mock } from "bun:test";
 import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import TransactionsService from "../../src/services/transaction";
-import { TransactionStatus } from "@agglayer/bridge-hub-types";
+import { TransactionStatus } from "@agglayer/bridge-hub-commons";
 import type {
 	IHubBridgeTransaction,
 	IHubBridgedStatusTransactions,
