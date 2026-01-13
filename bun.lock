@@ -26,9 +26,9 @@
     },
     "packages/api": {
       "name": "bridge-hub-api",
-      "version": "1.5.9",
+      "version": "1.5.12",
       "dependencies": {
-        "@agglayer/bridge-hub-types": "workspace:*",
+        "@agglayer/bridge-hub-commons": "workspace:*",
         "@hono/zod-openapi": "^1.1.2",
         "@scalar/hono-api-reference": "^0.9.19",
         "hono": "^4.9.0",
@@ -42,11 +42,11 @@
         "typescript": "^5",
       },
     },
-    "packages/consumer": {
-      "name": "bridge-hub-consumer",
-      "version": "1.6.1",
+    "packages/commons": {
+      "name": "@agglayer/bridge-hub-commons",
+      "version": "1.0.1",
       "dependencies": {
-        "@agglayer/bridge-hub-types": "workspace:*",
+        "@hono/zod-openapi": "^1.1.2",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -55,11 +55,11 @@
         "typescript": "^5",
       },
     },
-    "packages/types": {
-      "name": "@agglayer/bridge-hub-types",
-      "version": "1.0.0",
+    "packages/consumer": {
+      "name": "bridge-hub-consumer",
+      "version": "1.6.3",
       "dependencies": {
-        "@hono/zod-openapi": "^1.1.2",
+        "@agglayer/bridge-hub-commons": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -72,7 +72,7 @@
   "packages": {
     "@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.11.1", "", {}, "sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ=="],
 
-    "@agglayer/bridge-hub-types": ["@agglayer/bridge-hub-types@workspace:packages/types"],
+    "@agglayer/bridge-hub-commons": ["@agglayer/bridge-hub-commons@workspace:packages/commons"],
 
     "@asteasolutions/zod-to-openapi": ["@asteasolutions/zod-to-openapi@8.1.0", "", { "dependencies": { "openapi3-ts": "^4.1.2" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-tQFxVs05J/6QXXqIzj6rTRk3nj1HFs4pe+uThwE95jL5II2JfpVXkK+CqkO7aT0Do5AYqO6LDrKpleLUFXgY+g=="],
 
@@ -1680,7 +1680,7 @@
 
     "zod": ["zod@4.1.12", "", {}, "sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ=="],
 
-    "@agglayer/bridge-hub-types/@types/bun": ["@types/bun@1.3.5", "", { "dependencies": { "bun-types": "1.3.5" } }, "sha512-RnygCqNrd3srIPEWBd5LFeUYG7plCoH2Yw9WaZGyNmdTEei+gWaHqydbaIRkIkcbXwhBT94q78QljxN0Sk838w=="],
+    "@agglayer/bridge-hub-commons/@types/bun": ["@types/bun@1.3.5", "", { "dependencies": { "bun-types": "1.3.5" } }, "sha512-RnygCqNrd3srIPEWBd5LFeUYG7plCoH2Yw9WaZGyNmdTEei+gWaHqydbaIRkIkcbXwhBT94q78QljxN0Sk838w=="],
 
     "@commitlint/config-validator/ajv": ["ajv@8.17.1", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g=="],
 
@@ -1896,7 +1896,7 @@
 
     "write-pkg/type-fest": ["type-fest@0.4.1", "", {}, "sha512-IwzA/LSfD2vC1/YDYMv/zHP4rDF1usCwllsDpbolT3D4fUepIO7f9K70jjmUewU/LmGUKJcwcVtDCpnKk4BPMw=="],
 
-    "@agglayer/bridge-hub-types/@types/bun/bun-types": ["bun-types@1.3.5", "", { "dependencies": { "@types/node": "*" } }, "sha512-inmAYe2PFLs0SUbFOWSVD24sg1jFlMPxOjOSSCYqUgn4Hsc3rDc7dFvfVYjFPNHtov6kgUeulV4SxbuIV/stPw=="],
+    "@agglayer/bridge-hub-commons/@types/bun/bun-types": ["bun-types@1.3.5", "", { "dependencies": { "@types/node": "*" } }, "sha512-inmAYe2PFLs0SUbFOWSVD24sg1jFlMPxOjOSSCYqUgn4Hsc3rDc7dFvfVYjFPNHtov6kgUeulV4SxbuIV/stPw=="],
 
     "@commitlint/config-validator/ajv/json-schema-traverse": ["json-schema-traverse@1.0.0", "", {}, "sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug=="],
 

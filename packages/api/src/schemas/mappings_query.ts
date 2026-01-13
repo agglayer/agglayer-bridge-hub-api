@@ -10,7 +10,7 @@ import {
 import {
 	HubTokenMappingsSchema,
 	type IHubTokenMappings,
-} from "@agglayer/bridge-hub-types";
+} from "@agglayer/bridge-hub-commons";
 
 export const MappingsQuerySchema = z
 	.object({

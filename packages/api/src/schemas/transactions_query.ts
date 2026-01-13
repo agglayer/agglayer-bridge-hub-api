@@ -13,7 +13,7 @@ import {
 	HubClaimTransactionSchema,
 	type IHubBridgeTransaction,
 	type IHubClaimTransaction,
-} from "@agglayer/bridge-hub-types";
+} from "@agglayer/bridge-hub-commons";
 
 export const TransactionsQuerySchema = z
 	.object({

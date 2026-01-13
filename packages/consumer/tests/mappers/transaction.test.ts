@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import TransactionMapper from "../../src/mappers/transaction";
 import { LeafType } from "../../src/enums/leaf_type";
-import { TransactionStatus } from "@agglayer/bridge-hub-types";
+import { TransactionStatus } from "@agglayer/bridge-hub-commons";
 import {
 	mockBridgeTx,
 	mockBridgeTxs,
