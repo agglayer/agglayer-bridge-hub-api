@@ -59,7 +59,6 @@ describe("TransactionMapper", () => {
 				status: TransactionStatus.BRIDGED,
 				lastUpdatedAt: expect.any(Number),
 				txSender: mockBridgeTx.txn_sender.toLowerCase(),
-				metadata: mockBridgeTx.metadata,
 			});
 		});
 

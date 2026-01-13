@@ -43,7 +43,6 @@ export const HubBridgeTransactionSchema = z.object({
 	status: TransactionStatusSchema,
 	lastUpdatedAt: z.number().optional(),
 	txSender: z.string(),
-	metadata: z.string(),
 });
 
 // Export inferred TypeScript types

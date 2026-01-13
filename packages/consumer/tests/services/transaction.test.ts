@@ -84,7 +84,6 @@ describe("TransactionsService", () => {
 				status: TransactionStatus.BRIDGED,
 				lastUpdatedAt: Date.now(),
 				txSender: "0xsender1",
-				metadata: "0xmetadata1",
 			};
 
 			const bridgeTransaction2: IHubBridgeTransaction = {
@@ -127,7 +126,6 @@ describe("TransactionsService", () => {
 				status: TransactionStatus.BRIDGED,
 				lastUpdatedAt: Date.now(),
 				txSender: "0xsender1",
-				metadata: "0xmetadata1",
 			};
 
 			const bridgeTransaction2: IHubBridgeTransaction = {
@@ -175,7 +173,6 @@ describe("TransactionsService", () => {
 				status: TransactionStatus.BRIDGED,
 				lastUpdatedAt: Date.now(),
 				txSender: "0xsender",
-				metadata: "0xmetadata",
 			};
 
 			await service.saveBridges([bridgeTransaction]);
@@ -210,7 +207,6 @@ describe("TransactionsService", () => {
 					status: TransactionStatus.BRIDGED,
 					lastUpdatedAt: Date.now(),
 					txSender: "0xsender1",
-					metadata: "0xmetadata1",
 				},
 				{
 					hubUID: "test-uid-2",
@@ -231,7 +227,6 @@ describe("TransactionsService", () => {
 					status: TransactionStatus.BRIDGED,
 					lastUpdatedAt: Date.now(),
 					txSender: "0xsender2",
-					metadata: "0xmetadata2",
 				},
 			];
 

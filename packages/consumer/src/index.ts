@@ -179,10 +179,7 @@ async function start(): Promise<void> {
 					const latestClaims = claims?.claims?.[0] || null;
 					const latestBridgeInDB = latestBridgeFromDB[0] || null;
 
-					if (
-						latestBridge &&
-						(!latestBridgeInDB || !latestBridgeInDB.timestamp)
-					) {
+					if (latestBridge && !latestBridgeInDB?.timestamp) {
 						throw new ApiError(
 							"No bridges saved in DB but bridges found in Aggkit API"
 						);
@@ -274,4 +271,4 @@ async function start(): Promise<void> {
 	}
 }
 
-start();
+await start();
