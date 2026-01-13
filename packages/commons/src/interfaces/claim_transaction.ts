@@ -12,7 +12,7 @@ export const HubClaimTransactionSchema = z.object({
 	sourceNetwork: z.number(),
 	depositCount: z.number(),
 	status: TransactionStatusSchema,
-	lastUpdatedAt: z.number(),
+	lastUpdatedAt: z.number().optional(),
 });
 
 // Export inferred TypeScript type

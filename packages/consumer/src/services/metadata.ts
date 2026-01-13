@@ -1,26 +1,49 @@
-import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import {
+	executeMongoOperation,
+	type Collection,
+	type Document,
+} from "@agglayer/bridge-hub-commons";
 import type { IHubMetadata } from "../interfaces/metadata";
+
+interface MetadataDocument extends Document, IHubMetadata {
+	_id: string;
+}
 
 export default class MetadataService {
 	constructor(
-		private readonly database: DatabaseClient,
-		private readonly collectionId: string = "bridge_hub_api_metadata",
+		private readonly collection: Collection<MetadataDocument>,
+		private readonly collectionName: string = "bridge_hub_api_metadata",
 		private readonly docId: string = "lastIndexedTransactions"
 	) {}
 
 	public async saveLastIndexedTxs(data: IHubMetadata): Promise<void> {
-		await this.database.updateDocuments({
-			collectionPaths: [this.collectionId],
-			docDatas: [data],
-			docIds: [this.docId],
-		});
+		await executeMongoOperation(
+			this.collection,
+			(col) =>
+				col.updateOne(
+					{ _id: this.docId },
+					{
+						$set: { ...data },
+						$setOnInsert: { _id: this.docId },
+					},
+					{ upsert: true }
+				),
+			{
+				operationName: "saveLastIndexedTxs",
+				logContext: { ...data } as Record<string, unknown>,
+			}
+		);
 	}
 
 	public async getLastIndexedTxs(): Promise<IHubMetadata> {
-		const data = await this.database.getDocument({
-			collectionId: this.collectionId,
-			docId: this.docId,
-		});
-		return data as IHubMetadata;
+		const result = await executeMongoOperation(
+			this.collection,
+			(col) => col.findOne({ _id: this.docId }),
+			{
+				operationName: "getLastIndexedTxs",
+			}
+		);
+
+		return (result ?? {}) as IHubMetadata;
 	}
 }

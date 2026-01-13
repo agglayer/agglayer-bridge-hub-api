@@ -42,9 +42,9 @@ export default class TransactionMapper {
 				depositCount: bridgeTransaction.deposit_count,
 				bridgeHash: bridgeTransaction.bridge_hash,
 				status: TransactionStatus.BRIDGED,
-				lastUpdatedAt: Date.now(),
 				txSender: bridgeTransaction.txn_sender.toLowerCase(),
 				metadata: bridgeTransaction.metadata,
+				lastUpdatedAt: Date.now(),
 			});
 		});
 

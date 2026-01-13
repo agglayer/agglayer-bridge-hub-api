@@ -1,6 +1,8 @@
-import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import {
+	executeMongoOperation,
 	TransactionStatus,
+	type Collection,
+	type Document,
 	type IHubBridgedStatusTransactions,
 	type IHubBridgeTransaction,
 	type IHubLeafIncludedStatusTransactions,
@@ -8,10 +10,20 @@ import {
 import type { IHubClaimTransaction } from "../interfaces/claim_tx";
 import { CryptoHasher } from "bun";
 
+interface TransactionDocument extends Document, IHubBridgeTransaction {
+	_id: string;
+	claimTransactionHash?: string;
+	claimBlockNumber?: number;
+	claimTimestamp?: number;
+	globalIndex?: string;
+	leafIndex?: number;
+	leafIndexForProof?: number;
+}
+
 export default class TransactionsService {
 	constructor(
-		private readonly database: DatabaseClient,
-		private readonly collectionId: string = "bridge_hub_api_transactions"
+		private readonly collection: Collection<TransactionDocument>,
+		private readonly collectionName: string = "bridge_hub_api_transactions"
 	) {}
 
 	private generateDocId(depositCount: number, sourceNetwork: number): string {
@@ -23,45 +35,61 @@ export default class TransactionsService {
 	public async saveBridges(
 		bridgetransactions: IHubBridgeTransaction[]
 	): Promise<void> {
-		const docIds: string[] = [];
-		for (const tx of bridgetransactions) {
+		const operations = bridgetransactions.map((tx) => {
 			const docId = this.generateDocId(tx.depositCount, tx.sourceNetwork);
-			docIds.push(docId);
-		}
-		this.database.conditionalUpdateDocuments({
-			collectionPaths: this.collectionId,
-			docDatas: bridgetransactions,
-			docIds,
-			conditions: [
-				{
-					field: "status",
-					operator: "==",
-					value: TransactionStatus.BRIDGED,
+			const { status, ...txWithoutStatus } = tx;
+			return {
+				updateOne: {
+					filter: { _id: docId },
+					update: {
+						$set: txWithoutStatus,
+						$setOnInsert: {
+							_id: docId,
+							status: status,
+						},
+					},
+					upsert: true,
 				},
-			],
-			conditionModifications: [
-				{
-					field: "status",
-					value: TransactionStatus.BRIDGED,
-					defaultValue: TransactionStatus.BRIDGED,
-				},
-			],
+			};
 		});
+
+		await executeMongoOperation(
+			this.collection,
+			(col) => col.bulkWrite(operations),
+			{
+				operationName: "saveBridges",
+				logContext: { count: bridgetransactions.length },
+			}
+		);
 	}
 
 	public async saveClaims(
 		claimTransactions: IHubClaimTransaction[]
 	): Promise<void> {
-		const docIds: string[] = [];
-		for (const tx of claimTransactions) {
+		const operations = claimTransactions.map((tx) => {
 			const docId = this.generateDocId(tx.depositCount, tx.sourceNetwork);
-			docIds.push(docId);
-		}
-		this.database.updateDocuments({
-			collectionPaths: this.collectionId,
-			docDatas: claimTransactions,
-			docIds,
+			return {
+				updateOne: {
+					filter: { _id: docId },
+					update: {
+						$set: tx,
+						$setOnInsert: {
+							_id: docId,
+						},
+					},
+					upsert: true,
+				},
+			};
 		});
+
+		await executeMongoOperation(
+			this.collection,
+			(col) => col.bulkWrite(operations),
+			{
+				operationName: "saveClaims",
+				logContext: { count: claimTransactions.length },
+			}
+		);
 	}
 
 	public async updateLeafIndex(
@@ -70,25 +98,28 @@ export default class TransactionsService {
 		leafIndex: number
 	): Promise<void> {
 		const docId = this.generateDocId(depositCount, sourceNetwork);
-		this.database.conditionalUpdateDocuments({
-			collectionPaths: this.collectionId,
-			docDatas: [{ leafIndex, lastUpdatedAt: Date.now() }],
-			docIds: [docId],
-			conditions: [
-				{
-					field: "status",
-					operator: "==",
-					value: TransactionStatus.BRIDGED,
-				},
-			],
-			conditionModifications: [
-				{
-					field: "status",
-					value: TransactionStatus.LEAF_INCLUDED,
-					defaultValue: TransactionStatus.LEAF_INCLUDED,
-				},
-			],
-		});
+
+		await executeMongoOperation(
+			this.collection,
+			(col) =>
+				col.updateOne(
+					{
+						_id: docId,
+						status: TransactionStatus.BRIDGED,
+					},
+					{
+						$set: {
+							leafIndex,
+							status: TransactionStatus.LEAF_INCLUDED,
+							lastUpdatedAt: Date.now(),
+						},
+					}
+				),
+			{
+				operationName: "updateLeafIndex",
+				logContext: { depositCount, sourceNetwork, leafIndex },
+			}
+		);
 	}
 
 	public async updateTransactionToReadyToClaim(
@@ -97,129 +128,162 @@ export default class TransactionsService {
 		leafIndexForProof: number
 	): Promise<void> {
 		const docId = this.generateDocId(depositCount, sourceNetwork);
-		this.database.conditionalUpdateDocuments({
-			collectionPaths: this.collectionId,
-			docDatas: [{ lastUpdatedAt: Date.now(), leafIndexForProof }],
-			docIds: [docId],
-			conditions: [
-				{
-					field: "status",
-					operator: "==",
-					value: TransactionStatus.LEAF_INCLUDED,
-				},
-			],
-			conditionModifications: [
-				{
-					field: "status",
-					value: TransactionStatus.READY_TO_CLAIM,
-					defaultValue: TransactionStatus.READY_TO_CLAIM,
-				},
-			],
-		});
+
+		await executeMongoOperation(
+			this.collection,
+			(col) =>
+				col.updateOne(
+					{
+						_id: docId,
+						status: TransactionStatus.LEAF_INCLUDED,
+					},
+					{
+						$set: {
+							leafIndexForProof,
+							status: TransactionStatus.READY_TO_CLAIM,
+							lastUpdatedAt: Date.now(),
+						},
+					}
+				),
+			{
+				operationName: "updateTransactionToReadyToClaim",
+				logContext: { depositCount, sourceNetwork, leafIndexForProof },
+			}
+		);
 	}
 
 	public async getBridgedTransactions(
 		sourceNetwork: number,
 		afterId?: string
 	): Promise<IHubBridgedStatusTransactions[]> {
-		return await this.database
-			.getDocuments({
-				collectionPath: this.collectionId,
-				filter: [
-					{
-						field: "sourceNetwork",
-						operator: "==",
-						value: sourceNetwork,
-					},
-					{
-						field: "status",
-						operator: "==",
-						value: TransactionStatus.BRIDGED,
-					},
-				],
-				limit: 10,
-				order: [{ field: "hubUID", order: "asc" }],
-				startAfterCursor: afterId,
-				selectFields: ["sourceNetwork", "depositCount", "hubUID"],
-			})
-			.then((res) => res.documents as IHubBridgedStatusTransactions[]);
+		const filter: any = {
+			sourceNetwork,
+			status: TransactionStatus.BRIDGED,
+		};
+
+		// If afterId is provided, use it for cursor-based pagination
+		if (afterId) {
+			filter.hubUID = { $gt: afterId };
+		}
+
+		return await executeMongoOperation(
+			this.collection,
+			(col) =>
+				col
+					.find(filter, {
+						projection: {
+							sourceNetwork: 1,
+							depositCount: 1,
+							hubUID: 1,
+						},
+					})
+					.sort({ hubUID: 1 })
+					.limit(10)
+					.toArray(),
+			{
+				operationName: "getBridgedTransactions",
+				logContext: { sourceNetwork, afterId },
+			}
+		);
 	}
 
 	public async getLatestBridgeTransactions(
 		sourceNetwork: number
 	): Promise<IHubBridgedStatusTransactions[]> {
-		return await this.database
-			.getDocuments({
-				collectionPath: this.collectionId,
-				filter: [
-					{
-						field: "sourceNetwork",
-						operator: "==",
-						value: sourceNetwork,
-					},
-				],
-				limit: 1,
-				order: [{ field: "hubUID", order: "desc" }],
-				selectFields: [
-					"sourceNetwork",
-					"depositCount",
-					"hubUID",
-					"timestamp",
-				],
-			})
-			.then((res) => res.documents as IHubBridgedStatusTransactions[]);
+		return await executeMongoOperation(
+			this.collection,
+			(col) =>
+				col
+					.find(
+						{ sourceNetwork },
+						{
+							projection: {
+								sourceNetwork: 1,
+								depositCount: 1,
+								hubUID: 1,
+								timestamp: 1,
+							},
+						}
+					)
+					.sort({ hubUID: -1 })
+					.limit(1)
+					.toArray(),
+			{
+				operationName: "getLatestBridgeTransactions",
+				logContext: { sourceNetwork },
+			}
+		);
 	}
 
 	public async getClaim(
 		txHash: string
 	): Promise<IHubBridgedStatusTransactions[]> {
-		return await this.database
-			.getDocuments({
-				collectionPath: this.collectionId,
-				filter: [
-					{
-						field: "claimTransactionHash",
-						operator: "==",
-						value: txHash,
-					},
-				],
-				limit: 1,
-				selectFields: ["sourceNetwork", "depositCount", "hubUID"],
-			})
-			.then((res) => res.documents as IHubBridgedStatusTransactions[]);
+		return await executeMongoOperation(
+			this.collection,
+			(col) =>
+				col
+					.find(
+						{ claimTransactionHash: txHash },
+						{
+							projection: {
+								sourceNetwork: 1,
+								depositCount: 1,
+								hubUID: 1,
+							},
+						}
+					)
+					.limit(1)
+					.toArray(),
+			{
+				operationName: "getClaim",
+				logContext: { txHash },
+			}
+		);
 	}
 
 	public async getLeafIncludedTransactions(
 		destinationNetwork: number,
 		afterId?: string
 	): Promise<IHubLeafIncludedStatusTransactions[]> {
-		return await this.database
-			.getDocuments({
-				collectionPath: this.collectionId,
-				filter: [
-					{
-						field: "destinationNetwork",
-						operator: "==",
-						value: destinationNetwork,
-					},
-					{
-						field: "status",
-						operator: "==",
-						value: TransactionStatus.LEAF_INCLUDED,
-					},
-				],
-				limit: 10,
-				order: [{ field: "hubUID", order: "asc" }],
-				startAfterCursor: afterId,
-				selectFields: [
-					"sourceNetwork",
-					"depositCount",
-					"leafIndex",
-					"hubUID",
-				],
-			})
-			.then(
-				(res) => res.documents as IHubLeafIncludedStatusTransactions[]
-			);
+		const filter: any = {
+			destinationNetwork,
+			status: TransactionStatus.LEAF_INCLUDED,
+		};
+
+		// If afterId is provided, use it for cursor-based pagination
+		if (afterId) {
+			filter.hubUID = { $gt: afterId };
+		}
+
+		const results = await executeMongoOperation(
+			this.collection,
+			(col) =>
+				col
+					.find(filter, {
+						projection: {
+							sourceNetwork: 1,
+							depositCount: 1,
+							leafIndex: 1,
+							hubUID: 1,
+						},
+					})
+					.sort({ hubUID: 1 })
+					.limit(10)
+					.toArray(),
+			{
+				operationName: "getLeafIncludedTransactions",
+				logContext: { destinationNetwork, afterId },
+			}
+		);
+
+		// Filter out documents without leafIndex and map to the expected type
+		return results
+			.filter((doc) => doc.leafIndex !== undefined)
+			.map((doc) => ({
+				sourceNetwork: doc.sourceNetwork,
+				depositCount: doc.depositCount,
+				leafIndex: doc.leafIndex as number,
+				hubUID: doc.hubUID,
+			}));
 	}
 }

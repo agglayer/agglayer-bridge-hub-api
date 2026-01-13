@@ -23,15 +23,16 @@ import TokenMappingsService from "./services/mapping";
 import TransactionsService from "./services/transaction";
 import MetadataService from "./services/metadata";
 import MetadataMapper from "./mappers/metadata";
-import { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import { MongoDBClient } from "./db/mongo-client";
 import { ClaimReadinessConsumer } from "./claim_readiness_consumer";
 import bridgeAbi from "./interfaces/PolygonZkEVMBridge";
 
-let database: DatabaseClient;
+let database: MongoDBClient;
 
 // Static configuration and cached environment variables
 const BRIDGE_ADDRESSES = new Map([
 	["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
+	["testnet", "0x528e26b25a34a4A5d0dbDa1d57D318153d2ED582"],
 	["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
 ]);
 
@@ -70,19 +71,19 @@ async function start(): Promise<void> {
 						metadata: "bridge_hub_api_metadata_testnet",
 					};
 
-		database = new DatabaseClient({
-			projectId: process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
-			databaseId: process.env.FIRESTORE_DATABASE_ID ?? "",
-		});
+		database = new MongoDBClient(
+			process.env.MONGODB_CONNECTION_URI || "mongodb://localhost:27017",
+			process.env.MONGODB_DB_NAME || "bridge_hub"
+		);
 		await database.connect();
 
 		const transactionService = new TransactionsService(
-			database,
+			database.getCollection<any>(collectionsConfig.transactions),
 			collectionsConfig.transactions
 		);
 
 		const tokenMappingsService = new TokenMappingsService(
-			database,
+			database.getCollection<any>(collectionsConfig.tokenMappings),
 			collectionsConfig.tokenMappings
 		);
 
@@ -135,7 +136,7 @@ async function start(): Promise<void> {
 			transactionService,
 			tokenMappingsService,
 			new MetadataService(
-				database,
+				database.getCollection<any>(collectionsConfig.metadata),
 				collectionsConfig.metadata,
 				process.env.METADATA_DOC || "lastIndexedTransactions"
 			)

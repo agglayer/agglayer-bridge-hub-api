@@ -11,9 +11,16 @@ export default class MetadataMapper {
 	public mapLastIndexedBridgeTx(
 		data: ILastIndexedBridgeTransaction
 	): IHubMetadata {
-		const formattedMetadata: IHubMetadata = {
-			lastIndexedBridgeDepositCount: data.deposit_count,
-		};
+		const formattedMetadata: IHubMetadata = {};
+
+		if (
+			data.deposit_count !== undefined &&
+			data.deposit_count !== null &&
+			!Number.isNaN(data.deposit_count)
+		) {
+			formattedMetadata.lastIndexedBridgeDepositCount =
+				data.deposit_count;
+		}
 
 		return formattedMetadata;
 	}
@@ -21,9 +28,15 @@ export default class MetadataMapper {
 	public mapLastIndexedClaimTx(
 		data: ILastIndexedClaimTransaction
 	): IHubMetadata {
-		const formattedMetadata: IHubMetadata = {
-			lastIndexedClaimBlockNumber: data.block_num,
-		};
+		const formattedMetadata: IHubMetadata = {};
+
+		if (
+			data.block_num !== undefined &&
+			data.block_num !== null &&
+			!Number.isNaN(data.block_num)
+		) {
+			formattedMetadata.lastIndexedClaimBlockNumber = data.block_num;
+		}
 
 		return formattedMetadata;
 	}
@@ -31,9 +44,15 @@ export default class MetadataMapper {
 	public mapLastIndexedMappingTx(
 		data: ILastIndexedMappingTransaction
 	): IHubMetadata {
-		const formattedMetadata: IHubMetadata = {
-			lastIndexedMappingBlockNumber: data.block_num,
-		};
+		const formattedMetadata: IHubMetadata = {};
+
+		if (
+			data.block_num !== undefined &&
+			data.block_num !== null &&
+			!Number.isNaN(data.block_num)
+		) {
+			formattedMetadata.lastIndexedMappingBlockNumber = data.block_num;
+		}
 
 		return formattedMetadata;
 	}
