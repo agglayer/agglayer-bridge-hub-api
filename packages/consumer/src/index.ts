@@ -26,15 +26,9 @@ import MetadataMapper from "./mappers/metadata";
 import { MongoDBClient } from "./db/mongo-client";
 import { ClaimReadinessConsumer } from "./claim_readiness_consumer";
 import bridgeAbi from "./interfaces/PolygonZkEVMBridge";
+import { BRIDGE_ADDRESSES, COLLECTIONS_CONFIG } from "./config";
 
 let database: MongoDBClient;
-
-// Static configuration and cached environment variables
-const BRIDGE_ADDRESSES = new Map([
-	["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
-	["testnet", "0x528e26b25a34a4A5d0dbDa1d57D318153d2ED582"],
-	["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
-]);
 
 const NETWORK_ID = process.env.NETWORK_ID || "0";
 const BRIDGE_SERVICE_URL = process.env.BRIDGE_SERVICE_URL;
@@ -59,17 +53,8 @@ const fetchWithValidation = async (url: string): Promise<any> => {
 async function start(): Promise<void> {
 	try {
 		const collectionsConfig =
-			NETWORK === "mainnet"
-				? {
-						transactions: "bridge_hub_api_transactions",
-						tokenMappings: "bridge_hub_api_mappings",
-						metadata: "bridge_hub_api_metadata",
-					}
-				: {
-						transactions: "bridge_hub_api_transactions_testnet",
-						tokenMappings: "bridge_hub_api_mappings_testnet",
-						metadata: "bridge_hub_api_metadata_testnet",
-					};
+			COLLECTIONS_CONFIG.get(NETWORK) ||
+			COLLECTIONS_CONFIG.get("devnet")!;
 
 		database = new MongoDBClient(
 			process.env.MONGODB_CONNECTION_URI || "mongodb://localhost:27017",

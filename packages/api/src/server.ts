@@ -11,6 +11,11 @@ import { ProofService } from "./services/proof";
 import { HealthCheckService } from "./services";
 import { DatabaseClient } from "@polygonlabs/servercore-firestore";
 import healthCheckRoutes from "./routes/health_check";
+import {
+	BRIDGE_ADDRESSES,
+	MAPPINGS_COLLECTIONS,
+	TRANSACTIONS_COLLECTIONS,
+} from "./config";
 
 const app = new OpenAPIHono();
 
@@ -64,35 +69,16 @@ async function serve(): Promise<void> {
 	// Initialize services
 	TransactionService.initializeTransactionService(
 		database,
-		new Map([
-			["mainnet", "bridge_hub_api_transactions"],
-			["testnet", "bridge_hub_api_transactions_testnet"],
-			["devnet", "bridge_hub_api_transactions_testnet"],
-		])
+		TRANSACTIONS_COLLECTIONS
 	);
 
-	MappingsService.initializeMappingsService(
-		database,
-		new Map([
-			["mainnet", "bridge_hub_api_mappings"],
-			["testnet", "bridge_hub_api_mappings_testnet"],
-			["devnet", "bridge_hub_api_mappings_testnet"],
-		])
-	);
+	MappingsService.initializeMappingsService(database, MAPPINGS_COLLECTIONS);
 
 	TokenMetadataService.initializeTokenMetadataService(
 		database,
-		new Map([
-			["mainnet", "bridge_hub_api_mappings"],
-			["testnet", "bridge_hub_api_mappings_testnet"],
-			["devnet", "bridge_hub_api_mappings_testnet"],
-		]),
+		MAPPINGS_COLLECTIONS,
 		rpcConfig,
-		new Map([
-			["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
-			["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
-			["devnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
-		])
+		BRIDGE_ADDRESSES
 	);
 
 	HealthCheckService.initializeHealthCheckService(rpcConfig);
