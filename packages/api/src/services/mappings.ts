@@ -1,45 +1,29 @@
+import type { Db, Collection } from "mongodb";
 import {
-	type IQueryFilterOperationParams,
-	type IQueryOrderOperationParams,
-} from "@polygonlabs/servercore";
-import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
+	executeMongoOperation,
+	type Document,
+} from "@agglayer/bridge-hub-commons";
 import type { HubTokenMapping } from "../schemas";
 
-let db: DatabaseClient;
+let db: Db;
 let collectionId: Map<string, string>;
-// let chainConfig: Map<string, Map<number, string>>;
-// let bridgeAddress: Map<string, string>;
 
-// Order params for db request
-const orderParams: IQueryOrderOperationParams[] = [
-	{
-		field: "timestamp",
-		order: "desc",
-	},
-];
+interface MappingDocument extends Document, HubTokenMapping {
+	_id: string;
+}
 
 export class MappingsService {
 	static initializeMappingsService(
-		database: DatabaseClient,
+		database: Db,
 		collectionIdParam: Map<string, string> = new Map([
-			["mainnet", "mappings"],
-			["testnet", "mappings_testnet"],
-			["devnet", "mappings_testnet"],
+			["mainnet", "bridge_hub_api_mappings"],
+			["testnet", "bridge_hub_api_mappings_testnet"],
+			["devnet", "bridge_hub_api_mappings_testnet"],
 		])
-		// chainConfigParam: Map<string, Map<number, string>> = new Map([
-		// 	["mainnet", new Map([])],
-		// 	["testnet", new Map([])],
-		// ]),
-		// bridgeAddressParam: Map<string, string> = new Map([
-		// 	["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
-		// 	["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
-		// ])
 	) {
 		if (!db) {
 			db = database;
 			collectionId = collectionIdParam;
-			// chainConfig = chainConfigParam;
-			// bridgeAddress = bridgeAddressParam;
 		}
 	}
 
@@ -68,45 +52,58 @@ export class MappingsService {
 				"MappingsService not initialized. Call initializeMappingsService first."
 			);
 		}
-		const queryParams: IQueryFilterOperationParams[] = [];
+
+		const collectionName = collectionId.get(network) || "";
+		const collection: Collection<MappingDocument> =
+			db.collection(collectionName);
+
+		// Build MongoDB filter
+		const filter: any = {};
 
 		if (originTokenAddress) {
-			queryParams.push({
-				field: "originTokenAddress",
-				operator: "==",
-				value: originTokenAddress,
-			});
-		}
-		if (wrappedTokenAddress) {
-			queryParams.push({
-				field: "wrappedTokenAddress",
-				operator: "==",
-				value: wrappedTokenAddress,
-			});
-		}
-		if (originNetworkIds && originNetworkIds.length > 0) {
-			queryParams.push({
-				field: "originTokenNetwork",
-				operator: "in",
-				value: originNetworkIds,
-			});
-		}
-		if (wrappedNetworkIds && wrappedNetworkIds.length > 0) {
-			queryParams.push({
-				field: "wrappedTokenNetwork",
-				operator: "in",
-				value: wrappedNetworkIds,
-			});
+			filter.originTokenAddress = originTokenAddress;
 		}
 
-		// Fetch documents from db
-		return await db.getDocuments({
-			collectionPath: collectionId.get(network) || "",
-			filter: queryParams,
-			limit,
-			order: orderParams,
-			startAfterCursor: startAfter,
-		});
+		if (wrappedTokenAddress) {
+			filter.wrappedTokenAddress = wrappedTokenAddress;
+		}
+
+		if (originNetworkIds && originNetworkIds.length > 0) {
+			filter.originTokenNetwork = { $in: originNetworkIds };
+		}
+
+		if (wrappedNetworkIds && wrappedNetworkIds.length > 0) {
+			filter.wrappedTokenNetwork = { $in: wrappedNetworkIds };
+		}
+
+		if (startAfter) {
+			filter.timestamp = { $lt: startAfter };
+		}
+
+		// Build sort order
+		const sort: any = {
+			timestamp: -1,
+		};
+
+		// Execute query
+		const documents = await executeMongoOperation(
+			collection,
+			(col) =>
+				col
+					.find(filter)
+					.sort(sort)
+					.limit(limit || 10)
+					.toArray(),
+			{
+				operationName: "getMappings",
+				logContext: { network, filter },
+			}
+		);
+
+		return {
+			documents: documents as HubTokenMapping[],
+			totalDocumentsCount: undefined,
+		};
 	}
 
 	static async getMappingsByToken(
@@ -123,51 +120,47 @@ export class MappingsService {
 			);
 		}
 
-		// Create query params for db request
-		const originTokenParams: IQueryFilterOperationParams[] = [
-			{
-				field: "originTokenAddress",
-				operator: "==",
-				value: tokenAddress,
-			},
-			{
-				field: "originTokenNetwork",
-				operator: "==",
-				value: Number(tokenNetwork),
-			},
-		];
+		const collectionName = collectionId.get(network) || "";
+		const collection: Collection<MappingDocument> =
+			db.collection(collectionName);
 
-		const wrappedTokenParams: IQueryFilterOperationParams[] = [
-			{
-				field: "wrappedTokenAddress",
-				operator: "==",
-				value: tokenAddress,
-			},
-			{
-				field: "wrappedTokenNetwork",
-				operator: "==",
-				value: Number(tokenNetwork),
-			},
-		];
+		// Query for origin tokens
+		const originTokenFilter = {
+			originTokenAddress: tokenAddress,
+			originTokenNetwork: Number(tokenNetwork),
+		};
+
+		// Query for wrapped tokens
+		const wrappedTokenFilter = {
+			wrappedTokenAddress: tokenAddress,
+			wrappedTokenNetwork: Number(tokenNetwork),
+		};
 
 		const [originTokens, wrappedTokens] = await Promise.all([
-			db.getDocuments({
-				collectionPath: collectionId.get(network) || "",
-				filter: originTokenParams,
-				returnTotalDocumentsCount: true,
-			}),
-			db.getDocuments({
-				collectionPath: collectionId.get(network) || "",
-				filter: wrappedTokenParams,
-				returnTotalDocumentsCount: true,
-			}),
+			executeMongoOperation(
+				collection,
+				(col) => col.find(originTokenFilter).toArray(),
+				{
+					operationName: "getMappingsByToken:originTokens",
+					logContext: { network, tokenAddress, tokenNetwork },
+				}
+			),
+			executeMongoOperation(
+				collection,
+				(col) => col.find(wrappedTokenFilter).toArray(),
+				{
+					operationName: "getMappingsByToken:wrappedTokens",
+					logContext: { network, tokenAddress, tokenNetwork },
+				}
+			),
 		]);
 
 		return {
-			documents: [...originTokens.documents, ...wrappedTokens.documents],
-			totalDocumentsCount:
-				(originTokens.totalDocumentsCount || 0) +
-				(wrappedTokens.totalDocumentsCount || 0),
+			documents: [
+				...(originTokens as HubTokenMapping[]),
+				...(wrappedTokens as HubTokenMapping[]),
+			],
+			totalDocumentsCount: originTokens.length + wrappedTokens.length,
 		};
 	}
 }

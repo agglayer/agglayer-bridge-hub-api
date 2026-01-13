@@ -1,37 +1,32 @@
+import { BadRequestError, Logger } from "@polygonlabs/servercore";
+import type { Db, Collection } from "mongodb";
 import {
-	BadRequestError,
-	Logger,
-	type IQueryOrderOperationParams,
-	type IQueryOrFilterParams,
-} from "@polygonlabs/servercore";
-import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
+	executeMongoOperation,
+	type Document,
+} from "@agglayer/bridge-hub-commons";
 import { createPublicClient, http } from "viem";
 import { ERC20_ABI } from "../constants/erc20";
 import { BRIDGE_ABI_V2, BRIDGE_ABI_V1 } from "../constants/bridge";
-import type { TokenMetadata } from "../schemas";
+import type { TokenMetadata, HubTokenMapping } from "../schemas";
 
-let db: DatabaseClient;
+interface MappingDocument extends Document, HubTokenMapping {
+	_id: string;
+}
+
+let db: Db;
 let collectionId: Map<string, string>;
 let chainConfig: Map<string, Map<number, string>>;
 let bridgeAddress: Map<string, string>;
 const v1NetworkId: number = 1;
 const v2NetworkId: number = 20;
 
-// Order params for db request
-const orderParams: IQueryOrderOperationParams[] = [
-	{
-		field: "timestamp",
-		order: "desc",
-	},
-];
-
 export class TokenMetadataService {
 	static initializeTokenMetadataService(
-		database: DatabaseClient,
+		database: Db,
 		collectionIdParam: Map<string, string> = new Map([
-			["mainnet", "mappings"],
-			["testnet", "mappings_testnet"],
-			["devnet", "mappings_testnet"],
+			["mainnet", "bridge_hub_api_mappings"],
+			["testnet", "bridge_hub_api_mappings_testnet"],
+			["devnet", "bridge_hub_api_mappings_testnet"],
 		]),
 		chainConfigParam: Map<string, Map<number, string>> = new Map([
 			["mainnet", new Map([])],
@@ -128,49 +123,38 @@ export class TokenMetadataService {
 			);
 		}
 
-		// Create query params for db request
-		const queryParams: IQueryOrFilterParams[] = [];
+		const collectionName = collectionId.get(network) || "";
+		const collection: Collection<MappingDocument> =
+			db.collection(collectionName);
 
-		if (tokenAddress) {
-			queryParams.push({
-				or: [
-					{
-						field: "originTokenAddress",
-						operator: "==",
-						value: tokenAddress,
-					},
-					{
-						field: "wrappedTokenAddress",
-						operator: "==",
-						value: tokenAddress,
-					},
-				],
-			});
-		}
+		// Build MongoDB filter with $or query
+		const filter: any = {
+			$or: [
+				{ originTokenAddress: tokenAddress },
+				{ wrappedTokenAddress: tokenAddress },
+			],
+		};
 
-		const mappings = await db
-			.getDocuments({
-				collectionPath: collectionId.get(network) || "",
-				limit: 1,
-				order: orderParams,
-				orFilters: queryParams,
-			})
-			.then((res) => {
-				if (res.documents.length > 0) {
-					return res.documents;
-				}
-				return undefined;
-			});
+		// Execute query
+		const mappingsResult = await executeMongoOperation(
+			collection,
+			(col) =>
+				col.find(filter).sort({ timestamp: -1 }).limit(1).toArray(),
+			{
+				operationName: "getTokenMetadata",
+				logContext: { network, tokenAddress },
+			}
+		);
 
-		if (!mappings) {
+		if (!mappingsResult || mappingsResult.length === 0) {
 			return await this.fetchTokenMetadataFromAllRPCs(
 				network,
 				tokenAddress
 			);
 		}
 
-		const originTokenAddress = mappings[0].originTokenAddress;
-		const originTokenNetwork = mappings[0].originTokenNetwork;
+		const originTokenAddress = mappingsResult[0].originTokenAddress;
+		const originTokenNetwork = mappingsResult[0].originTokenNetwork;
 
 		//get token details from chain
 		const rpcUrl =

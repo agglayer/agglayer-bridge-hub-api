@@ -9,7 +9,7 @@ import { TokenMetadataService } from "./services/token_metadata";
 import { TransactionService } from "./services/transactions";
 import { ProofService } from "./services/proof";
 import { HealthCheckService } from "./services";
-import { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import { MongoDBClient } from "@agglayer/bridge-hub-commons";
 import healthCheckRoutes from "./routes/health_check";
 import {
 	BRIDGE_ADDRESSES,
@@ -30,10 +30,10 @@ async function serve(): Promise<void> {
 		},
 	});
 
-	const database = new DatabaseClient({
-		projectId: process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
-		databaseId: process.env.FIRESTORE_DATABASE_ID ?? "",
-	});
+	const database = new MongoDBClient(
+		process.env.MONGODB_CONNECTION_URI || "mongodb://localhost:27017",
+		process.env.MONGODB_DB_NAME || "bridge_hub"
+	);
 	await database.connect();
 
 	// Parse the PROOF_CONFIG and RPC_CONFIG environment variable and convert it to a Map
@@ -68,14 +68,17 @@ async function serve(): Promise<void> {
 
 	// Initialize services
 	TransactionService.initializeTransactionService(
-		database,
+		database.getDb(),
 		TRANSACTIONS_COLLECTIONS
 	);
 
-	MappingsService.initializeMappingsService(database, MAPPINGS_COLLECTIONS);
+	MappingsService.initializeMappingsService(
+		database.getDb(),
+		MAPPINGS_COLLECTIONS
+	);
 
 	TokenMetadataService.initializeTokenMetadataService(
-		database,
+		database.getDb(),
 		MAPPINGS_COLLECTIONS,
 		rpcConfig,
 		BRIDGE_ADDRESSES

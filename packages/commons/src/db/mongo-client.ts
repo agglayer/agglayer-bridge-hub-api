@@ -1,8 +1,8 @@
-import { MongoClient, type Db } from "@agglayer/bridge-hub-commons";
+import { MongoClient, type Db, type Document } from "mongodb";
 import { Logger } from "@polygonlabs/servercore";
 
 /**
- * MongoDB client wrapper for the consumer application
+ * MongoDB client wrapper
  * Provides connection management and database access
  */
 export class MongoDBClient {

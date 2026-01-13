@@ -18,6 +18,8 @@ export type {
 	MongoOperationResult,
 } from "./types";
 
+export { MongoDBClient } from "./mongo-client";
+
 // Re-export commonly used MongoDB types and classes for convenience
 export { MongoClient } from "mongodb";
 

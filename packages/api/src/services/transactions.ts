@@ -1,30 +1,25 @@
-import type {
-	IQueryFilterOperationParams,
-	IQueryOrderOperationParams,
-	IQueryOrFilterParams,
-} from "@polygonlabs/servercore";
-import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import type { Db, Collection } from "mongodb";
 import { CryptoHasher } from "bun";
+import {
+	executeMongoOperation,
+	type Document,
+} from "@agglayer/bridge-hub-commons";
 import type { IHubTransaction } from "../schemas";
 
-let db: DatabaseClient;
+let db: Db;
 let collectionId: Map<string, string>;
 
-// Order params for db request
-const orderParams: IQueryOrderOperationParams[] = [
-	{
-		field: "hubUID",
-		order: "desc",
-	},
-];
+interface TransactionDocument extends Document, IHubTransaction {
+	_id: string;
+}
 
 export class TransactionService {
 	static initializeTransactionService(
-		database: DatabaseClient,
+		database: Db,
 		collectionIdParams: Map<string, string> = new Map([
-			["mainnet", "transactions"],
-			["testnet", "transactions_testnet"],
-			["devnet", "transactions_testnet"],
+			["mainnet", "bridge_hub_api_transactions"],
+			["testnet", "bridge_hub_api_transactions_testnet"],
+			["devnet", "bridge_hub_api_transactions_testnet"],
 		])
 	) {
 		if (!db) {
@@ -69,71 +64,75 @@ export class TransactionService {
 			);
 		}
 
-		// Create query params for db request
-		const queryParams: IQueryFilterOperationParams[] = [];
-		let orderParamsOverride: IQueryOrderOperationParams[] | undefined =
-			undefined;
-		const orFilters: IQueryOrFilterParams[] = [];
+		const collectionName = collectionId.get(network) || "";
+		const collection: Collection<TransactionDocument> =
+			db.collection(collectionName);
 
-		if (order) {
-			orderParamsOverride = [{ field: "hubUID", order: order }];
-		}
+		// Build MongoDB filter
+		const filter: any = {};
 
 		if (fromAddress) {
-			queryParams.push({
-				field: "fromAddress",
-				operator: "==",
-				value: fromAddress,
-			});
+			filter.fromAddress = fromAddress;
 		}
 
-		if (sourceNetworkIds) {
-			queryParams.push({
-				field: "sourceNetwork",
-				operator: "in",
-				value: sourceNetworkIds,
-			});
+		if (sourceNetworkIds && sourceNetworkIds.length > 0) {
+			filter.sourceNetwork = { $in: sourceNetworkIds };
 		}
 
-		if (destinationNetworkIds) {
-			queryParams.push({
-				field: "destinationNetwork",
-				operator: "in",
-				value: destinationNetworkIds,
-			});
+		if (destinationNetworkIds && destinationNetworkIds.length > 0) {
+			filter.destinationNetwork = { $in: destinationNetworkIds };
 		}
 
 		if (updatedSince) {
-			queryParams.push({
-				field: "lastUpdatedAt",
-				operator: ">=",
-				value: updatedSince,
-			});
-
-			queryParams.push({
-				field: "transactionHash",
-				operator: "!=",
-				value: "",
-			});
+			filter.lastUpdatedAt = { $gte: updatedSince };
+			filter.transactionHash = { $ne: "" };
 		}
 
 		if (status) {
-			queryParams.push({
-				field: "status",
-				operator: "==",
-				value: status,
-			});
+			filter.status = status;
 		}
 
-		return await db.getDocuments({
-			collectionPath: collectionId.get(network) || "",
-			filter: queryParams,
-			limit,
-			order: orderParamsOverride || orderParams,
-			startAfterCursor: startAfter,
-			orFilters: orFilters,
-			returnTotalDocumentsCount: true,
-		});
+		if (startAfter) {
+			filter.hubUID = { $lt: startAfter };
+		}
+
+		// Build sort order
+		const sort: any = {
+			hubUID: order === "asc" ? 1 : -1,
+		};
+
+		// Execute query
+		const documents = await executeMongoOperation(
+			collection,
+			(col) =>
+				col
+					.find(filter)
+					.sort(sort)
+					.limit(limit || 10)
+					.toArray(),
+			{
+				operationName: "getTransactions",
+				logContext: { network, filter },
+			}
+		);
+
+		// Get total count if needed
+		let totalDocumentsCount: number | undefined = undefined;
+		if (limit) {
+			totalDocumentsCount = await executeMongoOperation(
+				collection,
+				(col) => col.countDocuments(filter),
+				{
+					operationName: "getTransactionsCount",
+					logContext: { network },
+				}
+			);
+		}
+
+		return {
+			documents: documents as IHubTransaction[],
+			totalDocumentsCount,
+		};
 	}
 
 	static async getTransactionByDepositCount(
@@ -145,9 +144,20 @@ export class TransactionService {
 				"TransactionService not initialized. Call initializeTransactionService first."
 			);
 		}
-		return (await db.getDocument({
-			collectionId: collectionId.get(network) || "",
-			docId,
-		})) as IHubTransaction;
+
+		const collectionName = collectionId.get(network) || "";
+		const collection: Collection<TransactionDocument> =
+			db.collection(collectionName);
+
+		const document = await executeMongoOperation(
+			collection,
+			(col) => col.findOne({ _id: docId }),
+			{
+				operationName: "getTransactionByDepositCount",
+				logContext: { network, docId },
+			}
+		);
+
+		return document as IHubTransaction | null;
 	}
 }
