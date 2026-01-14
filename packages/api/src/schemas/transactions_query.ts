@@ -4,15 +4,16 @@ import {
 	networkIdsSchema,
 	NetworkSchema,
 	PaginationSchema,
-	PaginatedResponseSchema,
-	ResponseSchema,
 } from "./common";
 import {
 	TransactionStatusSchema,
 	HubBridgeTransactionSchema,
 	HubClaimTransactionSchema,
+	HubTransactionSchema,
 	type IHubBridgeTransaction,
 	type IHubClaimTransaction,
+	PaginatedResponseSchema,
+	ResponseSchema,
 } from "@agglayer/bridge-hub-commons";
 
 export const TransactionsQuerySchema = z
@@ -59,16 +60,9 @@ export const TransactionsByDepositCountQuerySchema = z
 // Re-export schemas from shared types package
 export { HubBridgeTransactionSchema, HubClaimTransactionSchema };
 
-// API-specific schema that combines bridge + claim with optional fields
-export const HubTransactionSchema = z.object({
-	...HubBridgeTransactionSchema.shape,
-	...HubClaimTransactionSchema.shape,
-	leafIndex: z.number().optional(),
-	leafIndexForProof: z.number().optional(),
-});
-
-export const TransactionResponseSchema =
-	PaginatedResponseSchema(HubTransactionSchema);
+export const TransactionResponseSchema = PaginatedResponseSchema(
+	z.array(HubTransactionSchema)
+);
 
 export const TransactionByDepositCountResponseSchema =
 	ResponseSchema(HubTransactionSchema);

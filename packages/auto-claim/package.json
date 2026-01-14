@@ -1,0 +1,27 @@
+{
+	"name": "auto-claim-service",
+	"version": "1.0.0",
+	"module": "src/index.ts",
+	"exports": "./dist/",
+	"description": "auto claim service to claim bridge transactions",
+	"type": "module",
+	"scripts": {
+		"build": "tsup",
+		"dev": "bun run --hot src/index.ts",
+		"start": "bun dist/index.js",
+		"tests": "bun test"
+	},
+	"dependencies": {
+		"@polygonlabs/servercore": "^1.1.0",
+		"@agglayer/bridge-hub-commons": "workspace:*",
+		"dotenv": "^16.0.1",
+		"ethers": "^6.12.1",
+		"web3-eth-abi": "^4.4.1"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	}
+}
