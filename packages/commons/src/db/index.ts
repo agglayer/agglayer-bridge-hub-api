@@ -7,16 +7,9 @@
  * - Contextual information for debugging
  */
 
-export {
-	executeMongoOperation,
-	executeBatchMongoOperations,
-} from "./mongo-wrapper";
+export { executeMongoOperation } from "./mongo-wrapper";
 
-export type {
-	MongoOperation,
-	MongoOperationConfig,
-	MongoOperationResult,
-} from "./types";
+export type { MongoOperation, MongoOperationConfig } from "./types";
 
 export { MongoDBClient } from "./mongo-client";
 

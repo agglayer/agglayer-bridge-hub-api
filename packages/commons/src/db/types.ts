@@ -14,12 +14,6 @@ export interface MongoOperationConfig {
 	 * Additional context to include in logs
 	 */
 	logContext?: Record<string, unknown>;
-
-	/**
-	 * Whether to suppress error logging (errors will still be thrown)
-	 * Default: false
-	 */
-	suppressErrorLog?: boolean;
 }
 
 /**
@@ -29,12 +23,3 @@ export interface MongoOperationConfig {
 export type MongoOperation<TDocument extends Document, TResult> = (
 	collection: Collection<TDocument>
 ) => Promise<TResult>;
-
-/**
- * Result wrapper for MongoDB operations
- */
-export interface MongoOperationResult<TResult> {
-	success: boolean;
-	data?: TResult;
-	error?: Error;
-}
