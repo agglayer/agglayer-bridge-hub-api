@@ -171,20 +171,27 @@ describe("TokenMetadataService", () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
 
-			mockDatabase.getDocuments.mockResolvedValueOnce({
-				documents: [
-					{
-						...mockTokenMapping,
-						originTokenAddress: tokenAddress,
-						originTokenNetwork: 1,
-					},
-				],
+			// Mock MongoDB toArray to return the mapping
+			mockFind.mockReturnValueOnce({
+				sort: mock(() => ({
+					limit: mock(() => ({
+						toArray: mock(() =>
+							Promise.resolve([
+								{
+									...mockTokenMapping,
+									originTokenAddress: tokenAddress,
+									originTokenNetwork: 1,
+								},
+							])
+						),
+					})),
+				})),
 			});
 
 			mockReadContract
 				.mockResolvedValueOnce("TestToken") // name
 				.mockResolvedValueOnce("TEST") // symbol
-				.mockResolvedValueOnce("18") // decimals
+				.mockResolvedValueOnce(18) // decimals
 				.mockResolvedValueOnce("0xwrappedv1address") // v1 wrapped address
 				.mockResolvedValueOnce("0xwrappedv2address"); // v2 wrapped address
 
@@ -193,26 +200,12 @@ describe("TokenMetadataService", () => {
 				tokenAddress
 			);
 
-			expect(mockDatabase.getDocuments).toHaveBeenCalledWith({
-				collectionPath: "mappings_testnet",
-				limit: 1,
-				order: [{ field: "timestamp", order: "desc" }],
-				orFilters: expect.arrayContaining([
-					expect.objectContaining({
-						or: expect.arrayContaining([
-							expect.objectContaining({
-								field: "originTokenAddress",
-								operator: "==",
-								value: tokenAddress,
-							}),
-							expect.objectContaining({
-								field: "wrappedTokenAddress",
-								operator: "==",
-								value: tokenAddress,
-							}),
-						]),
-					}),
-				]),
+			// Verify MongoDB query was called
+			expect(mockFind).toHaveBeenCalledWith({
+				$or: [
+					{ originTokenAddress: tokenAddress },
+					{ wrappedTokenAddress: tokenAddress },
+				],
 			});
 
 			expect(result).toEqual({
@@ -230,20 +223,26 @@ describe("TokenMetadataService", () => {
 			const tokenAddress = "0xabcdef1234567890abcdef1234567890abcdef12";
 			const network = "testnet";
 
-			mockDatabase.getDocuments.mockResolvedValueOnce({
-				documents: [
-					{
-						...mockTokenMapping,
-						wrappedTokenAddress: tokenAddress,
-						originTokenNetwork: 137,
-					},
-				],
+			mockFind.mockReturnValueOnce({
+				sort: mock(() => ({
+					limit: mock(() => ({
+						toArray: mock(() =>
+							Promise.resolve([
+								{
+									...mockTokenMapping,
+									wrappedTokenAddress: tokenAddress,
+									originTokenNetwork: 137,
+								},
+							])
+						),
+					})),
+				})),
 			});
 
 			mockReadContract
 				.mockResolvedValueOnce("WrappedToken")
 				.mockResolvedValueOnce("WRAP")
-				.mockResolvedValueOnce("6")
+				.mockResolvedValueOnce(6)
 				.mockResolvedValueOnce("0xwrappedv1addr")
 				.mockResolvedValueOnce("0xwrappedv2addr");
 
@@ -267,14 +266,20 @@ describe("TokenMetadataService", () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
 
-			mockDatabase.getDocuments.mockResolvedValueOnce({
-				documents: [
-					{
-						...mockTokenMapping,
-						originTokenAddress: tokenAddress,
-						originTokenNetwork: 999, // Non-existent network
-					},
-				],
+			mockFind.mockReturnValueOnce({
+				sort: mock(() => ({
+					limit: mock(() => ({
+						toArray: mock(() =>
+							Promise.resolve([
+								{
+									...mockTokenMapping,
+									originTokenAddress: tokenAddress,
+									originTokenNetwork: 999, // Non-existent network
+								},
+							])
+						),
+					})),
+				})),
 			});
 
 			expect(
@@ -288,14 +293,20 @@ describe("TokenMetadataService", () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
 
-			mockDatabase.getDocuments.mockResolvedValueOnce({
-				documents: [
-					{
-						...mockTokenMapping,
-						originTokenAddress: tokenAddress,
-						originTokenNetwork: 1,
-					},
-				],
+			mockFind.mockReturnValueOnce({
+				sort: mock(() => ({
+					limit: mock(() => ({
+						toArray: mock(() =>
+							Promise.resolve([
+								{
+									...mockTokenMapping,
+									originTokenAddress: tokenAddress,
+									originTokenNetwork: 1,
+								},
+							])
+						),
+					})),
+				})),
 			});
 
 			mockReadContract.mockRejectedValueOnce(
@@ -311,14 +322,18 @@ describe("TokenMetadataService", () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
 
-			mockDatabase.getDocuments.mockResolvedValueOnce({
-				documents: [], // No mapping found
+			mockFind.mockReturnValueOnce({
+				sort: mock(() => ({
+					limit: mock(() => ({
+						toArray: mock(() => Promise.resolve([])), // No mapping found
+					})),
+				})),
 			});
 
 			mockReadContract
 				.mockResolvedValueOnce("TestToken") // name from first network
 				.mockResolvedValueOnce("TEST") // symbol from first network
-				.mockResolvedValueOnce("18") // decimals from first network
+				.mockResolvedValueOnce(18) // decimals from first network
 				.mockResolvedValueOnce("0xwrappedv1address") // v1 wrapped address
 				.mockResolvedValueOnce("0xwrappedv2address"); // v2 wrapped address
 
@@ -342,8 +357,12 @@ describe("TokenMetadataService", () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
 
-			mockDatabase.getDocuments.mockResolvedValueOnce({
-				documents: [],
+			mockFind.mockReturnValueOnce({
+				sort: mock(() => ({
+					limit: mock(() => ({
+						toArray: mock(() => Promise.resolve([])),
+					})),
+				})),
 			});
 
 			// Clear all previous mocks and set them all to fail
@@ -364,20 +383,26 @@ describe("TokenMetadataService", () => {
 				"0x1234567890abcdef1234567890abcdef12345678"; // Lowercase
 			const network = "testnet";
 
-			mockDatabase.getDocuments.mockResolvedValueOnce({
-				documents: [
-					{
-						...mockTokenMapping,
-						originTokenAddress: mappingTokenAddress,
-						originTokenNetwork: 1,
-					},
-				],
+			mockFind.mockReturnValueOnce({
+				sort: mock(() => ({
+					limit: mock(() => ({
+						toArray: mock(() =>
+							Promise.resolve([
+								{
+									...mockTokenMapping,
+									originTokenAddress: mappingTokenAddress,
+									originTokenNetwork: 1,
+								},
+							])
+						),
+					})),
+				})),
 			});
 
 			mockReadContract
 				.mockResolvedValueOnce("TestToken")
 				.mockResolvedValueOnce("TEST")
-				.mockResolvedValueOnce("18")
+				.mockResolvedValueOnce(18)
 				.mockResolvedValueOnce("0xwrappedv1")
 				.mockResolvedValueOnce("0xwrappedv2");
 
@@ -395,20 +420,26 @@ describe("TokenMetadataService", () => {
 			const networks = ["mainnet", "testnet"];
 
 			for (const network of networks) {
-				mockDatabase.getDocuments.mockResolvedValueOnce({
-					documents: [
-						{
-							...mockTokenMapping,
-							originTokenAddress: tokenAddress,
-							originTokenNetwork: 1,
-						},
-					],
+				mockFind.mockReturnValueOnce({
+					sort: mock(() => ({
+						limit: mock(() => ({
+							toArray: mock(() =>
+								Promise.resolve([
+									{
+										...mockTokenMapping,
+										originTokenAddress: tokenAddress,
+										originTokenNetwork: 1,
+									},
+								])
+							),
+						})),
+					})),
 				});
 
 				mockReadContract
 					.mockResolvedValueOnce(`${network}Token`)
 					.mockResolvedValueOnce(`${network.toUpperCase()}`)
-					.mockResolvedValueOnce("18")
+					.mockResolvedValueOnce(18)
 					.mockResolvedValueOnce("0xwrappedv1")
 					.mockResolvedValueOnce("0xwrappedv2");
 
@@ -420,7 +451,7 @@ describe("TokenMetadataService", () => {
 				expect(result?.name).toBe(`${network}Token`);
 				expect(result?.symbol).toBe(network.toUpperCase());
 
-				mockDatabase.getDocuments.mockClear();
+				mockFind.mockClear();
 				mockReadContract.mockClear();
 			}
 		});
@@ -438,8 +469,12 @@ describe("TokenMetadataService", () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
 
-			mockDatabase.getDocuments.mockResolvedValueOnce({
-				documents: [],
+			mockFind.mockReturnValueOnce({
+				sort: mock(() => ({
+					limit: mock(() => ({
+						toArray: mock(() => Promise.resolve([])),
+					})),
+				})),
 			});
 
 			const result = await TokenMetadataService.getTokenMetadata(
@@ -463,8 +498,12 @@ describe("TokenMetadataService", () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
 
-			mockDatabase.getDocuments.mockResolvedValueOnce({
-				documents: [],
+			mockFind.mockReturnValueOnce({
+				sort: mock(() => ({
+					limit: mock(() => ({
+						toArray: mock(() => Promise.resolve([])),
+					})),
+				})),
 			});
 
 			const result = await TokenMetadataService.getTokenMetadata(
@@ -479,8 +518,12 @@ describe("TokenMetadataService", () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
 			const network = "testnet";
 
-			mockDatabase.getDocuments.mockResolvedValueOnce({
-				documents: [],
+			mockFind.mockReturnValueOnce({
+				sort: mock(() => ({
+					limit: mock(() => ({
+						toArray: mock(() => Promise.resolve([])),
+					})),
+				})),
 			});
 
 			// First RPC call fails, second succeeds
@@ -490,7 +533,7 @@ describe("TokenMetadataService", () => {
 				.mockRejectedValueOnce(new Error("First RPC failed"))
 				.mockResolvedValueOnce("SecondRPCToken") // Second RPC succeeds
 				.mockResolvedValueOnce("SECOND")
-				.mockResolvedValueOnce("18")
+				.mockResolvedValueOnce(18)
 				.mockResolvedValueOnce("0xwrappedv1addr")
 				.mockResolvedValueOnce("0xwrappedv2addr");
 

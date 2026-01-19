@@ -109,18 +109,29 @@ export const mockProofQuery: ClaimProofQuery = {
 };
 
 // Mock Hono context
-export function createMockContext() {
+export function createMockContext(options?: {
+	validatedQuery?: any;
+	validatedParams?: any;
+}) {
+	const storage = new Map();
+	if (options?.validatedQuery) {
+		storage.set("validatedQuery", options.validatedQuery);
+	}
+	if (options?.validatedParams) {
+		storage.set("validatedParams", options.validatedParams);
+	}
+
 	return {
 		req: {
-			query: () => ({}),
-			param: () => ({}),
+			query: () => options?.validatedQuery || {},
+			param: () => options?.validatedParams || {},
 			header: () => undefined,
 		},
 		json: (data: any) => data,
 		text: (data: string) => data,
 		status: () => {},
-		set: () => {},
-		get: () => undefined,
+		set: (key: string, value: any) => storage.set(key, value),
+		get: (key: string) => storage.get(key),
 	} as any;
 }
 
