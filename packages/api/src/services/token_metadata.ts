@@ -1,4 +1,4 @@
-import { BadRequestError, Logger } from "@polygonlabs/servercore";
+import { BadRequestError, Logger, ApiError } from "@polygonlabs/servercore";
 import type { Db, Collection } from "mongodb";
 import {
 	executeMongoOperation,
@@ -123,7 +123,19 @@ export class TokenMetadataService {
 			);
 		}
 
-		const collectionName = collectionId.get(network) || "";
+		const collectionName = collectionId.get(network);
+		if (!collectionName) {
+			throw new ApiError(
+				`No collection configured for network: ${network}`,
+				{
+					context: {
+						service: "TokenMetadataService",
+						network,
+						availableNetworks: Array.from(collectionId.keys()),
+					},
+				}
+			);
+		}
 		const collection: Collection<MappingDocument> =
 			db.collection(collectionName);
 

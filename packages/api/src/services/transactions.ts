@@ -4,6 +4,7 @@ import {
 	executeMongoOperation,
 	type Document,
 } from "@agglayer/bridge-hub-commons";
+import { ApiError } from "@polygonlabs/servercore";
 import type { IHubTransaction } from "../schemas";
 
 let db: Db;
@@ -64,7 +65,19 @@ export class TransactionService {
 			);
 		}
 
-		const collectionName = collectionId.get(network) || "";
+		const collectionName = collectionId.get(network);
+		if (!collectionName) {
+			throw new ApiError(
+				`No collection configured for network: ${network}`,
+				{
+					context: {
+						service: "TransactionService",
+						network,
+						availableNetworks: Array.from(collectionId.keys()),
+					},
+				}
+			);
+		}
 		const collection: Collection<TransactionDocument> =
 			db.collection(collectionName);
 
@@ -145,7 +158,19 @@ export class TransactionService {
 			);
 		}
 
-		const collectionName = collectionId.get(network) || "";
+		const collectionName = collectionId.get(network);
+		if (!collectionName) {
+			throw new ApiError(
+				`No collection configured for network: ${network}`,
+				{
+					context: {
+						service: "TransactionService",
+						network,
+						availableNetworks: Array.from(collectionId.keys()),
+					},
+				}
+			);
+		}
 		const collection: Collection<TransactionDocument> =
 			db.collection(collectionName);
 

@@ -3,6 +3,7 @@ import {
 	executeMongoOperation,
 	type Document,
 } from "@agglayer/bridge-hub-commons";
+import { ApiError } from "@polygonlabs/servercore";
 import type { HubTokenMapping } from "../schemas";
 
 let db: Db;
@@ -53,7 +54,19 @@ export class MappingsService {
 			);
 		}
 
-		const collectionName = collectionId.get(network) || "";
+		const collectionName = collectionId.get(network);
+		if (!collectionName) {
+			throw new ApiError(
+				`No collection configured for network: ${network}`,
+				{
+					context: {
+						service: "MappingsService",
+						network,
+						availableNetworks: Array.from(collectionId.keys()),
+					},
+				}
+			);
+		}
 		const collection: Collection<MappingDocument> =
 			db.collection(collectionName);
 
@@ -120,7 +133,19 @@ export class MappingsService {
 			);
 		}
 
-		const collectionName = collectionId.get(network) || "";
+		const collectionName = collectionId.get(network);
+		if (!collectionName) {
+			throw new ApiError(
+				`No collection configured for network: ${network}`,
+				{
+					context: {
+						service: "MappingsService",
+						network,
+						availableNetworks: Array.from(collectionId.keys()),
+					},
+				}
+			);
+		}
 		const collection: Collection<MappingDocument> =
 			db.collection(collectionName);
 

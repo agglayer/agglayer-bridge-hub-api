@@ -1,6 +1,14 @@
 import { describe, test, expect, beforeEach, mock } from "bun:test";
 import { TokenMetadataService } from "../../src/services/token_metadata";
 import { mockTokenMapping } from "../test-utils";
+import type { Db, Collection } from "mongodb";
+
+// Mock executeMongoOperation to simply execute the callback
+mock.module("@agglayer/bridge-hub-commons", () => ({
+	executeMongoOperation: async (collection: any, callback: any) => {
+		return await callback(collection);
+	},
+}));
 
 // Mock servercore classes
 class MockApiError extends Error {
@@ -39,21 +47,32 @@ mock.module("viem", () => ({
 	http: mock((url: string) => ({ url })),
 }));
 
-// Mock database client
+// Mock MongoDB Collection methods
+const mockFind = mock(() => ({
+	sort: mock(() => ({
+		limit: mock(() => ({
+			toArray: mock(() => Promise.resolve([mockTokenMapping])),
+		})),
+	})),
+}));
+
+const mockCollection = {
+	find: mockFind,
+	collectionName: "mappings_testnet",
+} as unknown as Collection;
+
+// Mock MongoDB Db
 const mockDatabase = {
-	getDocuments: mock(() =>
-		Promise.resolve({
-			documents: [mockTokenMapping],
-		})
-	),
-};
+	collection: mock(() => mockCollection),
+} as unknown as Db;
 
 describe("TokenMetadataService", () => {
 	let testChainConfig: Map<string, Map<number, string>>;
 	let testBridgeAddress: Map<string, string>;
 
 	beforeEach(() => {
-		mockDatabase.getDocuments.mockClear();
+		mockFind.mockClear();
+		(mockDatabase.collection as any).mockClear();
 		mockReadContract.mockClear();
 		mockCreatePublicClient.mockClear();
 
