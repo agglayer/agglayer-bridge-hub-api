@@ -12,7 +12,6 @@ interface MetadataDocument extends Document, IHubMetadata {
 export default class MetadataService {
 	constructor(
 		private readonly collection: Collection<MetadataDocument>,
-		private readonly collectionName: string = "bridge_hub_api_metadata",
 		private readonly docId: string = "lastIndexedTransactions"
 	) {}
 

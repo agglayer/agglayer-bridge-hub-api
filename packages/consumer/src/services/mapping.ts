@@ -12,8 +12,7 @@ interface TokenMappingDocument extends Document, IHubTokenMappings {
 
 export default class TokenMappingsService {
 	constructor(
-		private readonly collection: Collection<TokenMappingDocument>,
-		private readonly collectionName: string = "bridge_hub_api_tokenMappings"
+		private readonly collection: Collection<TokenMappingDocument>
 	) {}
 
 	private generateDocId(

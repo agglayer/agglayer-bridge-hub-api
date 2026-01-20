@@ -7,9 +7,10 @@ export class ProofService {
 	static initializeService(
 		networkMapParam: Map<string, Map<number, string>>
 	) {
-		if (!networkMap) {
-			networkMap = networkMapParam;
+		if (networkMap) {
+			throw new Error("ProofService is already initialized");
 		}
+		networkMap = networkMapParam;
 	}
 
 	static async getProof(

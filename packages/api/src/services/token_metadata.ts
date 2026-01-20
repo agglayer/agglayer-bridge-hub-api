@@ -39,12 +39,13 @@ export class TokenMetadataService {
 			["devnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
 		])
 	) {
-		if (!db) {
-			db = database;
-			collectionId = collectionIdParam;
-			chainConfig = chainConfigParam;
-			bridgeAddress = bridgeAddressParam;
+		if (db) {
+			throw new Error("TokenMetadataService is already initialized");
 		}
+		db = database;
+		collectionId = collectionIdParam;
+		chainConfig = chainConfigParam;
+		bridgeAddress = bridgeAddressParam;
 	}
 
 	private static async fetchERC20TokenData(

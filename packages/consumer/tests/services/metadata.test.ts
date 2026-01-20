@@ -20,37 +20,23 @@ const mockCollection = {
 
 describe("MetadataService", () => {
 	let service: MetadataService;
-	const mockCollectionId = "test_metadata";
 	const mockDocId = "test_lastIndexedTransactions";
 
 	beforeEach(() => {
-		service = new MetadataService(
-			mockCollection,
-			mockCollectionId,
-			mockDocId
-		);
+		service = new MetadataService(mockCollection, mockDocId);
 		mockUpdateOne.mockClear();
 		mockFindOne.mockClear();
 	});
 
 	describe("constructor", () => {
-		test("should initialize with default collection and doc IDs", () => {
+		test("should initialize with default doc ID", () => {
 			const defaultService = new MetadataService(mockCollection);
 			expect(defaultService).toBeInstanceOf(MetadataService);
 		});
 
-		test("should initialize with custom collection ID only", () => {
+		test("should initialize with custom doc ID", () => {
 			const customService = new MetadataService(
 				mockCollection,
-				"custom_collection"
-			);
-			expect(customService).toBeInstanceOf(MetadataService);
-		});
-
-		test("should initialize with custom collection and doc IDs", () => {
-			const customService = new MetadataService(
-				mockCollection,
-				"custom_collection",
 				"custom_doc"
 			);
 			expect(customService).toBeInstanceOf(MetadataService);
@@ -212,7 +198,7 @@ describe("MetadataService", () => {
 			expect(call[1].$set).toEqual(metadata);
 		});
 
-		test("should work with custom collection ID and default doc ID", async () => {
+		test("should work with custom doc ID", async () => {
 			const customService = new MetadataService(
 				mockCollection,
 				"custom_metadata"
@@ -223,14 +209,13 @@ describe("MetadataService", () => {
 
 			expect(mockUpdateOne).toHaveBeenCalled();
 			const call = mockUpdateOne.mock.calls[0];
-			expect(call[0]).toEqual({ _id: "lastIndexedTransactions" });
+			expect(call[0]).toEqual({ _id: "custom_metadata" });
 			expect(call[1].$set).toEqual(metadata);
 		});
 
-		test("should get document with custom parameters", async () => {
+		test("should get document with custom doc ID", async () => {
 			const customService = new MetadataService(
 				mockCollection,
-				"custom_collection",
 				"custom_doc"
 			);
 

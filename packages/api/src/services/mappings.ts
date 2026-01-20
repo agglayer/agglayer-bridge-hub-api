@@ -22,10 +22,11 @@ export class MappingsService {
 			["devnet", "bridge_hub_api_mappings_testnet"],
 		])
 	) {
-		if (!db) {
-			db = database;
-			collectionId = collectionIdParam;
+		if (db) {
+			throw new Error("MappingsService is already initialized");
 		}
+		db = database;
+		collectionId = collectionIdParam;
 	}
 
 	static async getMappings({

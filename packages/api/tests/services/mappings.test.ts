@@ -42,43 +42,26 @@ describe("MappingsService", () => {
 	});
 
 	describe("initializeMappingsService", () => {
-		test("should initialize with default collection IDs", () => {
+		test("should initialize successfully and throw error on reinitialize", () => {
+			// First initialization should succeed
 			MappingsService.initializeMappingsService(mockDatabase);
 
-			// Test is mainly for ensuring no errors thrown during initialization
-			expect(true).toBe(true);
-		});
+			// Second initialization should throw error
+			expect(() =>
+				MappingsService.initializeMappingsService(mockDatabase)
+			).toThrow("MappingsService is already initialized");
 
-		test("should initialize with custom collection IDs", () => {
+			// Also verify custom collection IDs can be passed (tested with default above)
 			const customCollectionMap = new Map([
 				["mainnet", "custom_mappings"],
 				["testnet", "custom_mappings_testnet"],
 			]);
-
-			MappingsService.initializeMappingsService(
-				mockDatabase,
-				customCollectionMap
-			);
-			expect(true).toBe(true);
-		});
-
-		test("should not reinitialize if already initialized", () => {
-			const originalCollectionMap = new Map([
-				["mainnet", "original_mappings"],
-			]);
-			const newCollectionMap = new Map([["mainnet", "new_mappings"]]);
-
-			MappingsService.initializeMappingsService(
-				mockDatabase,
-				originalCollectionMap
-			);
-			MappingsService.initializeMappingsService(
-				mockDatabase,
-				newCollectionMap
-			);
-
-			// Since it doesn't reinitialize, this should not throw
-			expect(true).toBe(true);
+			expect(() =>
+				MappingsService.initializeMappingsService(
+					mockDatabase,
+					customCollectionMap
+				)
+			).toThrow("MappingsService is already initialized");
 		});
 	});
 

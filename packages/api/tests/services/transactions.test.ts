@@ -48,30 +48,26 @@ describe("TransactionService", () => {
 	});
 
 	describe("initializeTransactionService", () => {
-		test("should initialize with default collection IDs", () => {
+		test("should initialize successfully and throw error on reinitialize", () => {
+			// First initialization should succeed
 			TransactionService.initializeTransactionService(mockDatabase);
-			expect(true).toBe(true);
-		});
 
-		test("should initialize with custom collection IDs", () => {
+			// Second initialization should throw error
+			expect(() =>
+				TransactionService.initializeTransactionService(mockDatabase)
+			).toThrow("TransactionService is already initialized");
+
+			// Also verify custom collection IDs can be passed (tested with default above)
 			const customCollectionMap = new Map([
 				["mainnet", "custom_transactions"],
 				["testnet", "custom_transactions_testnet"],
 			]);
-
-			TransactionService.initializeTransactionService(
-				mockDatabase,
-				customCollectionMap
-			);
-			expect(true).toBe(true);
-		});
-
-		test("should not reinitialize if already initialized", () => {
-			TransactionService.initializeTransactionService(mockDatabase);
-			TransactionService.initializeTransactionService(mockDatabase);
-
-			// Should not throw error on second initialization
-			expect(true).toBe(true);
+			expect(() =>
+				TransactionService.initializeTransactionService(
+					mockDatabase,
+					customCollectionMap
+				)
+			).toThrow("TransactionService is already initialized");
 		});
 	});
 

@@ -63,13 +63,11 @@ async function start(): Promise<void> {
 		await database.connect();
 
 		const transactionService = new TransactionsService(
-			database.getCollection<any>(collectionsConfig.transactions),
-			collectionsConfig.transactions
+			database.getCollection<any>(collectionsConfig.transactions)
 		);
 
 		const tokenMappingsService = new TokenMappingsService(
-			database.getCollection<any>(collectionsConfig.tokenMappings),
-			collectionsConfig.tokenMappings
+			database.getCollection<any>(collectionsConfig.tokenMappings)
 		);
 
 		const bridgeAPIConsumer = new BridgeAPIConsumer(
@@ -122,7 +120,6 @@ async function start(): Promise<void> {
 			tokenMappingsService,
 			new MetadataService(
 				database.getCollection<any>(collectionsConfig.metadata),
-				collectionsConfig.metadata,
 				process.env.METADATA_DOC || "lastIndexedTransactions"
 			)
 		);

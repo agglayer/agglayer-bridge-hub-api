@@ -23,10 +23,11 @@ export class TransactionService {
 			["devnet", "bridge_hub_api_transactions_testnet"],
 		])
 	) {
-		if (!db) {
-			db = database;
-			collectionId = collectionIdParams;
+		if (db) {
+			throw new Error("TransactionService is already initialized");
 		}
+		db = database;
+		collectionId = collectionIdParams;
 	}
 
 	static generateDocId(depositCount: number, sourceNetwork: number): string {

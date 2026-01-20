@@ -21,10 +21,7 @@ interface TransactionDocument extends Document, IHubBridgeTransaction {
 }
 
 export default class TransactionsService {
-	constructor(
-		private readonly collection: Collection<TransactionDocument>,
-		private readonly collectionName: string = "bridge_hub_api_transactions"
-	) {}
+	constructor(private readonly collection: Collection<TransactionDocument>) {}
 
 	private generateDocId(depositCount: number, sourceNetwork: number): string {
 		const hasher = new CryptoHasher("sha256");

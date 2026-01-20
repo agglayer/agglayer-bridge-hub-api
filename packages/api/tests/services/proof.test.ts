@@ -65,38 +65,28 @@ describe("ProofService", () => {
 				]),
 			],
 		]);
-
-		ProofService.initializeService(testNetworkMap);
 	});
 
 	describe("initializeService", () => {
-		test("should initialize with network map", () => {
-			const newNetworkMap = new Map([
+		test("should initialize successfully and throw error on reinitialize", () => {
+			// First initialization should succeed
+			ProofService.initializeService(testNetworkMap);
+
+			// Second initialization should throw error
+			expect(() =>
+				ProofService.initializeService(testNetworkMap)
+			).toThrow("ProofService is already initialized");
+
+			// Also verify custom maps can be passed (tested with testNetworkMap above)
+			const customMap = new Map([
 				[
 					"custom",
 					new Map([[42, "https://custom.rpc.com/claim-proof"]]),
 				],
 			]);
-
-			ProofService.initializeService(newNetworkMap);
-
-			// Test that initialization doesn't throw
-			expect(true).toBe(true);
-		});
-
-		test("should not reinitialize if already initialized", () => {
-			const originalMap = new Map([
-				["original", new Map([[1, "https://original.com"]])],
-			]);
-			const newMap = new Map([
-				["new", new Map([[2, "https://new.com"]])],
-			]);
-
-			ProofService.initializeService(originalMap);
-			ProofService.initializeService(newMap); // Should not override
-
-			// Should not throw
-			expect(true).toBe(true);
+			expect(() => ProofService.initializeService(customMap)).toThrow(
+				"ProofService is already initialized"
+			);
 		});
 	});
 

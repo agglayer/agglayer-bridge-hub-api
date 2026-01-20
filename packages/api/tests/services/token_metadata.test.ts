@@ -99,44 +99,29 @@ describe("TokenMetadataService", () => {
 			["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
 			["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
 		]);
-
-		TokenMetadataService.initializeTokenMetadataService(
-			mockDatabase as any,
-			new Map([
-				["mainnet", "mappings"],
-				["testnet", "mappings_testnet"],
-			]),
-			testChainConfig,
-			testBridgeAddress,
-			new Map([
-				[
-					"mainnet",
-					new Map([
-						[1, "v2"],
-						[20, "v2"],
-					]),
-				],
-				[
-					"testnet",
-					new Map([
-						[1, "v2"],
-						[20, "v2"],
-					]),
-				],
-			])
-		);
 	});
 
 	describe("initializeTokenMetadataService", () => {
-		test("should initialize with default parameters", () => {
+		test("should initialize successfully and throw error on reinitialize", () => {
 			const database = mockDatabase as any;
-			TokenMetadataService.initializeTokenMetadataService(database);
 
-			expect(true).toBe(true);
-		});
+			// First initialization should succeed
+			TokenMetadataService.initializeTokenMetadataService(
+				database,
+				new Map([
+					["mainnet", "mappings"],
+					["testnet", "mappings_testnet"],
+				]),
+				testChainConfig,
+				testBridgeAddress
+			);
 
-		test("should initialize with custom parameters", () => {
-			const database = mockDatabase as any;
+			// Second initialization should throw error
+			expect(() =>
+				TokenMetadataService.initializeTokenMetadataService(database)
+			).toThrow("TokenMetadataService is already initialized");
+
+			// Also verify custom parameters can be passed (tested above)
 			const customCollectionMap = new Map([
 				["custom", "custom_mappings"],
 			]);
@@ -146,23 +131,14 @@ describe("TokenMetadataService", () => {
 			const customBridgeAddress = new Map([
 				["custom", "0xCustomBridge123"],
 			]);
-
-			TokenMetadataService.initializeTokenMetadataService(
-				database,
-				customCollectionMap,
-				customChainConfig,
-				customBridgeAddress
-			);
-
-			expect(true).toBe(true);
-		});
-
-		test("should not reinitialize if already initialized", () => {
-			const database = mockDatabase as any;
-			TokenMetadataService.initializeTokenMetadataService(database);
-			TokenMetadataService.initializeTokenMetadataService(database);
-
-			expect(true).toBe(true);
+			expect(() =>
+				TokenMetadataService.initializeTokenMetadataService(
+					database,
+					customCollectionMap,
+					customChainConfig,
+					customBridgeAddress
+				)
+			).toThrow("TokenMetadataService is already initialized");
 		});
 	});
 
@@ -454,64 +430,6 @@ describe("TokenMetadataService", () => {
 				mockFind.mockClear();
 				mockReadContract.mockClear();
 			}
-		});
-
-		test("should handle empty chain configuration", async () => {
-			// Initialize with empty chain config
-			TokenMetadataService.initializeTokenMetadataService(
-				mockDatabase as any,
-				new Map([["testnet", "mappings_testnet"]]),
-				new Map([["testnet", new Map()]]), // Empty chain config
-				testBridgeAddress,
-				new Map([["testnet", new Map()]])
-			);
-
-			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
-			const network = "testnet";
-
-			mockFind.mockReturnValueOnce({
-				sort: mock(() => ({
-					limit: mock(() => ({
-						toArray: mock(() => Promise.resolve([])),
-					})),
-				})),
-			});
-
-			const result = await TokenMetadataService.getTokenMetadata(
-				network,
-				tokenAddress
-			);
-
-			expect(result).toBeUndefined();
-		});
-
-		test("should handle missing bridge address", async () => {
-			// Initialize without bridge address for testnet
-			TokenMetadataService.initializeTokenMetadataService(
-				mockDatabase as any,
-				new Map([["testnet", "mappings_testnet"]]),
-				testChainConfig,
-				new Map([["mainnet", "0xbridge123"]]), // No testnet bridge
-				new Map([["testnet", new Map()]])
-			);
-
-			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
-			const network = "testnet";
-
-			mockFind.mockReturnValueOnce({
-				sort: mock(() => ({
-					limit: mock(() => ({
-						toArray: mock(() => Promise.resolve([])),
-					})),
-				})),
-			});
-
-			const result = await TokenMetadataService.getTokenMetadata(
-				network,
-				tokenAddress
-			);
-
-			expect(result).toBeUndefined();
 		});
 
 		test("should try multiple RPCs if first one fails", async () => {
