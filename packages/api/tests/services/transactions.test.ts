@@ -40,50 +40,31 @@ const mockDatabase = {
 } as unknown as Db;
 
 describe("TransactionService", () => {
+	let transactionService: TransactionService;
+
 	beforeEach(() => {
 		mockFind.mockClear();
 		mockCountDocuments.mockClear();
 		mockFindOne.mockClear();
 		(mockDatabase.collection as any).mockClear();
-	});
 
-	describe("initializeTransactionService", () => {
-		test("should initialize successfully and throw error on reinitialize", () => {
-			// First initialization should succeed
-			TransactionService.initializeTransactionService(mockDatabase);
-
-			// Second initialization should throw error
-			expect(() =>
-				TransactionService.initializeTransactionService(mockDatabase)
-			).toThrow("TransactionService is already initialized");
-
-			// Also verify custom collection IDs can be passed (tested with default above)
-			const customCollectionMap = new Map([
-				["mainnet", "custom_transactions"],
-				["testnet", "custom_transactions_testnet"],
-			]);
-			expect(() =>
-				TransactionService.initializeTransactionService(
-					mockDatabase,
-					customCollectionMap
-				)
-			).toThrow("TransactionService is already initialized");
-		});
+		// Create a new service instance for each test
+		transactionService = new TransactionService(mockDatabase);
 	});
 
 	describe("generateDocId", () => {
 		test("should generate consistent document ID for same inputs", () => {
-			const docId1 = TransactionService.generateDocId(42, 1);
-			const docId2 = TransactionService.generateDocId(42, 1);
+			const docId1 = transactionService.generateDocId(42, 1);
+			const docId2 = transactionService.generateDocId(42, 1);
 
 			expect(docId1).toBe(docId2);
 			expect(docId1).toMatch(/^[a-f0-9]{32}$/); // 32-char hex string
 		});
 
 		test("should generate different document IDs for different inputs", () => {
-			const docId1 = TransactionService.generateDocId(42, 1);
-			const docId2 = TransactionService.generateDocId(43, 1);
-			const docId3 = TransactionService.generateDocId(42, 2);
+			const docId1 = transactionService.generateDocId(42, 1);
+			const docId2 = transactionService.generateDocId(43, 1);
+			const docId3 = transactionService.generateDocId(42, 2);
 
 			expect(docId1).not.toBe(docId2);
 			expect(docId1).not.toBe(docId3);
@@ -99,7 +80,7 @@ describe("TransactionService", () => {
 			];
 
 			for (const { depositCount, sourceNetwork } of testCases) {
-				const docId = TransactionService.generateDocId(
+				const docId = transactionService.generateDocId(
 					depositCount,
 					sourceNetwork
 				);
@@ -111,24 +92,24 @@ describe("TransactionService", () => {
 
 		test("should use colon as separator in hash input", () => {
 			// Test that the order matters (depositCount:sourceNetwork)
-			const docId1 = TransactionService.generateDocId(12, 34);
-			const docId2 = TransactionService.generateDocId(1234, 0); // Different from "12:34"
-			const docId3 = TransactionService.generateDocId(1, 234); // Different from "12:34"
+			const docId1 = transactionService.generateDocId(12, 34);
+			const docId2 = transactionService.generateDocId(1234, 0); // Different from "12:34"
+			const docId3 = transactionService.generateDocId(1, 234); // Different from "12:34"
 
 			expect(docId1).not.toBe(docId2);
 			expect(docId1).not.toBe(docId3);
 		});
 
 		test("should handle zero values", () => {
-			const docId = TransactionService.generateDocId(0, 0);
+			const docId = transactionService.generateDocId(0, 0);
 
 			expect(docId).toMatch(/^[a-f0-9]{32}$/);
 			expect(docId).toHaveLength(32);
 		});
 
 		test("should handle negative values", () => {
-			const docId1 = TransactionService.generateDocId(-1, 1);
-			const docId2 = TransactionService.generateDocId(1, -1);
+			const docId1 = transactionService.generateDocId(-1, 1);
+			const docId2 = transactionService.generateDocId(1, -1);
 
 			expect(docId1).toMatch(/^[a-f0-9]{32}$/);
 			expect(docId2).toMatch(/^[a-f0-9]{32}$/);
@@ -145,7 +126,7 @@ describe("TransactionService", () => {
 			const startAfter = "hub-uid-123";
 			const updatedSince = 1700000000;
 
-			await TransactionService.getTransactions({
+			await transactionService.getTransactions({
 				network,
 				fromAddress,
 				status,
@@ -175,7 +156,7 @@ describe("TransactionService", () => {
 		test("should use default order when no override provided", async () => {
 			const network = "testnet";
 
-			await TransactionService.getTransactions({ network });
+			await transactionService.getTransactions({ network });
 
 			expect(mockFind).toHaveBeenCalledWith({});
 		});
@@ -183,7 +164,7 @@ describe("TransactionService", () => {
 		test("should handle empty query parameters", async () => {
 			const network = "mainnet";
 
-			await TransactionService.getTransactions({ network });
+			await transactionService.getTransactions({ network });
 
 			expect(mockDatabase.collection).toHaveBeenCalledWith(
 				"bridge_hub_api_transactions"
@@ -192,7 +173,7 @@ describe("TransactionService", () => {
 		});
 
 		test("should return documents and totalDocumentsCount", async () => {
-			const result = await TransactionService.getTransactions({
+			const result = await transactionService.getTransactions({
 				network: "testnet",
 				limit: 10,
 			});
@@ -205,7 +186,7 @@ describe("TransactionService", () => {
 		});
 
 		test("should not return totalDocumentsCount when limit is not provided", async () => {
-			const result = await TransactionService.getTransactions({
+			const result = await transactionService.getTransactions({
 				network: "testnet",
 			});
 
@@ -218,7 +199,7 @@ describe("TransactionService", () => {
 		test("should handle sourceNetworkIds parameter", async () => {
 			const sourceNetworkIds = [1, 137, 42];
 
-			await TransactionService.getTransactions({
+			await transactionService.getTransactions({
 				network: "testnet",
 				sourceNetworkIds,
 			});
@@ -230,7 +211,7 @@ describe("TransactionService", () => {
 		test("should handle destinationNetworkIds parameter", async () => {
 			const destinationNetworkIds = [1, 137];
 
-			await TransactionService.getTransactions({
+			await transactionService.getTransactions({
 				network: "testnet",
 				destinationNetworkIds,
 			});
@@ -245,9 +226,9 @@ describe("TransactionService", () => {
 	describe("getTransactionByDepositCount", () => {
 		test("should call MongoDB findOne with correct docId", async () => {
 			const network = "testnet";
-			const docId = TransactionService.generateDocId(42, 1);
+			const docId = transactionService.generateDocId(42, 1);
 
-			await TransactionService.getTransactionByDepositCount(
+			await transactionService.getTransactionByDepositCount(
 				network,
 				docId
 			);
@@ -260,7 +241,7 @@ describe("TransactionService", () => {
 
 		test("should return transaction document", async () => {
 			const result =
-				await TransactionService.getTransactionByDepositCount(
+				await transactionService.getTransactionByDepositCount(
 					"testnet",
 					"doc-1"
 				);
@@ -273,7 +254,7 @@ describe("TransactionService", () => {
 			const docId = "test-doc-id";
 
 			for (const network of networks) {
-				await TransactionService.getTransactionByDepositCount(
+				await transactionService.getTransactionByDepositCount(
 					network,
 					docId
 				);
@@ -302,7 +283,7 @@ describe("TransactionService", () => {
 			];
 
 			for (const docId of docIds) {
-				await TransactionService.getTransactionByDepositCount(
+				await transactionService.getTransactionByDepositCount(
 					"testnet",
 					docId
 				);
@@ -321,13 +302,13 @@ describe("TransactionService", () => {
 			const network = "testnet";
 
 			// Generate document ID
-			const docId = TransactionService.generateDocId(
+			const docId = transactionService.generateDocId(
 				depositCount,
 				sourceNetwork
 			);
 
 			// Use it to retrieve transaction
-			await TransactionService.getTransactionByDepositCount(
+			await transactionService.getTransactionByDepositCount(
 				network,
 				docId
 			);
@@ -343,7 +324,7 @@ describe("TransactionService", () => {
 			const limit = 10;
 
 			// Get transactions list
-			const result = await TransactionService.getTransactions({
+			const result = await transactionService.getTransactions({
 				network,
 				fromAddress: "0xuser123",
 				status: "BRIDGED",
@@ -351,10 +332,10 @@ describe("TransactionService", () => {
 			});
 
 			// Generate docId for a specific transaction
-			const docId = TransactionService.generateDocId(42, 1);
+			const docId = transactionService.generateDocId(42, 1);
 
 			// Get specific transaction
-			await TransactionService.getTransactionByDepositCount(
+			await transactionService.getTransactionByDepositCount(
 				network,
 				docId
 			);
@@ -379,7 +360,7 @@ describe("TransactionService", () => {
 			});
 
 			expect(
-				TransactionService.getTransactions({ network: "testnet" })
+				transactionService.getTransactions({ network: "testnet" })
 			).rejects.toThrow("Database connection failed");
 		});
 
@@ -388,7 +369,7 @@ describe("TransactionService", () => {
 			mockFindOne.mockRejectedValueOnce(error);
 
 			expect(
-				TransactionService.getTransactionByDepositCount(
+				transactionService.getTransactionByDepositCount(
 					"testnet",
 					"doc-1"
 				)
@@ -399,7 +380,7 @@ describe("TransactionService", () => {
 			mockFindOne.mockResolvedValueOnce(null as any);
 
 			const result =
-				await TransactionService.getTransactionByDepositCount(
+				await transactionService.getTransactionByDepositCount(
 					"testnet",
 					"doc-1"
 				);
@@ -411,7 +392,7 @@ describe("TransactionService", () => {
 			mockFindOne.mockResolvedValueOnce(undefined as any);
 
 			const result =
-				await TransactionService.getTransactionByDepositCount(
+				await transactionService.getTransactionByDepositCount(
 					"testnet",
 					"doc-1"
 				);
@@ -421,7 +402,7 @@ describe("TransactionService", () => {
 
 		test("should throw ApiError when network not configured", async () => {
 			expect(
-				TransactionService.getTransactions({ network: "invalid" })
+				transactionService.getTransactions({ network: "invalid" })
 			).rejects.toThrow("No collection configured for network");
 		});
 	});

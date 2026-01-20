@@ -1,8 +1,5 @@
 import { describe, test, expect, beforeEach, mock } from "bun:test";
-import {
-	getMappings,
-	getMappingsByToken,
-} from "../../src/controllers/mappings";
+import { MappingsController } from "../../src/controllers/mappings";
 import {
 	createMockContext,
 	mockMappingsQuery,
@@ -41,12 +38,15 @@ mock.module("../../src/middlewares/response_context", () => ({
 }));
 
 describe("Mappings Controller", () => {
+	let mappingsController: MappingsController;
+
 	beforeEach(() => {
 		clearAllMocks();
 		mockMappingsService.getMappings.mockClear();
 		mockMappingsService.getMappingsByToken.mockClear();
 		mockHandleResponse.mockClear();
 		mockGetResponseContext.mockClear();
+		mappingsController = new MappingsController(mockMappingsService as any);
 	});
 
 	describe("getMappings", () => {
@@ -56,7 +56,7 @@ describe("Mappings Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getMappings(mockContext);
+			await mappingsController.getMappings(mockContext);
 
 			expect(mockMappingsService.getMappings).toHaveBeenCalledWith({
 				network: "testnet",
@@ -75,7 +75,7 @@ describe("Mappings Controller", () => {
 				validatedParams: { network: "mainnet" },
 			});
 
-			await getMappings(mockContext);
+			await mappingsController.getMappings(mockContext);
 
 			expect(mockMappingsService.getMappings).toHaveBeenCalledWith({
 				network: "mainnet",
@@ -94,7 +94,7 @@ describe("Mappings Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getMappings(mockContext);
+			await mappingsController.getMappings(mockContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -117,7 +117,7 @@ describe("Mappings Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getMappings(mockContext);
+			await mappingsController.getMappings(mockContext);
 
 			const handleResponseCall = mockHandleResponse.mock.calls[0];
 			const metaParam = handleResponseCall[2];
@@ -136,7 +136,7 @@ describe("Mappings Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getMappings(mockContext);
+			await mappingsController.getMappings(mockContext);
 
 			const handleResponseCall = mockHandleResponse.mock.calls[0];
 			const metaParam = handleResponseCall[2];
@@ -155,7 +155,7 @@ describe("Mappings Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getMappings(mockContext);
+			await mappingsController.getMappings(mockContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -181,7 +181,7 @@ describe("Mappings Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getMappings(mockContext);
+			await mappingsController.getMappings(mockContext);
 
 			const handleResponseCall = mockHandleResponse.mock.calls[0];
 			const metaParam = handleResponseCall[2];
@@ -201,7 +201,7 @@ describe("Mappings Controller", () => {
 				},
 			});
 
-			await getMappingsByToken(mockContext);
+			await mappingsController.getMappingsByToken(mockContext);
 
 			expect(mockMappingsService.getMappingsByToken).toHaveBeenCalledWith(
 				"0x1234567890abcdef1234567890abcdef12345678",
@@ -220,7 +220,7 @@ describe("Mappings Controller", () => {
 				},
 			});
 
-			await getMappingsByToken(mockContext);
+			await mappingsController.getMappingsByToken(mockContext);
 
 			expect(mockMappingsService.getMappingsByToken).toHaveBeenCalledWith(
 				undefined,
@@ -239,7 +239,7 @@ describe("Mappings Controller", () => {
 				},
 			});
 
-			await getMappingsByToken(mockContext);
+			await mappingsController.getMappingsByToken(mockContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -263,7 +263,7 @@ describe("Mappings Controller", () => {
 				},
 			});
 
-			await getMappingsByToken(mockContext);
+			await mappingsController.getMappingsByToken(mockContext);
 
 			const handleResponseCall = mockHandleResponse.mock.calls[0];
 			const metaParam = handleResponseCall[2];
@@ -284,7 +284,7 @@ describe("Mappings Controller", () => {
 				},
 			});
 
-			await getMappingsByToken(mockContext);
+			await mappingsController.getMappingsByToken(mockContext);
 
 			const handleResponseCall = mockHandleResponse.mock.calls[0];
 			const metaParam = handleResponseCall[2];
@@ -303,7 +303,9 @@ describe("Mappings Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			expect(getMappings(mockContext)).rejects.toThrow("Service error");
+			expect(mappingsController.getMappings(mockContext)).rejects.toThrow(
+				"Service error"
+			);
 		});
 
 		test("should handle null/undefined response from service", async () => {
@@ -314,7 +316,9 @@ describe("Mappings Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			expect(getMappings(mockContext)).rejects.toThrow();
+			expect(
+				mappingsController.getMappings(mockContext)
+			).rejects.toThrow();
 		});
 
 		test("should work with minimal query parameters", async () => {
@@ -324,7 +328,7 @@ describe("Mappings Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getMappings(mockContext);
+			await mappingsController.getMappings(mockContext);
 
 			expect(mockMappingsService.getMappings).toHaveBeenCalledWith({
 				network: "testnet",
@@ -346,7 +350,7 @@ describe("Mappings Controller", () => {
 					validatedParams: { network },
 				});
 
-				await getMappings(mockContext);
+				await mappingsController.getMappings(mockContext);
 
 				expect(mockMappingsService.getMappings).toHaveBeenCalledWith(
 					expect.objectContaining({ network })

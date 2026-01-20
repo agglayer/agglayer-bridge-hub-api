@@ -35,34 +35,15 @@ const mockDatabase = {
 } as unknown as Db;
 
 describe("MappingsService", () => {
+	let mappingsService: MappingsService;
+
 	beforeEach(() => {
 		mockFind.mockClear();
 		mockToArray.mockClear();
 		(mockDatabase.collection as any).mockClear();
-	});
 
-	describe("initializeMappingsService", () => {
-		test("should initialize successfully and throw error on reinitialize", () => {
-			// First initialization should succeed
-			MappingsService.initializeMappingsService(mockDatabase);
-
-			// Second initialization should throw error
-			expect(() =>
-				MappingsService.initializeMappingsService(mockDatabase)
-			).toThrow("MappingsService is already initialized");
-
-			// Also verify custom collection IDs can be passed (tested with default above)
-			const customCollectionMap = new Map([
-				["mainnet", "custom_mappings"],
-				["testnet", "custom_mappings_testnet"],
-			]);
-			expect(() =>
-				MappingsService.initializeMappingsService(
-					mockDatabase,
-					customCollectionMap
-				)
-			).toThrow("MappingsService is already initialized");
-		});
+		// Create a new service instance for each test
+		mappingsService = new MappingsService(mockDatabase);
 	});
 
 	describe("getMappings", () => {
@@ -73,7 +54,7 @@ describe("MappingsService", () => {
 				network: "testnet",
 			};
 
-			await MappingsService.getMappings(params);
+			await mappingsService.getMappings(params);
 
 			expect(mockFind).toHaveBeenCalled();
 			const filterArg = (mockFind.mock.calls as any)[0][0];
@@ -90,7 +71,7 @@ describe("MappingsService", () => {
 				network: "testnet",
 			};
 
-			await MappingsService.getMappings(params);
+			await mappingsService.getMappings(params);
 
 			const filterArg = (mockFind.mock.calls as any)[0][0];
 
@@ -109,7 +90,7 @@ describe("MappingsService", () => {
 				network: "testnet",
 			};
 
-			await MappingsService.getMappings(params as any);
+			await mappingsService.getMappings(params as any);
 
 			const filterArg = (mockFind.mock.calls as any)[0][0];
 
@@ -128,7 +109,7 @@ describe("MappingsService", () => {
 
 		test("should return database response", async () => {
 			const params = { network: "testnet" };
-			const result = await MappingsService.getMappings(params);
+			const result = await mappingsService.getMappings(params);
 
 			expect(result).toEqual({
 				documents: mockServiceResponse.documents,
@@ -148,7 +129,7 @@ describe("MappingsService", () => {
 				startAfter: 1700000000,
 			};
 
-			await MappingsService.getMappings(params);
+			await mappingsService.getMappings(params);
 
 			const filterArg = (mockFind.mock.calls as any)[0][0];
 
@@ -168,7 +149,7 @@ describe("MappingsService", () => {
 			const tokenNetwork = "1";
 			const network = "testnet";
 
-			await MappingsService.getMappingsByToken(
+			await mappingsService.getMappingsByToken(
 				tokenAddress,
 				tokenNetwork,
 				network
@@ -197,7 +178,7 @@ describe("MappingsService", () => {
 			const tokenNetwork = "1";
 			const network = "testnet";
 
-			await MappingsService.getMappingsByToken(
+			await mappingsService.getMappingsByToken(
 				tokenAddress as any,
 				tokenNetwork,
 				network
@@ -215,7 +196,7 @@ describe("MappingsService", () => {
 			const tokenNetwork = null;
 			const network = "testnet";
 
-			await MappingsService.getMappingsByToken(
+			await mappingsService.getMappingsByToken(
 				tokenAddress,
 				tokenNetwork as any,
 				network
@@ -234,7 +215,7 @@ describe("MappingsService", () => {
 			const tokenNetwork = null;
 			const network = "testnet";
 
-			await MappingsService.getMappingsByToken(
+			await mappingsService.getMappingsByToken(
 				tokenAddress as any,
 				tokenNetwork as any,
 				network
@@ -249,7 +230,7 @@ describe("MappingsService", () => {
 		});
 
 		test("should return combined database response", async () => {
-			const result = await MappingsService.getMappingsByToken(
+			const result = await mappingsService.getMappingsByToken(
 				"0x1234",
 				"1",
 				"testnet"
@@ -279,7 +260,7 @@ describe("MappingsService", () => {
 
 			const params = { network: "testnet" };
 
-			await expect(MappingsService.getMappings(params)).rejects.toThrow(
+			await expect(mappingsService.getMappings(params)).rejects.toThrow(
 				"Database connection failed"
 			);
 		});
@@ -288,7 +269,7 @@ describe("MappingsService", () => {
 			const networks = ["mainnet", "testnet"];
 
 			for (const network of networks) {
-				await MappingsService.getMappings({ network });
+				await mappingsService.getMappings({ network });
 
 				const expectedCollectionName =
 					network === "mainnet"
@@ -311,7 +292,7 @@ describe("MappingsService", () => {
 				network: "testnet",
 			};
 
-			await MappingsService.getMappings(params);
+			await mappingsService.getMappings(params);
 
 			const filterArg = (mockFind.mock.calls as any)[0][0];
 
@@ -325,7 +306,7 @@ describe("MappingsService", () => {
 
 		test("should throw ApiError when network not configured", async () => {
 			expect(
-				MappingsService.getMappings({ network: "invalid" })
+				mappingsService.getMappings({ network: "invalid" })
 			).rejects.toThrow("No collection configured for network");
 		});
 	});

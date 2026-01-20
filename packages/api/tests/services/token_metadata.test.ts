@@ -69,6 +69,7 @@ const mockDatabase = {
 describe("TokenMetadataService", () => {
 	let testChainConfig: Map<string, Map<number, string>>;
 	let testBridgeAddress: Map<string, string>;
+	let tokenMetadataService: TokenMetadataService;
 
 	beforeEach(() => {
 		mockFind.mockClear();
@@ -99,47 +100,17 @@ describe("TokenMetadataService", () => {
 			["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
 			["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
 		]);
-	});
 
-	describe("initializeTokenMetadataService", () => {
-		test("should initialize successfully and throw error on reinitialize", () => {
-			const database = mockDatabase as any;
-
-			// First initialization should succeed
-			TokenMetadataService.initializeTokenMetadataService(
-				database,
-				new Map([
-					["mainnet", "mappings"],
-					["testnet", "mappings_testnet"],
-				]),
-				testChainConfig,
-				testBridgeAddress
-			);
-
-			// Second initialization should throw error
-			expect(() =>
-				TokenMetadataService.initializeTokenMetadataService(database)
-			).toThrow("TokenMetadataService is already initialized");
-
-			// Also verify custom parameters can be passed (tested above)
-			const customCollectionMap = new Map([
-				["custom", "custom_mappings"],
-			]);
-			const customChainConfig = new Map([
-				["custom", new Map([[1, "https://custom.rpc.com"]])],
-			]);
-			const customBridgeAddress = new Map([
-				["custom", "0xCustomBridge123"],
-			]);
-			expect(() =>
-				TokenMetadataService.initializeTokenMetadataService(
-					database,
-					customCollectionMap,
-					customChainConfig,
-					customBridgeAddress
-				)
-			).toThrow("TokenMetadataService is already initialized");
-		});
+		// Create a new service instance for each test
+		tokenMetadataService = new TokenMetadataService(
+			mockDatabase,
+			new Map([
+				["mainnet", "mappings"],
+				["testnet", "mappings_testnet"],
+			]),
+			testChainConfig,
+			testBridgeAddress
+		);
 	});
 
 	describe("getTokenMetadata", () => {
@@ -171,7 +142,7 @@ describe("TokenMetadataService", () => {
 				.mockResolvedValueOnce("0xwrappedv1address") // v1 wrapped address
 				.mockResolvedValueOnce("0xwrappedv2address"); // v2 wrapped address
 
-			const result = await TokenMetadataService.getTokenMetadata(
+			const result = await tokenMetadataService.getTokenMetadata(
 				network,
 				tokenAddress
 			);
@@ -222,7 +193,7 @@ describe("TokenMetadataService", () => {
 				.mockResolvedValueOnce("0xwrappedv1addr")
 				.mockResolvedValueOnce("0xwrappedv2addr");
 
-			const result = await TokenMetadataService.getTokenMetadata(
+			const result = await tokenMetadataService.getTokenMetadata(
 				network,
 				tokenAddress
 			);
@@ -259,7 +230,7 @@ describe("TokenMetadataService", () => {
 			});
 
 			expect(
-				TokenMetadataService.getTokenMetadata(network, tokenAddress)
+				tokenMetadataService.getTokenMetadata(network, tokenAddress)
 			).rejects.toThrow(
 				"Unsupported origin token network 999 for testnet"
 			);
@@ -290,7 +261,7 @@ describe("TokenMetadataService", () => {
 			);
 
 			expect(
-				TokenMetadataService.getTokenMetadata(network, tokenAddress)
+				tokenMetadataService.getTokenMetadata(network, tokenAddress)
 			).rejects.toThrow("Contract call failed");
 		});
 
@@ -313,7 +284,7 @@ describe("TokenMetadataService", () => {
 				.mockResolvedValueOnce("0xwrappedv1address") // v1 wrapped address
 				.mockResolvedValueOnce("0xwrappedv2address"); // v2 wrapped address
 
-			const result = await TokenMetadataService.getTokenMetadata(
+			const result = await tokenMetadataService.getTokenMetadata(
 				network,
 				tokenAddress
 			);
@@ -345,7 +316,7 @@ describe("TokenMetadataService", () => {
 			mockReadContract.mockClear();
 			mockReadContract.mockRejectedValue(new Error("All RPCs failed"));
 
-			const result = await TokenMetadataService.getTokenMetadata(
+			const result = await tokenMetadataService.getTokenMetadata(
 				network,
 				tokenAddress
 			);
@@ -382,7 +353,7 @@ describe("TokenMetadataService", () => {
 				.mockResolvedValueOnce("0xwrappedv1")
 				.mockResolvedValueOnce("0xwrappedv2");
 
-			const result = await TokenMetadataService.getTokenMetadata(
+			const result = await tokenMetadataService.getTokenMetadata(
 				network,
 				tokenAddress
 			);
@@ -419,7 +390,7 @@ describe("TokenMetadataService", () => {
 					.mockResolvedValueOnce("0xwrappedv1")
 					.mockResolvedValueOnce("0xwrappedv2");
 
-				const result = await TokenMetadataService.getTokenMetadata(
+				const result = await tokenMetadataService.getTokenMetadata(
 					network,
 					tokenAddress
 				);
@@ -455,7 +426,7 @@ describe("TokenMetadataService", () => {
 				.mockResolvedValueOnce("0xwrappedv1addr")
 				.mockResolvedValueOnce("0xwrappedv2addr");
 
-			const result = await TokenMetadataService.getTokenMetadata(
+			const result = await tokenMetadataService.getTokenMetadata(
 				network,
 				tokenAddress
 			);

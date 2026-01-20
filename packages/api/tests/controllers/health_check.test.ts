@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, mock } from "bun:test";
-import { checkServiceHealth } from "../../src/controllers/health_check";
+import { HealthCheckController } from "../../src/controllers/health_check";
 import { createMockContext } from "../test-utils";
 
 // Mock servercore functions
@@ -35,18 +35,25 @@ mock.module("../../src/middlewares/response_context", () => ({
 	getResponseContext: mockGetResponseContext,
 }));
 
+const mockHealthCheckService = {} as any;
+
 describe("Health Check Controller", () => {
+	let healthCheckController: HealthCheckController;
+
 	beforeEach(() => {
 		mockHandleResponse.mockClear();
 		mockHandleError.mockClear();
 		mockGetResponseContext.mockClear();
+		healthCheckController = new HealthCheckController(
+			mockHealthCheckService
+		);
 	});
 
 	describe("checkServiceHealth", () => {
 		test("should return success response", async () => {
 			const mockContext = createMockContext();
 
-			await checkServiceHealth(mockContext);
+			await healthCheckController.checkServiceHealth(mockContext);
 
 			expect(mockGetResponseContext).toHaveBeenCalledWith(mockContext);
 			expect(mockHandleResponse).toHaveBeenCalledWith(
@@ -61,7 +68,7 @@ describe("Health Check Controller", () => {
 		test("should not call handleError for successful health check", async () => {
 			const mockContext = createMockContext();
 
-			await checkServiceHealth(mockContext);
+			await healthCheckController.checkServiceHealth(mockContext);
 
 			expect(mockHandleError).not.toHaveBeenCalled();
 		});
@@ -69,7 +76,7 @@ describe("Health Check Controller", () => {
 		test("should return consistent response structure", async () => {
 			const mockContext = createMockContext();
 
-			await checkServiceHealth(mockContext);
+			await healthCheckController.checkServiceHealth(mockContext);
 
 			const responseCall = mockHandleResponse.mock.calls[0];
 			const [context, data] = responseCall;
@@ -85,8 +92,8 @@ describe("Health Check Controller", () => {
 			const mockContext1 = createMockContext();
 			const mockContext2 = createMockContext();
 
-			await checkServiceHealth(mockContext1);
-			await checkServiceHealth(mockContext2);
+			await healthCheckController.checkServiceHealth(mockContext1);
+			await healthCheckController.checkServiceHealth(mockContext2);
 
 			expect(mockHandleResponse).toHaveBeenCalledTimes(2);
 			expect(mockGetResponseContext).toHaveBeenCalledTimes(2);
@@ -106,7 +113,7 @@ describe("Health Check Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await checkServiceHealth(customContext);
+			await healthCheckController.checkServiceHealth(customContext);
 
 			expect(mockGetResponseContext).toHaveBeenCalledWith(customContext);
 		});
@@ -114,7 +121,7 @@ describe("Health Check Controller", () => {
 		test("should work with empty context", async () => {
 			const emptyContext = createMockContext({});
 
-			await checkServiceHealth(emptyContext);
+			await healthCheckController.checkServiceHealth(emptyContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -130,7 +137,7 @@ describe("Health Check Controller", () => {
 		test("should have correct status and message properties", async () => {
 			const mockContext = createMockContext();
 
-			await checkServiceHealth(mockContext);
+			await healthCheckController.checkServiceHealth(mockContext);
 
 			const responseCall = mockHandleResponse.mock.calls[0];
 			const data = responseCall[1];
@@ -145,7 +152,7 @@ describe("Health Check Controller", () => {
 		test("should have exactly two properties in response data", async () => {
 			const mockContext = createMockContext();
 
-			await checkServiceHealth(mockContext);
+			await healthCheckController.checkServiceHealth(mockContext);
 
 			const responseCall = mockHandleResponse.mock.calls[0];
 			const data = responseCall[1];

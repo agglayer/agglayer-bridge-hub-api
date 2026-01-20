@@ -1,8 +1,5 @@
 import { describe, test, expect, beforeEach, mock } from "bun:test";
-import {
-	getTransactions,
-	getTransactionByDepositCount,
-} from "../../src/controllers/transactions";
+import { TransactionsController } from "../../src/controllers/transactions";
 import {
 	createMockContext,
 	mockTransactionsQuery,
@@ -47,12 +44,17 @@ mock.module("../../src/middlewares/response_context", () => ({
 }));
 
 describe("Transactions Controller", () => {
+	let transactionsController: TransactionsController;
+
 	beforeEach(() => {
 		mockTransactionService.getTransactions.mockClear();
 		mockTransactionService.getTransactionByDepositCount.mockClear();
 		mockTransactionService.generateDocId.mockClear();
 		mockHandleResponse.mockClear();
 		mockGetResponseContext.mockClear();
+		transactionsController = new TransactionsController(
+			mockTransactionService as any
+		);
 	});
 
 	describe("getTransactions", () => {
@@ -73,7 +75,7 @@ describe("Transactions Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getTransactions(mockContext);
+			await transactionsController.getTransactions(mockContext);
 
 			// Check that the service was called with correct parameters
 			const serviceCall =
@@ -97,7 +99,7 @@ describe("Transactions Controller", () => {
 				validatedParams: { network: "mainnet" },
 			});
 
-			await getTransactions(mockContext);
+			await transactionsController.getTransactions(mockContext);
 
 			const serviceCall =
 				mockTransactionService.getTransactions.mock.calls[0];
@@ -124,7 +126,7 @@ describe("Transactions Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getTransactions(mockContext);
+			await transactionsController.getTransactions(mockContext);
 
 			const serviceCall =
 				mockTransactionService.getTransactions.mock.calls[0];
@@ -144,7 +146,7 @@ describe("Transactions Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getTransactions(mockContext);
+			await transactionsController.getTransactions(mockContext);
 
 			const serviceCall =
 				mockTransactionService.getTransactions.mock.calls[0];
@@ -159,7 +161,7 @@ describe("Transactions Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getTransactions(mockContext);
+			await transactionsController.getTransactions(mockContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -186,7 +188,7 @@ describe("Transactions Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getTransactions(mockContext);
+			await transactionsController.getTransactions(mockContext);
 
 			const handleResponseCall = mockHandleResponse.mock.calls[0];
 			const metaParam = handleResponseCall[2];
@@ -205,7 +207,7 @@ describe("Transactions Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getTransactions(mockContext);
+			await transactionsController.getTransactions(mockContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -229,7 +231,9 @@ describe("Transactions Controller", () => {
 				},
 			});
 
-			await getTransactionByDepositCount(mockContext);
+			await transactionsController.getTransactionByDepositCount(
+				mockContext
+			);
 
 			expect(mockTransactionService.generateDocId).toHaveBeenCalledWith(
 				42,
@@ -249,7 +253,9 @@ describe("Transactions Controller", () => {
 				},
 			});
 
-			await getTransactionByDepositCount(mockContext);
+			await transactionsController.getTransactionByDepositCount(
+				mockContext
+			);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -273,7 +279,9 @@ describe("Transactions Controller", () => {
 					},
 				});
 
-				await getTransactionByDepositCount(mockContext);
+				await transactionsController.getTransactionByDepositCount(
+					mockContext
+				);
 
 				expect(
 					mockTransactionService.generateDocId
@@ -297,7 +305,9 @@ describe("Transactions Controller", () => {
 					},
 				});
 
-				await getTransactionByDepositCount(mockContext);
+				await transactionsController.getTransactionByDepositCount(
+					mockContext
+				);
 
 				expect(
 					mockTransactionService.getTransactionByDepositCount
@@ -320,9 +330,9 @@ describe("Transactions Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			expect(getTransactions(mockContext)).rejects.toThrow(
-				"Service error"
-			);
+			expect(
+				transactionsController.getTransactions(mockContext)
+			).rejects.toThrow("Service error");
 		});
 
 		test("should handle service throwing error in getTransactionByDepositCount", async () => {
@@ -339,9 +349,9 @@ describe("Transactions Controller", () => {
 				},
 			});
 
-			expect(getTransactionByDepositCount(mockContext)).rejects.toThrow(
-				"Transaction not found"
-			);
+			expect(
+				transactionsController.getTransactionByDepositCount(mockContext)
+			).rejects.toThrow("Transaction not found");
 		});
 
 		test("should handle complex query combinations", async () => {
@@ -360,7 +370,7 @@ describe("Transactions Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getTransactions(mockContext);
+			await transactionsController.getTransactions(mockContext);
 
 			const serviceCall =
 				mockTransactionService.getTransactions.mock.calls[0];

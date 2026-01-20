@@ -1,11 +1,13 @@
 import { describe, test, expect, beforeEach, mock } from "bun:test";
-import { getProof } from "../../src/controllers/proof";
+import { ProofController } from "../../src/controllers/proof";
 import { createMockContext, mockProof, mockProofQuery } from "../test-utils";
 
 // Mock the services and servercore functions
 const mockProofService = {
 	getProof: mock(() => Promise.resolve(mockProof)),
 };
+
+const mockTransactionService = {} as any;
 
 const mockHandleResponse = mock((context: any, data: any) => ({
 	success: true,
@@ -61,11 +63,17 @@ mock.module("../../src/middlewares/response_context", () => ({
 }));
 
 describe("Proof Controller", () => {
+	let proofController: ProofController;
+
 	beforeEach(() => {
 		mockProofService.getProof.mockClear();
 		mockHandleResponse.mockClear();
 		mockHandleError.mockClear();
 		mockGetResponseContext.mockClear();
+		proofController = new ProofController(
+			mockProofService as any,
+			mockTransactionService
+		);
 	});
 
 	describe("getProof", () => {
@@ -75,7 +83,7 @@ describe("Proof Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getProof(mockContext);
+			await proofController.getProof(mockContext);
 
 			expect(mockProofService.getProof).toHaveBeenCalledWith(
 				"testnet",
@@ -91,7 +99,7 @@ describe("Proof Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getProof(mockContext);
+			await proofController.getProof(mockContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -114,7 +122,7 @@ describe("Proof Controller", () => {
 					validatedParams: { network },
 				});
 
-				await getProof(mockContext);
+				await proofController.getProof(mockContext);
 
 				expect(mockProofService.getProof).toHaveBeenCalledWith(
 					network,
@@ -145,7 +153,7 @@ describe("Proof Controller", () => {
 					validatedParams: { network: "testnet" },
 				});
 
-				await getProof(mockContext);
+				await proofController.getProof(mockContext);
 
 				expect(mockProofService.getProof).toHaveBeenCalledWith(
 					"testnet",
@@ -183,7 +191,7 @@ describe("Proof Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getProof(mockContext);
+			await proofController.getProof(mockContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -202,7 +210,7 @@ describe("Proof Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getProof(mockContext);
+			await proofController.getProof(mockContext);
 
 			expect(mockHandleError).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -223,7 +231,7 @@ describe("Proof Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getProof(mockContext);
+			await proofController.getProof(mockContext);
 
 			expect(mockHandleError).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -241,7 +249,7 @@ describe("Proof Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getProof(mockContext);
+			await proofController.getProof(mockContext);
 
 			expect(mockHandleError).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -258,7 +266,7 @@ describe("Proof Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getProof(mockContext);
+			await proofController.getProof(mockContext);
 
 			expect(mockHandleError).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -280,7 +288,7 @@ describe("Proof Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getProof(mockContext);
+			await proofController.getProof(mockContext);
 
 			expect(mockProofService.getProof).toHaveBeenCalledWith(
 				"testnet",
@@ -302,7 +310,7 @@ describe("Proof Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getProof(mockContext);
+			await proofController.getProof(mockContext);
 
 			expect(mockProofService.getProof).toHaveBeenCalledWith(
 				"testnet",
@@ -327,7 +335,7 @@ describe("Proof Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getProof(mockContext);
+			await proofController.getProof(mockContext);
 
 			expect(mockGetResponseContext).toHaveBeenCalledWith(mockContext);
 			expect(mockHandleError).toHaveBeenCalledWith(
@@ -345,7 +353,7 @@ describe("Proof Controller", () => {
 				validatedParams: { network: "testnet" },
 			});
 
-			await getProof(mockContext);
+			await proofController.getProof(mockContext);
 
 			expect(mockGetResponseContext).toHaveBeenCalledWith(mockContext);
 			expect(mockHandleResponse).toHaveBeenCalledWith(

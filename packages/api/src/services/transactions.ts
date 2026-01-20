@@ -7,15 +7,15 @@ import {
 import { ApiError } from "@polygonlabs/servercore";
 import type { IHubTransaction } from "../schemas";
 
-let db: Db;
-let collectionId: Map<string, string>;
-
 interface TransactionDocument extends Document, IHubTransaction {
 	_id: string;
 }
 
 export class TransactionService {
-	static initializeTransactionService(
+	private readonly db: Db;
+	private readonly collectionId: Map<string, string>;
+
+	constructor(
 		database: Db,
 		collectionIdParams: Map<string, string> = new Map([
 			["mainnet", "bridge_hub_api_transactions"],
@@ -23,20 +23,17 @@ export class TransactionService {
 			["devnet", "bridge_hub_api_transactions_testnet"],
 		])
 	) {
-		if (db) {
-			throw new Error("TransactionService is already initialized");
-		}
-		db = database;
-		collectionId = collectionIdParams;
+		this.db = database;
+		this.collectionId = collectionIdParams;
 	}
 
-	static generateDocId(depositCount: number, sourceNetwork: number): string {
+	generateDocId(depositCount: number, sourceNetwork: number): string {
 		const hasher = new CryptoHasher("sha256");
 		hasher.update(`${depositCount}:${sourceNetwork}`);
 		return hasher.digest("hex").slice(0, 32);
 	}
 
-	static async getTransactions({
+	async getTransactions({
 		network,
 		fromAddress,
 		sourceNetworkIds,
@@ -60,13 +57,7 @@ export class TransactionService {
 		documents: IHubTransaction[];
 		totalDocumentsCount?: number;
 	}> {
-		if (!db || !collectionId) {
-			throw new Error(
-				"TransactionService not initialized. Call initializeTransactionService first."
-			);
-		}
-
-		const collectionName = collectionId.get(network);
+		const collectionName = this.collectionId.get(network);
 		if (!collectionName) {
 			throw new ApiError(
 				`No collection configured for network: ${network}`,
@@ -74,13 +65,13 @@ export class TransactionService {
 					context: {
 						service: "TransactionService",
 						network,
-						availableNetworks: Array.from(collectionId.keys()),
+						availableNetworks: Array.from(this.collectionId.keys()),
 					},
 				}
 			);
 		}
 		const collection: Collection<TransactionDocument> =
-			db.collection(collectionName);
+			this.db.collection(collectionName);
 
 		// Build MongoDB filter
 		const filter: any = {};
@@ -149,17 +140,11 @@ export class TransactionService {
 		};
 	}
 
-	static async getTransactionByDepositCount(
+	async getTransactionByDepositCount(
 		network: string,
 		docId: string
 	): Promise<IHubTransaction | null> {
-		if (!db || !collectionId) {
-			throw new Error(
-				"TransactionService not initialized. Call initializeTransactionService first."
-			);
-		}
-
-		const collectionName = collectionId.get(network);
+		const collectionName = this.collectionId.get(network);
 		if (!collectionName) {
 			throw new ApiError(
 				`No collection configured for network: ${network}`,
@@ -167,13 +152,13 @@ export class TransactionService {
 					context: {
 						service: "TransactionService",
 						network,
-						availableNetworks: Array.from(collectionId.keys()),
+						availableNetworks: Array.from(this.collectionId.keys()),
 					},
 				}
 			);
 		}
 		const collection: Collection<TransactionDocument> =
-			db.collection(collectionName);
+			this.db.collection(collectionName);
 
 		const document = await executeMongoOperation(
 			collection,

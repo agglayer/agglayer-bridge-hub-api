@@ -1,31 +1,21 @@
 import { ApiError, NotFoundError } from "@polygonlabs/servercore";
 import type { ClaimProofResponse } from "../schemas/proof_query";
 
-let networkMap: Map<string, Map<number, string>>;
-
 export class ProofService {
-	static initializeService(
-		networkMapParam: Map<string, Map<number, string>>
-	) {
-		if (networkMap) {
-			throw new Error("ProofService is already initialized");
-		}
-		networkMap = networkMapParam;
+	private readonly networkMap: Map<string, Map<number, string>>;
+
+	constructor(networkMapParam: Map<string, Map<number, string>>) {
+		this.networkMap = networkMapParam;
 	}
 
-	static async getProof(
+	async getProof(
 		network: string,
 		sourceNetwork: number,
 		depositCount: number,
 		leaf: number
 	): Promise<ClaimProofResponse> {
-		if (!networkMap) {
-			throw new Error(
-				"ProofService not initialized. Call initializeService first."
-			);
-		}
 		try {
-			const networkURLMap = networkMap.get(network);
+			const networkURLMap = this.networkMap.get(network);
 			if (!networkURLMap) {
 				throw new NotFoundError(
 					"Network URL isn't supported",
@@ -80,7 +70,7 @@ export class ProofService {
 				error instanceof Error ? error.message : "Error fetching Proof",
 				{
 					context: {
-						url: networkMap.get(network)?.get(sourceNetwork),
+						url: this.networkMap.get(network)?.get(sourceNetwork),
 						sourceNetwork,
 						depositCount,
 						leaf,

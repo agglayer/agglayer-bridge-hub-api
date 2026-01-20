@@ -3,14 +3,14 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { Scalar } from "@scalar/hono-api-reference";
-import router from "./routes";
+import createRouter from "./routes";
 import { MappingsService } from "./services/mappings";
 import { TokenMetadataService } from "./services/token_metadata";
 import { TransactionService } from "./services/transactions";
 import { ProofService } from "./services/proof";
 import { HealthCheckService } from "./services";
 import { MongoDBClient } from "@agglayer/bridge-hub-commons";
-import healthCheckRoutes from "./routes/health_check";
+import createHealthCheckRoutes from "./routes/health_check";
 import {
 	BRIDGE_ADDRESSES,
 	MAPPINGS_COLLECTIONS,
@@ -67,26 +67,29 @@ async function serve(): Promise<void> {
 	}
 
 	// Initialize services
-	TransactionService.initializeTransactionService(
+	const transactionService = new TransactionService(
 		database.getDb(),
 		TRANSACTIONS_COLLECTIONS
 	);
 
-	MappingsService.initializeMappingsService(
+	const mappingsService = new MappingsService(
 		database.getDb(),
 		MAPPINGS_COLLECTIONS
 	);
 
-	TokenMetadataService.initializeTokenMetadataService(
+	const tokenMetadataService = new TokenMetadataService(
 		database.getDb(),
 		MAPPINGS_COLLECTIONS,
 		rpcConfig,
 		BRIDGE_ADDRESSES
 	);
 
-	HealthCheckService.initializeHealthCheckService(rpcConfig);
+	const healthCheckService = new HealthCheckService(
+		transactionService,
+		rpcConfig
+	);
 
-	ProofService.initializeService(proofConfig);
+	const proofService = new ProofService(proofConfig);
 
 	// Middlewares
 	app.use("*", logger()); // Logs all requests
@@ -123,6 +126,14 @@ async function serve(): Promise<void> {
 	);
 
 	// Register routes with network parameter schema
+	const router = createRouter(
+		transactionService,
+		mappingsService,
+		proofService,
+		tokenMetadataService
+	);
+	const healthCheckRoutes = createHealthCheckRoutes(healthCheckService);
+
 	app.route("/:network", router);
 	app.route("/health-check", healthCheckRoutes);
 }

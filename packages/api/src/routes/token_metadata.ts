@@ -1,59 +1,72 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { validateTokenMetadataQueryParams } from "../middlewares/validate_query_params";
-import { getTokenMetadata } from "../controllers/token_metadata";
+import { TokenMetadataController } from "../controllers/token_metadata";
 import {
 	TokenMetadataQuerySchema,
 	TokenMetadataResponseSchema,
 } from "../schemas";
+import { TokenMetadataService } from "../services/token_metadata";
 
-const tokenMetadataRoutes = new OpenAPIHono();
+const createTokenMetadataRoutes = (
+	tokenMetadataService: TokenMetadataService
+) => {
+	const tokenMetadataRoutes = new OpenAPIHono();
+	const tokenMetadataController = new TokenMetadataController(
+		tokenMetadataService
+	);
 
-const ErrorResponseSchema = z.object({
-	success: z.boolean(),
-	error: z.string(),
-});
+	const ErrorResponseSchema = z.object({
+		success: z.boolean(),
+		error: z.string(),
+	});
 
-// GET /token-metadata/:tokenAddress route
-const getTokenMetadataRoute = createRoute({
-	method: "get",
-	path: "/{tokenAddress}",
-	tags: ["token-metadata"],
-	summary: "Get token metadata",
-	description:
-		"Retrieve metadata for a specific token address including name, symbol, decimals, and other information",
-	request: {
-		params: TokenMetadataQuerySchema,
-	},
-	middleware: [validateTokenMetadataQueryParams],
-	responses: {
-		200: {
-			content: {
-				"application/json": {
-					schema: TokenMetadataResponseSchema,
-				},
-			},
-			description: "Successful response with token metadata",
+	// GET /token-metadata/:tokenAddress route
+	const getTokenMetadataRoute = createRoute({
+		method: "get",
+		path: "/{tokenAddress}",
+		tags: ["token-metadata"],
+		summary: "Get token metadata",
+		description:
+			"Retrieve metadata for a specific token address including name, symbol, decimals, and other information",
+		request: {
+			params: TokenMetadataQuerySchema,
 		},
-		400: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
+		middleware: [validateTokenMetadataQueryParams],
+		responses: {
+			200: {
+				content: {
+					"application/json": {
+						schema: TokenMetadataResponseSchema,
+					},
 				},
+				description: "Successful response with token metadata",
 			},
-			description: "Bad request - invalid token address",
-		},
-		404: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
+			400: {
+				content: {
+					"application/json": {
+						schema: ErrorResponseSchema,
+					},
 				},
+				description: "Bad request - invalid token address",
 			},
-			description: "Token metadata not found",
+			404: {
+				content: {
+					"application/json": {
+						schema: ErrorResponseSchema,
+					},
+				},
+				description: "Token metadata not found",
+			},
 		},
-	},
-});
+	});
 
-// Register routes
-tokenMetadataRoutes.openapi(getTokenMetadataRoute, getTokenMetadata);
+	// Register routes
+	tokenMetadataRoutes.openapi(
+		getTokenMetadataRoute,
+		tokenMetadataController.getTokenMetadata
+	);
 
-export default tokenMetadataRoutes;
+	return tokenMetadataRoutes;
+};
+
+export default createTokenMetadataRoutes;

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, mock } from "bun:test";
-import { getTokenMetadata } from "../../src/controllers/token_metadata";
+import { TokenMetadataController } from "../../src/controllers/token_metadata";
 import { createMockContext, mockTokenMetadata } from "../test-utils";
 
 // Mock the services and servercore functions
@@ -31,10 +31,15 @@ mock.module("../../src/middlewares/response_context", () => ({
 }));
 
 describe("Token Metadata Controller", () => {
+	let tokenMetadataController: TokenMetadataController;
+
 	beforeEach(() => {
 		mockTokenMetadataService.getTokenMetadata.mockClear();
 		mockHandleResponse.mockClear();
 		mockGetResponseContext.mockClear();
+		tokenMetadataController = new TokenMetadataController(
+			mockTokenMetadataService as any
+		);
 	});
 
 	describe("getTokenMetadata", () => {
@@ -46,7 +51,7 @@ describe("Token Metadata Controller", () => {
 				},
 			});
 
-			await getTokenMetadata(mockContext);
+			await tokenMetadataController.getTokenMetadata(mockContext);
 
 			// Check that the service was called with correct parameters
 			expect(
@@ -68,7 +73,7 @@ describe("Token Metadata Controller", () => {
 				},
 			});
 
-			await getTokenMetadata(mockContext);
+			await tokenMetadataController.getTokenMetadata(mockContext);
 
 			expect(
 				mockTokenMetadataService.getTokenMetadata
@@ -83,7 +88,7 @@ describe("Token Metadata Controller", () => {
 				},
 			});
 
-			await getTokenMetadata(mockContext);
+			await tokenMetadataController.getTokenMetadata(mockContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -103,7 +108,7 @@ describe("Token Metadata Controller", () => {
 					},
 				});
 
-				await getTokenMetadata(mockContext);
+				await tokenMetadataController.getTokenMetadata(mockContext);
 
 				expect(
 					mockTokenMetadataService.getTokenMetadata
@@ -130,7 +135,7 @@ describe("Token Metadata Controller", () => {
 					},
 				});
 
-				await getTokenMetadata(mockContext);
+				await tokenMetadataController.getTokenMetadata(mockContext);
 
 				const serviceCall =
 					mockTokenMetadataService.getTokenMetadata.mock.calls[0];
@@ -152,7 +157,7 @@ describe("Token Metadata Controller", () => {
 				},
 			});
 
-			await getTokenMetadata(mockContext);
+			await tokenMetadataController.getTokenMetadata(mockContext);
 
 			const serviceCall =
 				mockTokenMetadataService.getTokenMetadata.mock.calls[0];
@@ -170,7 +175,7 @@ describe("Token Metadata Controller", () => {
 				},
 			});
 
-			await getTokenMetadata(mockContext);
+			await tokenMetadataController.getTokenMetadata(mockContext);
 
 			const serviceCall =
 				mockTokenMetadataService.getTokenMetadata.mock.calls[0];
@@ -202,7 +207,7 @@ describe("Token Metadata Controller", () => {
 				},
 			});
 
-			await getTokenMetadata(mockContext);
+			await tokenMetadataController.getTokenMetadata(mockContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -221,7 +226,7 @@ describe("Token Metadata Controller", () => {
 				},
 			});
 
-			await getTokenMetadata(mockContext);
+			await tokenMetadataController.getTokenMetadata(mockContext);
 
 			const serviceCall =
 				mockTokenMetadataService.getTokenMetadata.mock.calls[0];
@@ -242,7 +247,7 @@ describe("Token Metadata Controller", () => {
 					},
 				});
 
-				await getTokenMetadata(mockContext);
+				await tokenMetadataController.getTokenMetadata(mockContext);
 
 				const serviceCall =
 					mockTokenMetadataService.getTokenMetadata.mock.calls[0];
@@ -271,9 +276,9 @@ describe("Token Metadata Controller", () => {
 				},
 			});
 
-			expect(getTokenMetadata(mockContext)).rejects.toThrow(
-				"Token not found"
-			);
+			expect(
+				tokenMetadataController.getTokenMetadata(mockContext)
+			).rejects.toThrow("Token not found");
 		});
 
 		test("should handle service returning null", async () => {
@@ -288,7 +293,7 @@ describe("Token Metadata Controller", () => {
 				},
 			});
 
-			await getTokenMetadata(mockContext);
+			await tokenMetadataController.getTokenMetadata(mockContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -308,7 +313,7 @@ describe("Token Metadata Controller", () => {
 				},
 			});
 
-			await getTokenMetadata(mockContext);
+			await tokenMetadataController.getTokenMetadata(mockContext);
 
 			expect(mockHandleResponse).toHaveBeenCalledWith(
 				{ requestId: "test-request-id" },
@@ -331,7 +336,7 @@ describe("Token Metadata Controller", () => {
 				},
 			});
 
-			await getTokenMetadata(mockContext);
+			await tokenMetadataController.getTokenMetadata(mockContext);
 
 			expect(mockGetResponseContext).toHaveBeenCalledWith(mockContext);
 			expect(mockHandleResponse).toHaveBeenCalledWith(

@@ -6,15 +6,15 @@ import {
 import { ApiError } from "@polygonlabs/servercore";
 import type { HubTokenMapping } from "../schemas";
 
-let db: Db;
-let collectionId: Map<string, string>;
-
 interface MappingDocument extends Document, HubTokenMapping {
 	_id: string;
 }
 
 export class MappingsService {
-	static initializeMappingsService(
+	private readonly db: Db;
+	private readonly collectionId: Map<string, string>;
+
+	constructor(
 		database: Db,
 		collectionIdParam: Map<string, string> = new Map([
 			["mainnet", "bridge_hub_api_mappings"],
@@ -22,14 +22,11 @@ export class MappingsService {
 			["devnet", "bridge_hub_api_mappings_testnet"],
 		])
 	) {
-		if (db) {
-			throw new Error("MappingsService is already initialized");
-		}
-		db = database;
-		collectionId = collectionIdParam;
+		this.db = database;
+		this.collectionId = collectionIdParam;
 	}
 
-	static async getMappings({
+	async getMappings({
 		originTokenAddress,
 		wrappedTokenAddress,
 		originNetworkIds,
@@ -49,13 +46,7 @@ export class MappingsService {
 		documents: HubTokenMapping[];
 		totalDocumentsCount?: number;
 	}> {
-		if (!db || !collectionId) {
-			throw new Error(
-				"MappingsService not initialized. Call initializeMappingsService first."
-			);
-		}
-
-		const collectionName = collectionId.get(network);
+		const collectionName = this.collectionId.get(network);
 		if (!collectionName) {
 			throw new ApiError(
 				`No collection configured for network: ${network}`,
@@ -63,13 +54,13 @@ export class MappingsService {
 					context: {
 						service: "MappingsService",
 						network,
-						availableNetworks: Array.from(collectionId.keys()),
+						availableNetworks: Array.from(this.collectionId.keys()),
 					},
 				}
 			);
 		}
 		const collection: Collection<MappingDocument> =
-			db.collection(collectionName);
+			this.db.collection(collectionName);
 
 		// Build MongoDB filter
 		const filter: any = {};
@@ -120,7 +111,7 @@ export class MappingsService {
 		};
 	}
 
-	static async getMappingsByToken(
+	async getMappingsByToken(
 		tokenAddress: string,
 		tokenNetwork: string,
 		network: string
@@ -128,13 +119,7 @@ export class MappingsService {
 		documents: HubTokenMapping[];
 		totalDocumentsCount?: number;
 	}> {
-		if (!db || !collectionId) {
-			throw new Error(
-				"MappingsService not initialized. Call initializeMappingsService first."
-			);
-		}
-
-		const collectionName = collectionId.get(network);
+		const collectionName = this.collectionId.get(network);
 		if (!collectionName) {
 			throw new ApiError(
 				`No collection configured for network: ${network}`,
@@ -142,13 +127,13 @@ export class MappingsService {
 					context: {
 						service: "MappingsService",
 						network,
-						availableNetworks: Array.from(collectionId.keys()),
+						availableNetworks: Array.from(this.collectionId.keys()),
 					},
 				}
 			);
 		}
 		const collection: Collection<MappingDocument> =
-			db.collection(collectionName);
+			this.db.collection(collectionName);
 
 		// Query for origin tokens
 		const originTokenFilter = {

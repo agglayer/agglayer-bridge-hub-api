@@ -1,14 +1,33 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import transactionRoutes from "./transactions";
-import mappingsRoutes from "./mappings";
-import proofRoutes from "./proof";
-import tokenMetadataRoutes from "./token_metadata";
+import createTransactionRoutes from "./transactions";
+import createMappingsRoutes from "./mappings";
+import createProofRoutes from "./proof";
+import createTokenMetadataRoutes from "./token_metadata";
+import { TransactionService } from "../services/transactions";
+import { MappingsService } from "../services/mappings";
+import { ProofService } from "../services/proof";
+import { TokenMetadataService } from "../services/token_metadata";
 
-const router = new OpenAPIHono();
+const createRouter = (
+	transactionService: TransactionService,
+	mappingsService: MappingsService,
+	proofService: ProofService,
+	tokenMetadataService: TokenMetadataService
+) => {
+	const router = new OpenAPIHono();
 
-router.route("/transactions", transactionRoutes);
-router.route("/token-mappings", mappingsRoutes);
-router.route("/claim-proof", proofRoutes);
-router.route("/token-metadata", tokenMetadataRoutes);
+	router.route("/transactions", createTransactionRoutes(transactionService));
+	router.route("/token-mappings", createMappingsRoutes(mappingsService));
+	router.route(
+		"/claim-proof",
+		createProofRoutes(proofService, transactionService)
+	);
+	router.route(
+		"/token-metadata",
+		createTokenMetadataRoutes(tokenMetadataService)
+	);
 
-export default router;
+	return router;
+};
+
+export default createRouter;
