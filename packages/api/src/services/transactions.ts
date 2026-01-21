@@ -6,6 +6,7 @@ import {
 } from "@agglayer/bridge-hub-commons";
 import { ApiError } from "@polygonlabs/servercore";
 import type { IHubTransaction } from "../schemas";
+import { Networks } from "../enums";
 
 interface TransactionDocument extends Document, IHubTransaction {
 	_id: string;
@@ -44,7 +45,7 @@ export class TransactionService {
 		startAfter,
 		limit,
 	}: {
-		network: string;
+		network: Networks;
 		fromAddress?: string;
 		sourceNetworkIds?: number[];
 		destinationNetworkIds?: number[];
@@ -133,7 +134,7 @@ export class TransactionService {
 	}
 
 	async getTransactionByDepositCount(
-		network: string,
+		network: Networks,
 		docId: string
 	): Promise<IHubTransaction | null> {
 		const collectionName = this.collectionId.get(network);

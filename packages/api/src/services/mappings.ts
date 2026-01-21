@@ -5,6 +5,7 @@ import {
 } from "@agglayer/bridge-hub-commons";
 import { ApiError } from "@polygonlabs/servercore";
 import type { HubTokenMapping } from "../schemas";
+import { Networks } from "../enums";
 
 interface MappingDocument extends Document, HubTokenMapping {
 	_id: string;
@@ -39,7 +40,7 @@ export class MappingsService {
 		wrappedTokenAddress?: string;
 		originNetworkIds?: number[];
 		wrappedNetworkIds?: number[];
-		network: string;
+		network: Networks;
 		limit: number;
 		startAfter?: number | undefined;
 	}): Promise<{
@@ -109,7 +110,7 @@ export class MappingsService {
 	async getMappingsByToken(
 		tokenAddress: string,
 		tokenNetwork: string,
-		network: string
+		network: Networks
 	): Promise<{
 		documents: HubTokenMapping[];
 		totalDocumentsCount?: number;

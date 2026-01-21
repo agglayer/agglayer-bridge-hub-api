@@ -1,6 +1,7 @@
 import { ApiError } from "@polygonlabs/servercore";
 import { TransactionService } from "./transactions";
 import { createPublicClient, http } from "viem";
+import { Networks } from "../enums";
 
 export class HealthCheckService {
 	private readonly chainConfig: Map<string, Map<number, string>>;
@@ -21,7 +22,7 @@ export class HealthCheckService {
 	}
 
 	async checkForAutoClaim(
-		network: string,
+		network: Networks,
 		networkId: string,
 		sourceNetworkIds: Array<number>
 	): Promise<boolean> {

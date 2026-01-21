@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach, mock } from "bun:test";
 import { TransactionService } from "../../src/services/transactions";
 import { mockTransactionServiceResponse, mockTransaction } from "../test-utils";
 import type { Db, Collection } from "mongodb";
+import { Networks } from "../../src/enums";
 
 // Mock executeMongoOperation to simply execute the callback
 mock.module("@agglayer/bridge-hub-commons", () => ({
@@ -119,7 +120,7 @@ describe("TransactionService", () => {
 
 	describe("getTransactions", () => {
 		test("should call MongoDB with correct filter parameters", async () => {
-			const network = "testnet";
+			const network = Networks.TESTNET;
 			const fromAddress = "0xfrom123";
 			const status = "BRIDGED";
 			const limit = 10;
@@ -154,17 +155,17 @@ describe("TransactionService", () => {
 		});
 
 		test("should use default order when no override provided", async () => {
-			const network = "testnet";
+			const network = Networks.TESTNET;
 
-			await transactionService.getTransactions({ network });
+			await transactionService.getTransactions({ network, limit: 20 });
 
 			expect(mockFind).toHaveBeenCalledWith({});
 		});
 
 		test("should handle empty query parameters", async () => {
-			const network = "mainnet";
+			const network = Networks.MAINNET;
 
-			await transactionService.getTransactions({ network });
+			await transactionService.getTransactions({ network, limit: 20 });
 
 			expect(mockDatabase.collection).toHaveBeenCalledWith(
 				"bridge_hub_api_transactions"
@@ -174,7 +175,7 @@ describe("TransactionService", () => {
 
 		test("should return documents and totalDocumentsCount", async () => {
 			const result = await transactionService.getTransactions({
-				network: "testnet",
+				network: Networks.TESTNET,
 				limit: 10,
 			});
 
@@ -189,8 +190,9 @@ describe("TransactionService", () => {
 			const sourceNetworkIds = [1, 137, 42];
 
 			await transactionService.getTransactions({
-				network: "testnet",
+				network: Networks.TESTNET,
 				sourceNetworkIds,
+				limit: 20,
 			});
 
 			const filterArg = (mockFind.mock.calls as any)[0][0];
@@ -201,8 +203,9 @@ describe("TransactionService", () => {
 			const destinationNetworkIds = [1, 137];
 
 			await transactionService.getTransactions({
-				network: "testnet",
+				network: Networks.TESTNET,
 				destinationNetworkIds,
+				limit: 20,
 			});
 
 			const filterArg = (mockFind.mock.calls as any)[0][0];
@@ -214,7 +217,7 @@ describe("TransactionService", () => {
 
 	describe("getTransactionByDepositCount", () => {
 		test("should call MongoDB findOne with correct docId", async () => {
-			const network = "testnet";
+			const network = Networks.TESTNET;
 			const docId = transactionService.generateDocId(42, 1);
 
 			await transactionService.getTransactionByDepositCount(
@@ -231,7 +234,7 @@ describe("TransactionService", () => {
 		test("should return transaction document", async () => {
 			const result =
 				await transactionService.getTransactionByDepositCount(
-					"testnet",
+					Networks.TESTNET,
 					"doc-1"
 				);
 
@@ -239,7 +242,7 @@ describe("TransactionService", () => {
 		});
 
 		test("should handle different network values", async () => {
-			const networks = ["mainnet", "testnet"];
+			const networks = [Networks.MAINNET, Networks.TESTNET];
 			const docId = "test-doc-id";
 
 			for (const network of networks) {
@@ -249,7 +252,7 @@ describe("TransactionService", () => {
 				);
 
 				const expectedCollectionId =
-					network === "mainnet"
+					network === Networks.MAINNET
 						? "bridge_hub_api_transactions"
 						: "bridge_hub_api_transactions_testnet";
 
@@ -273,7 +276,7 @@ describe("TransactionService", () => {
 
 			for (const docId of docIds) {
 				await transactionService.getTransactionByDepositCount(
-					"testnet",
+					Networks.TESTNET,
 					docId
 				);
 
@@ -288,7 +291,7 @@ describe("TransactionService", () => {
 		test("should generate docId and retrieve transaction", async () => {
 			const depositCount = 42;
 			const sourceNetwork = 1;
-			const network = "testnet";
+			const network = Networks.TESTNET;
 
 			// Generate document ID
 			const docId = transactionService.generateDocId(
@@ -309,7 +312,7 @@ describe("TransactionService", () => {
 		});
 
 		test("should handle typical transaction flow", async () => {
-			const network = "testnet";
+			const network = Networks.TESTNET;
 			const limit = 10;
 
 			// Get transactions list
@@ -341,15 +344,18 @@ describe("TransactionService", () => {
 		test("should propagate database errors from getTransactions", async () => {
 			const error = new Error("Database connection failed");
 			mockFind.mockReturnValueOnce({
-				sort: () => ({
-					limit: () => ({
-						toArray: () => Promise.reject(error),
-					}),
-				}),
+				sort: mock(() => ({
+					limit: mock(() => ({
+						toArray: mock(() => Promise.reject(error)),
+					})),
+				})),
 			});
 
 			expect(
-				transactionService.getTransactions({ network: "testnet" })
+				transactionService.getTransactions({
+					network: Networks.TESTNET,
+					limit: 20,
+				})
 			).rejects.toThrow("Database connection failed");
 		});
 
@@ -359,7 +365,7 @@ describe("TransactionService", () => {
 
 			expect(
 				transactionService.getTransactionByDepositCount(
-					"testnet",
+					Networks.TESTNET,
 					"doc-1"
 				)
 			).rejects.toThrow("Document not found");
@@ -370,7 +376,7 @@ describe("TransactionService", () => {
 
 			const result =
 				await transactionService.getTransactionByDepositCount(
-					"testnet",
+					Networks.TESTNET,
 					"doc-1"
 				);
 
@@ -382,7 +388,7 @@ describe("TransactionService", () => {
 
 			const result =
 				await transactionService.getTransactionByDepositCount(
-					"testnet",
+					Networks.TESTNET,
 					"doc-1"
 				);
 
@@ -391,7 +397,10 @@ describe("TransactionService", () => {
 
 		test("should throw ApiError when network not configured", async () => {
 			expect(
-				transactionService.getTransactions({ network: "invalid" })
+				transactionService.getTransactions({
+					network: "invalid" as Networks,
+					limit: 20,
+				})
 			).rejects.toThrow("No collection configured for network");
 		});
 	});

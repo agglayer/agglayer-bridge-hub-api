@@ -8,6 +8,7 @@ import { createPublicClient, http } from "viem";
 import { ERC20_ABI } from "../constants/erc20";
 import { BRIDGE_ABI_V2, BRIDGE_ABI_V1 } from "../constants/bridge";
 import type { TokenMetadata, HubTokenMapping } from "../schemas";
+import { Networks } from "../enums";
 
 interface MappingDocument extends Document, HubTokenMapping {
 	_id: string;
@@ -112,7 +113,7 @@ export class TokenMetadataService {
 	}
 
 	async getTokenMetadata(
-		network: string,
+		network: Networks,
 		tokenAddress: string
 	): Promise<TokenMetadata | undefined> {
 		const collectionName = this.collectionId.get(network);
@@ -220,7 +221,7 @@ export class TokenMetadataService {
 	}
 
 	private async fetchTokenMetadataFromAllRPCs(
-		network: string,
+		network: Networks,
 		tokenAddress: string
 	): Promise<TokenMetadata | undefined> {
 		if (tokenAddress === "0x0000000000000000000000000000000000000000") {

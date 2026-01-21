@@ -1,5 +1,6 @@
 import { ApiError, NotFoundError } from "@polygonlabs/servercore";
 import type { ClaimProofResponse } from "../schemas/proof_query";
+import { Networks } from "../enums";
 
 export class ProofService {
 	private readonly networkMap: Map<string, Map<number, string>>;
@@ -9,7 +10,7 @@ export class ProofService {
 	}
 
 	async getProof(
-		network: string,
+		network: Networks,
 		sourceNetwork: number,
 		depositCount: number,
 		leaf: number
