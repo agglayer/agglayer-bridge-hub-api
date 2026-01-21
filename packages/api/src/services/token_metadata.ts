@@ -2,17 +2,13 @@ import { BadRequestError, Logger, ApiError } from "@polygonlabs/servercore";
 import type { Db, Collection } from "mongodb";
 import {
 	executeMongoOperation,
-	type Document,
+	type IMappingDocument,
 } from "@agglayer/bridge-hub-commons";
 import { createPublicClient, http } from "viem";
 import { ERC20_ABI } from "../constants/erc20";
 import { BRIDGE_ABI_V2, BRIDGE_ABI_V1 } from "../constants/bridge";
-import type { TokenMetadata, HubTokenMapping } from "../schemas";
+import type { TokenMetadata } from "../schemas";
 import { Networks } from "../enums";
-
-interface MappingDocument extends Document, HubTokenMapping {
-	_id: string;
-}
 
 export class TokenMetadataService {
 	private readonly db: Db;
@@ -129,7 +125,7 @@ export class TokenMetadataService {
 				}
 			);
 		}
-		const collection: Collection<MappingDocument> =
+		const collection: Collection<IMappingDocument> =
 			this.db.collection(collectionName);
 
 		// Build MongoDB filter with $or query

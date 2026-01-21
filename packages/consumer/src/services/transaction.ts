@@ -2,26 +2,18 @@ import {
 	executeMongoOperation,
 	TransactionStatus,
 	type Collection,
-	type Document,
 	type IHubBridgedStatusTransactions,
 	type IHubBridgeTransaction,
 	type IHubLeafIncludedStatusTransactions,
+	type ITransactionDocument,
 } from "@agglayer/bridge-hub-commons";
 import type { IHubClaimTransaction } from "../interfaces/claim_tx";
 import { CryptoHasher } from "bun";
 
-interface TransactionDocument extends Document, IHubBridgeTransaction {
-	_id: string;
-	claimTransactionHash?: string;
-	claimBlockNumber?: number;
-	claimTimestamp?: number;
-	globalIndex?: string;
-	leafIndex?: number;
-	leafIndexForProof?: number;
-}
-
 export default class TransactionsService {
-	constructor(private readonly collection: Collection<TransactionDocument>) {}
+	constructor(
+		private readonly collection: Collection<ITransactionDocument>
+	) {}
 
 	private generateDocId(depositCount: number, sourceNetwork: number): string {
 		const hasher = new CryptoHasher("sha256");

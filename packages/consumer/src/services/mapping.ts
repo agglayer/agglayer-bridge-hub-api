@@ -1,19 +1,12 @@
 import {
 	executeMongoOperation,
 	type Collection,
-	type Document,
+	type IMappingDocument,
 } from "@agglayer/bridge-hub-commons";
-import type { IHubTokenMappings } from "../interfaces/token_mapping";
 import { CryptoHasher } from "bun";
 
-interface TokenMappingDocument extends Document, IHubTokenMappings {
-	_id: string;
-}
-
 export default class TokenMappingsService {
-	constructor(
-		private readonly collection: Collection<TokenMappingDocument>
-	) {}
+	constructor(private readonly collection: Collection<IMappingDocument>) {}
 
 	private generateDocId(
 		originTokenAddress: string,

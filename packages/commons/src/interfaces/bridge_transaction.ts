@@ -45,6 +45,31 @@ export const HubBridgeTransactionSchema = z.object({
 	txSender: z.string(),
 });
 
+/**
+ * Zod schema for the Hub API's Claim Transaction entity
+ */
+export const HubClaimTransactionSchema = z.object({
+	claimTransactionHash: z.string(),
+	claimBlockNumber: z.number(),
+	claimTimestamp: z.number(),
+	globalIndex: z.string(),
+	sourceNetwork: z.number(),
+	depositCount: z.number(),
+	status: TransactionStatusSchema,
+	lastUpdatedAt: z.number().optional(),
+});
+
+/**
+ * Combined schema that includes both bridge and claim transaction fields
+ * This represents the full transaction document stored in MongoDB
+ */
+export const HubTransactionSchema = z.object({
+	...HubBridgeTransactionSchema.shape,
+	...HubClaimTransactionSchema.shape,
+	leafIndex: z.number().optional(),
+	leafIndexForProof: z.number().optional(),
+});
+
 // Export inferred TypeScript types
 export type IHubBridgedStatusTransactions = z.infer<
 	typeof HubBridgedStatusTransactionsSchema
@@ -53,3 +78,5 @@ export type IHubLeafIncludedStatusTransactions = z.infer<
 	typeof HubLeafIncludedStatusTransactionsSchema
 >;
 export type IHubBridgeTransaction = z.infer<typeof HubBridgeTransactionSchema>;
+export type IHubClaimTransaction = z.infer<typeof HubClaimTransactionSchema>;
+export type IHubTransaction = z.infer<typeof HubTransactionSchema>;

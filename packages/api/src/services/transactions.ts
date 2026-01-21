@@ -2,15 +2,11 @@ import type { Db, Collection } from "mongodb";
 import { CryptoHasher } from "bun";
 import {
 	executeMongoOperation,
-	type Document,
+	type ITransactionDocument,
 } from "@agglayer/bridge-hub-commons";
 import { ApiError } from "@polygonlabs/servercore";
 import type { IHubTransaction } from "../schemas";
 import { Networks } from "../enums";
-
-interface TransactionDocument extends Document, IHubTransaction {
-	_id: string;
-}
 
 export class TransactionService {
 	private readonly db: Db;
@@ -71,7 +67,7 @@ export class TransactionService {
 				}
 			);
 		}
-		const collection: Collection<TransactionDocument> =
+		const collection: Collection<ITransactionDocument> =
 			this.db.collection(collectionName);
 
 		// Build MongoDB filter
@@ -150,7 +146,7 @@ export class TransactionService {
 				}
 			);
 		}
-		const collection: Collection<TransactionDocument> =
+		const collection: Collection<ITransactionDocument> =
 			this.db.collection(collectionName);
 
 		const document = await executeMongoOperation(

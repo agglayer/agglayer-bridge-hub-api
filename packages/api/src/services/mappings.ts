@@ -1,15 +1,11 @@
 import type { Db, Collection } from "mongodb";
 import {
 	executeMongoOperation,
-	type Document,
+	type IMappingDocument,
 } from "@agglayer/bridge-hub-commons";
 import { ApiError } from "@polygonlabs/servercore";
 import type { HubTokenMapping } from "../schemas";
 import { Networks } from "../enums";
-
-interface MappingDocument extends Document, HubTokenMapping {
-	_id: string;
-}
 
 export class MappingsService {
 	private readonly db: Db;
@@ -60,7 +56,7 @@ export class MappingsService {
 				}
 			);
 		}
-		const collection: Collection<MappingDocument> =
+		const collection: Collection<IMappingDocument> =
 			this.db.collection(collectionName);
 
 		// Build MongoDB filter
@@ -128,7 +124,7 @@ export class MappingsService {
 				}
 			);
 		}
-		const collection: Collection<MappingDocument> =
+		const collection: Collection<IMappingDocument> =
 			this.db.collection(collectionName);
 
 		// Query for origin tokens
