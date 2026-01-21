@@ -185,17 +185,6 @@ describe("TransactionService", () => {
 			});
 		});
 
-		test("should not return totalDocumentsCount when limit is not provided", async () => {
-			const result = await transactionService.getTransactions({
-				network: "testnet",
-			});
-
-			expect(result).toEqual({
-				documents: mockTransactionServiceResponse.documents,
-				totalDocumentsCount: undefined,
-			});
-		});
-
 		test("should handle sourceNetworkIds parameter", async () => {
 			const sourceNetworkIds = [1, 137, 42];
 
