@@ -30,6 +30,7 @@ export class HealthCheckService {
 			destinationNetworkIds: [parseInt(networkId, 10)],
 			status: "READY_TO_CLAIM",
 			sourceNetworkIds,
+			limit: 20,
 		});
 
 		if (transactions?.documents?.length) {
