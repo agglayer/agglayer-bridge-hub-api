@@ -35,6 +35,7 @@ const BRIDGE_SERVICE_URL = process.env.BRIDGE_SERVICE_URL;
 const NETWORK = process.env.NETWORK || "mainnet";
 const BRIDGE_CONTRACT_ADDRESS = process.env.BRIDGE_CONTRACT_ADDRESS;
 const ETROG_UPDATE_BLOCK_NUMBER = process.env.ETROG_UPDATE_BLOCK_NUMBER || "0";
+const METADATA_DOC = process.env.METADATA_DOC || "lastIndexedTransactions";
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
 // Helper function to build Bridge API URLs
@@ -120,7 +121,7 @@ async function start(): Promise<void> {
 			tokenMappingsService,
 			new MetadataService(
 				database.getCollection(collectionsConfig.metadata),
-				process.env.METADATA_DOC || "lastIndexedTransactions"
+				METADATA_DOC
 			)
 		);
 

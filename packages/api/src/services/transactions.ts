@@ -52,7 +52,7 @@ export class TransactionService {
 		status?: string;
 		order?: "asc" | "desc";
 		startAfter?: string | number;
-		limit?: number;
+		limit: number;
 	}): Promise<{
 		documents: IHubTransaction[];
 		totalDocumentsCount?: number;
@@ -109,12 +109,7 @@ export class TransactionService {
 		// Execute query
 		const documents = await executeMongoOperation(
 			collection,
-			(col) =>
-				col
-					.find(filter)
-					.sort(sort)
-					.limit(limit || 10)
-					.toArray(),
+			(col) => col.find(filter).sort(sort).limit(limit).toArray(),
 			{
 				operationName: "getTransactions",
 				logContext: { network, filter },
@@ -122,17 +117,14 @@ export class TransactionService {
 		);
 
 		// Get total count if needed
-		let totalDocumentsCount: number | undefined = undefined;
-		if (limit) {
-			totalDocumentsCount = await executeMongoOperation(
-				collection,
-				(col) => col.countDocuments(filter),
-				{
-					operationName: "getTransactionsCount",
-					logContext: { network },
-				}
-			);
-		}
+		const totalDocumentsCount = await executeMongoOperation(
+			collection,
+			(col) => col.countDocuments(filter),
+			{
+				operationName: "getTransactionsCount",
+				logContext: { network },
+			}
+		);
 
 		return {
 			documents: documents as IHubTransaction[],

@@ -40,7 +40,7 @@ export class MappingsService {
 		originNetworkIds?: number[];
 		wrappedNetworkIds?: number[];
 		network: string;
-		limit?: number | undefined;
+		limit: number;
 		startAfter?: number | undefined;
 	}): Promise<{
 		documents: HubTokenMapping[];
@@ -93,12 +93,7 @@ export class MappingsService {
 		// Execute query
 		const documents = await executeMongoOperation(
 			collection,
-			(col) =>
-				col
-					.find(filter)
-					.sort(sort)
-					.limit(limit || 10)
-					.toArray(),
+			(col) => col.find(filter).sort(sort).limit(limit).toArray(),
 			{
 				operationName: "getMappings",
 				logContext: { network, filter },
