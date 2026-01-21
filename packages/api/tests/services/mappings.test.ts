@@ -2,9 +2,12 @@ import { describe, test, expect, beforeEach, mock } from "bun:test";
 import { MappingsService } from "../../src/services/mappings";
 import { mockServiceResponse } from "../test-utils";
 import type { Db, Collection } from "mongodb";
+import { Networks } from "../../src/enums";
 
 // Mock executeMongoOperation to simply execute the callback
+const originalModule = await import("@agglayer/bridge-hub-commons");
 mock.module("@agglayer/bridge-hub-commons", () => ({
+	...originalModule,
 	executeMongoOperation: async (collection: any, callback: any) => {
 		return await callback(collection);
 	},
@@ -146,8 +149,8 @@ describe("MappingsService", () => {
 	describe("getMappingsByToken", () => {
 		test("should make two separate queries for origin and wrapped tokens", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
-			const tokenNetwork = "1";
-			const network = "testnet";
+			const tokenNetwork = 1;
+			const network = Networks.TESTNET;
 
 			await mappingsService.getMappingsByToken(
 				tokenAddress,
@@ -175,8 +178,8 @@ describe("MappingsService", () => {
 
 		test("should handle null tokenAddress", async () => {
 			const tokenAddress = null;
-			const tokenNetwork = "1";
-			const network = "testnet";
+			const tokenNetwork = 1;
+			const network = Networks.TESTNET;
 
 			await mappingsService.getMappingsByToken(
 				tokenAddress as any,
@@ -191,49 +194,11 @@ describe("MappingsService", () => {
 			expect(firstCallFilter.originTokenAddress).toBeNull();
 		});
 
-		test("should handle null tokenNetwork", async () => {
-			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
-			const tokenNetwork = null;
-			const network = "testnet";
-
-			await mappingsService.getMappingsByToken(
-				tokenAddress,
-				tokenNetwork as any,
-				network
-			);
-
-			// Should still make two separate calls even with null tokenNetwork
-			expect(mockFind).toHaveBeenCalledTimes(2);
-
-			const firstCallFilter = (mockFind.mock.calls as any)[0][0];
-			// Number(null) = 0
-			expect(firstCallFilter.originTokenNetwork).toBe(0);
-		});
-
-		test("should handle both null parameters", async () => {
-			const tokenAddress = null;
-			const tokenNetwork = null;
-			const network = "testnet";
-
-			await mappingsService.getMappingsByToken(
-				tokenAddress as any,
-				tokenNetwork as any,
-				network
-			);
-
-			// Should still make two separate calls even with both nulls
-			expect(mockFind).toHaveBeenCalledTimes(2);
-
-			const firstCallFilter = (mockFind.mock.calls as any)[0][0];
-			expect(firstCallFilter.originTokenAddress).toBeNull();
-			expect(firstCallFilter.originTokenNetwork).toBe(0);
-		});
-
 		test("should return combined database response", async () => {
 			const result = await mappingsService.getMappingsByToken(
 				"0x1234",
-				"1",
-				"testnet"
+				1,
+				Networks.TESTNET
 			);
 
 			// Should return combined results from both calls

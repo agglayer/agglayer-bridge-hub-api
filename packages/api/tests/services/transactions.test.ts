@@ -5,7 +5,9 @@ import type { Db, Collection } from "mongodb";
 import { Networks } from "../../src/enums";
 
 // Mock executeMongoOperation to simply execute the callback
+const originalModule = await import("@agglayer/bridge-hub-commons");
 mock.module("@agglayer/bridge-hub-commons", () => ({
+	...originalModule,
 	executeMongoOperation: async (collection: any, callback: any) => {
 		return await callback(collection);
 	},

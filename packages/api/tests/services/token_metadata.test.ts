@@ -2,9 +2,12 @@ import { describe, test, expect, beforeEach, mock } from "bun:test";
 import { TokenMetadataService } from "../../src/services/token_metadata";
 import { mockTokenMapping } from "../test-utils";
 import type { Db, Collection } from "mongodb";
+import { Networks } from "../../src/enums";
 
 // Mock executeMongoOperation to simply execute the callback
+const originalModule = await import("@agglayer/bridge-hub-commons");
 mock.module("@agglayer/bridge-hub-commons", () => ({
+	...originalModule,
 	executeMongoOperation: async (collection: any, callback: any) => {
 		return await callback(collection);
 	},
@@ -116,7 +119,7 @@ describe("TokenMetadataService", () => {
 	describe("getTokenMetadata", () => {
 		test("should return metadata when mapping found with matching originTokenAddress", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
-			const network = "testnet";
+			const network = Networks.TESTNET;
 
 			// Mock MongoDB toArray to return the mapping
 			mockFind.mockReturnValueOnce({
@@ -168,7 +171,7 @@ describe("TokenMetadataService", () => {
 
 		test("should return metadata when mapping found with matching wrappedTokenAddress", async () => {
 			const tokenAddress = "0xabcdef1234567890abcdef1234567890abcdef12";
-			const network = "testnet";
+			const network = Networks.TESTNET;
 
 			mockFind.mockReturnValueOnce({
 				sort: mock(() => ({
@@ -211,7 +214,7 @@ describe("TokenMetadataService", () => {
 
 		test("should throw BadRequestError when RPC URL not found", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
-			const network = "testnet";
+			const network = Networks.TESTNET;
 
 			mockFind.mockReturnValueOnce({
 				sort: mock(() => ({
@@ -238,7 +241,7 @@ describe("TokenMetadataService", () => {
 
 		test("should throw error when contract calls fail", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
-			const network = "testnet";
+			const network = Networks.TESTNET;
 
 			mockFind.mockReturnValueOnce({
 				sort: mock(() => ({
@@ -267,7 +270,7 @@ describe("TokenMetadataService", () => {
 
 		test("should call fetchTokenMetadataFromAllRPCs when no mapping found", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
-			const network = "testnet";
+			const network = Networks.TESTNET;
 
 			mockFind.mockReturnValueOnce({
 				sort: mock(() => ({
@@ -302,7 +305,7 @@ describe("TokenMetadataService", () => {
 
 		test("should return undefined when no mapping and RPC calls fail", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
-			const network = "testnet";
+			const network = Networks.TESTNET;
 
 			mockFind.mockReturnValueOnce({
 				sort: mock(() => ({
@@ -328,7 +331,7 @@ describe("TokenMetadataService", () => {
 			const tokenAddress = "0x1234567890ABCDEF1234567890ABCDEF12345678"; // Uppercase
 			const mappingTokenAddress =
 				"0x1234567890abcdef1234567890abcdef12345678"; // Lowercase
-			const network = "testnet";
+			const network = Networks.TESTNET;
 
 			mockFind.mockReturnValueOnce({
 				sort: mock(() => ({
@@ -405,7 +408,7 @@ describe("TokenMetadataService", () => {
 
 		test("should try multiple RPCs if first one fails", async () => {
 			const tokenAddress = "0x1234567890abcdef1234567890abcdef12345678";
-			const network = "testnet";
+			const network = Networks.TESTNET;
 
 			mockFind.mockReturnValueOnce({
 				sort: mock(() => ({

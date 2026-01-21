@@ -105,7 +105,7 @@ export class MappingsService {
 
 	async getMappingsByToken(
 		tokenAddress: string,
-		tokenNetwork: string,
+		tokenNetwork: number,
 		network: Networks
 	): Promise<{
 		documents: HubTokenMapping[];
@@ -130,13 +130,13 @@ export class MappingsService {
 		// Query for origin tokens
 		const originTokenFilter = {
 			originTokenAddress: tokenAddress,
-			originTokenNetwork: Number(tokenNetwork),
+			originTokenNetwork: tokenNetwork,
 		};
 
 		// Query for wrapped tokens
 		const wrappedTokenFilter = {
 			wrappedTokenAddress: tokenAddress,
-			wrappedTokenNetwork: Number(tokenNetwork),
+			wrappedTokenNetwork: tokenNetwork,
 		};
 
 		const [originTokens, wrappedTokens] = await Promise.all([
