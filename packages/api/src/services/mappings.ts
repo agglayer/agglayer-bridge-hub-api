@@ -1,4 +1,4 @@
-import type { Db, Collection } from "mongodb";
+import type { Db, Collection, Filter, Sort } from "mongodb";
 import {
 	executeMongoOperation,
 	type IMappingDocument,
@@ -38,7 +38,7 @@ export class MappingsService {
 		wrappedNetworkIds?: number[];
 		network: Networks;
 		limit: number;
-		startAfter?: number | undefined;
+		startAfter?: number;
 	}): Promise<{
 		documents: HubTokenMapping[];
 		totalDocumentsCount?: number;
@@ -60,7 +60,7 @@ export class MappingsService {
 			this.db.collection(collectionName);
 
 		// Build MongoDB filter
-		const filter: any = {};
+		const filter: Filter<IMappingDocument> = {};
 
 		if (originTokenAddress) {
 			filter.originTokenAddress = originTokenAddress;
@@ -83,7 +83,7 @@ export class MappingsService {
 		}
 
 		// Build sort order
-		const sort: any = {
+		const sort: Sort = {
 			timestamp: -1,
 		};
 

@@ -1,6 +1,7 @@
 import {
 	executeMongoOperation,
 	type Collection,
+	type IHubTokenMappings,
 	type IMappingDocument,
 } from "@agglayer/bridge-hub-commons";
 import { CryptoHasher } from "bun";

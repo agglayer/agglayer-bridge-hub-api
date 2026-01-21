@@ -2,6 +2,7 @@ import {
 	executeMongoOperation,
 	TransactionStatus,
 	type Collection,
+	type Filter,
 	type IHubBridgedStatusTransactions,
 	type IHubBridgeTransaction,
 	type IHubLeafIncludedStatusTransactions,
@@ -145,7 +146,7 @@ export default class TransactionsService {
 		sourceNetwork: number,
 		afterId?: string
 	): Promise<IHubBridgedStatusTransactions[]> {
-		const filter: any = {
+		const filter: Filter<ITransactionDocument> = {
 			sourceNetwork,
 			status: TransactionStatus.BRIDGED,
 		};
@@ -234,7 +235,7 @@ export default class TransactionsService {
 		destinationNetwork: number,
 		afterId?: string
 	): Promise<IHubLeafIncludedStatusTransactions[]> {
-		const filter: any = {
+		const filter: Filter<ITransactionDocument> = {
 			destinationNetwork,
 			status: TransactionStatus.LEAF_INCLUDED,
 		};

@@ -1,5 +1,5 @@
 import { BadRequestError, Logger, ApiError } from "@polygonlabs/servercore";
-import type { Db, Collection } from "mongodb";
+import type { Db, Collection, Filter } from "mongodb";
 import {
 	executeMongoOperation,
 	type IMappingDocument,
@@ -129,7 +129,7 @@ export class TokenMetadataService {
 			this.db.collection(collectionName);
 
 		// Build MongoDB filter with $or query
-		const filter: any = {
+		const filter: Filter<IMappingDocument> = {
 			$or: [
 				{ originTokenAddress: tokenAddress },
 				{ wrappedTokenAddress: tokenAddress },

@@ -1,4 +1,4 @@
-import type { Db, Collection } from "mongodb";
+import type { Db, Collection, Filter, Sort } from "mongodb";
 import { CryptoHasher } from "bun";
 import {
 	executeMongoOperation,
@@ -48,7 +48,7 @@ export class TransactionService {
 		updatedSince?: number;
 		status?: string;
 		order?: "asc" | "desc";
-		startAfter?: string | number;
+		startAfter?: string;
 		limit: number;
 	}): Promise<{
 		documents: IHubTransaction[];
@@ -71,7 +71,7 @@ export class TransactionService {
 			this.db.collection(collectionName);
 
 		// Build MongoDB filter
-		const filter: any = {};
+		const filter: Filter<ITransactionDocument> = {};
 
 		if (fromAddress) {
 			filter.fromAddress = fromAddress;
@@ -99,7 +99,7 @@ export class TransactionService {
 		}
 
 		// Build sort order
-		const sort: any = {
+		const sort: Sort = {
 			hubUID: order === "asc" ? 1 : -1,
 		};
 
