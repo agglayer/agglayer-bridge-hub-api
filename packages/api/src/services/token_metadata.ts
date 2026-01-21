@@ -18,8 +18,8 @@ export class TokenMetadataService {
 	private readonly collectionId: Map<string, string>;
 	private readonly chainConfig: Map<string, Map<number, string>>;
 	private readonly bridgeAddress: Map<string, string>;
-	private readonly v1NetworkId: number = 1;
-	private readonly v2NetworkId: number = 20;
+	private readonly V1_NETWORK_ID: number = 1;
+	private readonly V2_NETWORK_ID: number = 20;
 
 	constructor(
 		database: Db,
@@ -164,9 +164,9 @@ export class TokenMetadataService {
 		const rpcUrl =
 			this.chainConfig.get(network)?.get(originTokenNetwork) || undefined;
 		const rpcUrlV1 =
-			this.chainConfig.get(network)?.get(this.v1NetworkId) || undefined;
+			this.chainConfig.get(network)?.get(this.V1_NETWORK_ID) || undefined;
 		const rpcUrlV2 =
-			this.chainConfig.get(network)?.get(this.v2NetworkId) || undefined;
+			this.chainConfig.get(network)?.get(this.V2_NETWORK_ID) || undefined;
 
 		if (!rpcUrl || !rpcUrlV1 || !rpcUrlV2) {
 			throw new BadRequestError(
@@ -253,15 +253,17 @@ export class TokenMetadataService {
 				// Calculate both v1 and v2 wrapped addresses
 				const v1Client = createPublicClient({
 					transport: http(
-						this.chainConfig.get(network)?.get(this.v1NetworkId) ||
-							rpcUrl
+						this.chainConfig
+							.get(network)
+							?.get(this.V1_NETWORK_ID) || rpcUrl
 					),
 				});
 
 				const v2Client = createPublicClient({
 					transport: http(
-						this.chainConfig.get(network)?.get(this.v2NetworkId) ||
-							rpcUrl
+						this.chainConfig
+							.get(network)
+							?.get(this.V2_NETWORK_ID) || rpcUrl
 					),
 				});
 
