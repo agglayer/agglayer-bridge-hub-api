@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.14](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.13...bridge-hub-api@1.5.14) (2026-01-22)
+
+### Bug Fixes
+
+- mark limit param as required, since default limit is being set in query validation ([6e18754](https://github.com/agglayer/agglayer-bridge-hub-api/commit/6e18754d7ab7f2803377edfe76742271f175b73c))
+- modify tokenMetadata file constants to SCREAMING_SNAKE_CASE ([1398001](https://github.com/agglayer/agglayer-bridge-hub-api/commit/13980016e18adc09b5dfb1c74f2f8bd8a414dc35))
+- pass limit to getTransactions call in healthcheck for auto-claim ([fb9a63f](https://github.com/agglayer/agglayer-bridge-hub-api/commit/fb9a63f59f7d1d381608b149301f30f94af7f7e7))
+- remove test for totalDocuments number when limit is not provided ([0540301](https://github.com/agglayer/agglayer-bridge-hub-api/commit/054030121f4471d61c1450cc664006c1e8e2b177))
+- set tokenNetwork param in mapping services to accept number ([a87e3eb](https://github.com/agglayer/agglayer-bridge-hub-api/commit/a87e3eb25bc8f97ae47655df9c205c7a539ce75d))
+- use Filter and Sort mongodb types fot the services filter and sort params ([e2edc9d](https://github.com/agglayer/agglayer-bridge-hub-api/commit/e2edc9d08e99c1edd7dbaf6c4d49bee7675be556))
+- use Networks enum type for network params in services ([c37fe47](https://github.com/agglayer/agglayer-bridge-hub-api/commit/c37fe47a5fa4f9ba0925b8d951b7b7750e2ee177))
+
 ## [1.5.13](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.12...bridge-hub-api@1.5.13) (2026-01-13)
 
 **Note:** Version bump only for package bridge-hub-api

@@ -1,7 +1,7 @@
 {
 	"name": "bridge-hub-consumer",
 	"type": "module",
-	"version": "1.6.4",
+	"version": "1.6.5",
 	"module": "src/index.ts",
 	"exports": "./dist/",
 	"scripts": {

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.5](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.4...bridge-hub-consumer@1.6.5) (2026-01-22)
+
+### Bug Fixes
+
+- mark limit param as required, since default limit is being set in query validation ([6e18754](https://github.com/agglayer/agglayer-bridge-hub-api/commit/6e18754d7ab7f2803377edfe76742271f175b73c))
+- use Filter and Sort mongodb types fot the services filter and sort params ([e2edc9d](https://github.com/agglayer/agglayer-bridge-hub-api/commit/e2edc9d08e99c1edd7dbaf6c4d49bee7675be556))
+
 ## [1.6.4](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.3...bridge-hub-consumer@1.6.4) (2026-01-13)
 
 **Note:** Version bump only for package bridge-hub-consumer
