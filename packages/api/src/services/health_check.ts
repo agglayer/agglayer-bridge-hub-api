@@ -1,31 +1,37 @@
 import { ApiError } from "@polygonlabs/servercore";
 import { TransactionService } from "./transactions";
 import { createPublicClient, http } from "viem";
-
-let chainConfig: Map<string, Map<number, string>>;
-const autoclaimAddress = "0x616b3Af96437f69B31D03EBbD64Bbc967CE80361";
+import { Networks } from "../enums";
 
 export class HealthCheckService {
-	static initializeHealthCheckService(
+	private readonly chainConfig: Map<string, Map<number, string>>;
+	private readonly transactionService: TransactionService;
+	private readonly autoclaimAddress =
+		"0x616b3Af96437f69B31D03EBbD64Bbc967CE80361";
+
+	constructor(
+		transactionService: TransactionService,
 		chainConfigParam: Map<string, Map<number, string>> = new Map([
 			["mainnet", new Map([])],
 			["testnet", new Map([])],
 			["devnet", new Map([])],
 		])
 	) {
-		chainConfig = chainConfigParam;
+		this.transactionService = transactionService;
+		this.chainConfig = chainConfigParam;
 	}
 
-	static async checkForAutoClaim(
-		network: string,
+	async checkForAutoClaim(
+		network: Networks,
 		networkId: string,
 		sourceNetworkIds: Array<number>
 	): Promise<boolean> {
-		const transactions = await TransactionService.getTransactions({
+		const transactions = await this.transactionService.getTransactions({
 			network,
 			destinationNetworkIds: [parseInt(networkId, 10)],
 			status: "READY_TO_CLAIM",
 			sourceNetworkIds,
+			limit: 20,
 		});
 
 		if (transactions?.documents?.length) {
@@ -44,7 +50,7 @@ export class HealthCheckService {
 			}
 		}
 
-		const rpc = chainConfig.get(network)?.get(parseInt(networkId, 10));
+		const rpc = this.chainConfig.get(network)?.get(parseInt(networkId, 10));
 		if (!rpc) {
 			throw new ApiError(
 				`RPC not configured for network ${network} ${networkId}`
@@ -55,7 +61,7 @@ export class HealthCheckService {
 			transport: http(rpc),
 		});
 		const balance = await client.getBalance({
-			address: autoclaimAddress as `0x${string}`,
+			address: this.autoclaimAddress as `0x${string}`,
 		});
 		if (balance < BigInt("10000000000000000")) {
 			throw new ApiError(

@@ -1,37 +1,29 @@
+import { BadRequestError, Logger, ApiError } from "@polygonlabs/servercore";
+import type { Db, Collection, Filter } from "mongodb";
 import {
-	BadRequestError,
-	Logger,
-	type IQueryOrderOperationParams,
-	type IQueryOrFilterParams,
-} from "@polygonlabs/servercore";
-import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
+	executeMongoOperation,
+	type IMappingDocument,
+} from "@agglayer/bridge-hub-commons";
 import { createPublicClient, http } from "viem";
 import { ERC20_ABI } from "../constants/erc20";
 import { BRIDGE_ABI_V2, BRIDGE_ABI_V1 } from "../constants/bridge";
 import type { TokenMetadata } from "../schemas";
-
-let db: DatabaseClient;
-let collectionId: Map<string, string>;
-let chainConfig: Map<string, Map<number, string>>;
-let bridgeAddress: Map<string, string>;
-const v1NetworkId: number = 1;
-const v2NetworkId: number = 20;
-
-// Order params for db request
-const orderParams: IQueryOrderOperationParams[] = [
-	{
-		field: "timestamp",
-		order: "desc",
-	},
-];
+import { Networks } from "../enums";
 
 export class TokenMetadataService {
-	static initializeTokenMetadataService(
-		database: DatabaseClient,
+	private readonly db: Db;
+	private readonly collectionId: Map<string, string>;
+	private readonly chainConfig: Map<string, Map<number, string>>;
+	private readonly bridgeAddress: Map<string, string>;
+	private readonly V1_NETWORK_ID: number = 1;
+	private readonly V2_NETWORK_ID: number = 20;
+
+	constructor(
+		database: Db,
 		collectionIdParam: Map<string, string> = new Map([
-			["mainnet", "mappings"],
-			["testnet", "mappings_testnet"],
-			["devnet", "mappings_testnet"],
+			["mainnet", "bridge_hub_api_mappings"],
+			["testnet", "bridge_hub_api_mappings_testnet"],
+			["devnet", "bridge_hub_api_mappings_testnet"],
 		]),
 		chainConfigParam: Map<string, Map<number, string>> = new Map([
 			["mainnet", new Map([])],
@@ -44,15 +36,13 @@ export class TokenMetadataService {
 			["devnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
 		])
 	) {
-		if (!db) {
-			db = database;
-			collectionId = collectionIdParam;
-			chainConfig = chainConfigParam;
-			bridgeAddress = bridgeAddressParam;
-		}
+		this.db = database;
+		this.collectionId = collectionIdParam;
+		this.chainConfig = chainConfigParam;
+		this.bridgeAddress = bridgeAddressParam;
 	}
 
-	private static async fetchERC20TokenData(
+	private async fetchERC20TokenData(
 		client: any,
 		tokenAddress: string
 	): Promise<{ name: string; symbol: string; decimals: number }> {
@@ -81,7 +71,7 @@ export class TokenMetadataService {
 		};
 	}
 
-	private static async calculateWrappedAddressV1(
+	private async calculateWrappedAddressV1(
 		client: any,
 		bridgeAddr: string,
 		originTokenNetwork: number,
@@ -104,7 +94,7 @@ export class TokenMetadataService {
 		})) as string;
 	}
 
-	private static async calculateWrappedAddressV2(
+	private async calculateWrappedAddressV2(
 		client: any,
 		bridgeAddr: string,
 		originTokenNetwork: number,
@@ -118,67 +108,62 @@ export class TokenMetadataService {
 		})) as string;
 	}
 
-	static async getTokenMetadata(
-		network: string,
+	async getTokenMetadata(
+		network: Networks,
 		tokenAddress: string
 	): Promise<TokenMetadata | undefined> {
-		if (!db || !collectionId) {
-			throw new Error(
-				"TokenMetadataService not initialized. Call initializeTokenMetadataService first."
+		const collectionName = this.collectionId.get(network);
+		if (!collectionName) {
+			throw new ApiError(
+				`No collection configured for network: ${network}`,
+				{
+					context: {
+						service: "TokenMetadataService",
+						network,
+						availableNetworks: Array.from(this.collectionId.keys()),
+					},
+				}
 			);
 		}
+		const collection: Collection<IMappingDocument> =
+			this.db.collection(collectionName);
 
-		// Create query params for db request
-		const queryParams: IQueryOrFilterParams[] = [];
+		// Build MongoDB filter with $or query
+		const filter: Filter<IMappingDocument> = {
+			$or: [
+				{ originTokenAddress: tokenAddress },
+				{ wrappedTokenAddress: tokenAddress },
+			],
+		};
 
-		if (tokenAddress) {
-			queryParams.push({
-				or: [
-					{
-						field: "originTokenAddress",
-						operator: "==",
-						value: tokenAddress,
-					},
-					{
-						field: "wrappedTokenAddress",
-						operator: "==",
-						value: tokenAddress,
-					},
-				],
-			});
-		}
+		// Execute query
+		const mappingsResult = await executeMongoOperation(
+			collection,
+			(col) =>
+				col.find(filter).sort({ timestamp: -1 }).limit(1).toArray(),
+			{
+				operationName: "getTokenMetadata",
+				logContext: { network, tokenAddress },
+			}
+		);
 
-		const mappings = await db
-			.getDocuments({
-				collectionPath: collectionId.get(network) || "",
-				limit: 1,
-				order: orderParams,
-				orFilters: queryParams,
-			})
-			.then((res) => {
-				if (res.documents.length > 0) {
-					return res.documents;
-				}
-				return undefined;
-			});
-
-		if (!mappings) {
+		if (!mappingsResult || mappingsResult.length === 0) {
 			return await this.fetchTokenMetadataFromAllRPCs(
 				network,
 				tokenAddress
 			);
 		}
 
-		const originTokenAddress = mappings[0].originTokenAddress;
-		const originTokenNetwork = mappings[0].originTokenNetwork;
+		const originTokenAddress = mappingsResult[0].originTokenAddress;
+		const originTokenNetwork = mappingsResult[0].originTokenNetwork;
 
 		//get token details from chain
 		const rpcUrl =
-			chainConfig.get(network)?.get(originTokenNetwork) || undefined;
+			this.chainConfig.get(network)?.get(originTokenNetwork) || undefined;
 		const rpcUrlV1 =
-			chainConfig.get(network)?.get(v1NetworkId) || undefined;
+			this.chainConfig.get(network)?.get(this.V1_NETWORK_ID) || undefined;
 		const rpcUrlV2 =
-			chainConfig.get(network)?.get(v2NetworkId) || undefined;
+			this.chainConfig.get(network)?.get(this.V2_NETWORK_ID) || undefined;
 
 		if (!rpcUrl || !rpcUrlV1 || !rpcUrlV2) {
 			throw new BadRequestError(
@@ -205,7 +190,7 @@ export class TokenMetadataService {
 
 		const wrappedTokenAddressV1 = await this.calculateWrappedAddressV1(
 			v1Client,
-			bridgeAddress.get(network) || "",
+			this.bridgeAddress.get(network) || "",
 			originTokenNetwork,
 			originTokenAddress,
 			tokenData.name,
@@ -215,7 +200,7 @@ export class TokenMetadataService {
 
 		const wrappedTokenAddressV2 = await this.calculateWrappedAddressV2(
 			v2Client,
-			bridgeAddress.get(network) || "",
+			this.bridgeAddress.get(network) || "",
 			originTokenNetwork,
 			originTokenAddress
 		);
@@ -231,26 +216,20 @@ export class TokenMetadataService {
 		};
 	}
 
-	private static async fetchTokenMetadataFromAllRPCs(
-		network: string,
+	private async fetchTokenMetadataFromAllRPCs(
+		network: Networks,
 		tokenAddress: string
 	): Promise<TokenMetadata | undefined> {
 		if (tokenAddress === "0x0000000000000000000000000000000000000000") {
 			return undefined;
 		}
 
-		if (!chainConfig || !bridgeAddress) {
-			throw new Error(
-				"TokenMetadataService not initialized. Call initializeTokenMetadataService first."
-			);
-		}
-
-		const networkChainConfig = chainConfig.get(network);
+		const networkChainConfig = this.chainConfig.get(network);
 		if (!networkChainConfig || networkChainConfig.size === 0) {
 			return undefined;
 		}
 
-		const bridgeAddr = bridgeAddress.get(network);
+		const bridgeAddr = this.bridgeAddress.get(network);
 		if (!bridgeAddr) {
 			Logger.warn(`Bridge address not found for network ${network}`);
 			return undefined;
@@ -271,13 +250,17 @@ export class TokenMetadataService {
 				// Calculate both v1 and v2 wrapped addresses
 				const v1Client = createPublicClient({
 					transport: http(
-						chainConfig.get(network)?.get(v1NetworkId) || rpcUrl
+						this.chainConfig
+							.get(network)
+							?.get(this.V1_NETWORK_ID) || rpcUrl
 					),
 				});
 
 				const v2Client = createPublicClient({
 					transport: http(
-						chainConfig.get(network)?.get(v2NetworkId) || rpcUrl
+						this.chainConfig
+							.get(network)
+							?.get(this.V2_NETWORK_ID) || rpcUrl
 					),
 				});
 

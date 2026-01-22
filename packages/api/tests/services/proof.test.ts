@@ -44,6 +44,7 @@ global.fetch = mockFetch as any;
 
 describe("ProofService", () => {
 	let testNetworkMap: Map<string, Map<number, string>>;
+	let proofService: ProofService;
 
 	beforeEach(() => {
 		mockFetch.mockClear();
@@ -66,37 +67,26 @@ describe("ProofService", () => {
 			],
 		]);
 
-		ProofService.initializeService(testNetworkMap);
+		// Create a new service instance for each test
+		proofService = new ProofService(testNetworkMap);
 	});
 
-	describe("initializeService", () => {
-		test("should initialize with network map", () => {
-			const newNetworkMap = new Map([
+	describe("constructor", () => {
+		test("should create instance successfully", () => {
+			// Create an instance to verify constructor works
+			const service = new ProofService(testNetworkMap);
+
+			expect(service).toBeDefined();
+
+			// Also verify custom maps can be passed
+			const customMap = new Map([
 				[
 					"custom",
 					new Map([[42, "https://custom.rpc.com/claim-proof"]]),
 				],
 			]);
-
-			ProofService.initializeService(newNetworkMap);
-
-			// Test that initialization doesn't throw
-			expect(true).toBe(true);
-		});
-
-		test("should not reinitialize if already initialized", () => {
-			const originalMap = new Map([
-				["original", new Map([[1, "https://original.com"]])],
-			]);
-			const newMap = new Map([
-				["new", new Map([[2, "https://new.com"]])],
-			]);
-
-			ProofService.initializeService(originalMap);
-			ProofService.initializeService(newMap); // Should not override
-
-			// Should not throw
-			expect(true).toBe(true);
+			const customService = new ProofService(customMap);
+			expect(customService).toBeDefined();
 		});
 	});
 
@@ -107,7 +97,7 @@ describe("ProofService", () => {
 			const depositCount = 42;
 			const leaf = 100;
 
-			const result = await ProofService.getProof(
+			const result = await proofService.getProof(
 				network,
 				sourceNetwork,
 				depositCount,
@@ -151,7 +141,7 @@ describe("ProofService", () => {
 				const depositCount = 42;
 				const leaf = 100;
 
-				await ProofService.getProof(
+				await proofService.getProof(
 					network,
 					sourceNetwork,
 					depositCount,
@@ -173,7 +163,7 @@ describe("ProofService", () => {
 			];
 
 			for (const { depositCount, leaf } of testCases) {
-				await ProofService.getProof("testnet", 1, depositCount, leaf);
+				await proofService.getProof("testnet", 1, depositCount, leaf);
 
 				const expectedUrl = `https://rpc1.testnet.example.com/claim-proof?network_id=1&deposit_count=${depositCount}&leaf_index=${leaf}`;
 				expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
@@ -204,7 +194,7 @@ describe("ProofService", () => {
 				json: () => Promise.resolve(customProof),
 			});
 
-			const result = await ProofService.getProof("testnet", 1, 42, 100);
+			const result = await proofService.getProof("testnet", 1, 42, 100);
 
 			expect(result).toBe(customProof);
 		});
@@ -215,7 +205,7 @@ describe("ProofService", () => {
 			const unsupportedNetwork = "unsupported";
 
 			expect(
-				ProofService.getProof(unsupportedNetwork, 1, 42, 100)
+				proofService.getProof(unsupportedNetwork, 1, 42, 100)
 			).rejects.toThrow("Network URL isn't supported");
 
 			expect(mockFetch).not.toHaveBeenCalled();
@@ -226,7 +216,7 @@ describe("ProofService", () => {
 			const unsupportedSourceNetwork = 999; // Not in the test config
 
 			expect(
-				ProofService.getProof(
+				proofService.getProof(
 					network,
 					unsupportedSourceNetwork,
 					42,
@@ -248,7 +238,7 @@ describe("ProofService", () => {
 			});
 
 			expect(
-				ProofService.getProof("testnet", 1, 42, 100)
+				proofService.getProof("testnet", 1, 42, 100)
 			).rejects.toThrow("Proof not found for given parameters");
 		});
 
@@ -259,7 +249,7 @@ describe("ProofService", () => {
 			});
 
 			expect(
-				ProofService.getProof("testnet", 1, 42, 100)
+				proofService.getProof("testnet", 1, 42, 100)
 			).rejects.toThrow("Error fetching Proof");
 		});
 
@@ -268,7 +258,7 @@ describe("ProofService", () => {
 			mockFetch.mockRejectedValueOnce(fetchError);
 
 			expect(
-				ProofService.getProof("testnet", 1, 42, 100)
+				proofService.getProof("testnet", 1, 42, 100)
 			).rejects.toThrow("Network connection failed");
 		});
 
@@ -276,7 +266,7 @@ describe("ProofService", () => {
 			mockFetch.mockRejectedValueOnce("String error");
 
 			expect(
-				ProofService.getProof("testnet", 1, 42, 100)
+				proofService.getProof("testnet", 1, 42, 100)
 			).rejects.toThrow("Error fetching Proof");
 		});
 
@@ -287,13 +277,13 @@ describe("ProofService", () => {
 			mockFetch.mockRejectedValueOnce(notFoundError);
 
 			expect(
-				ProofService.getProof("testnet", 1, 42, 100)
+				proofService.getProof("testnet", 1, 42, 100)
 			).rejects.toThrow("Custom not found error");
 		});
 
 		test("should include context information in NotFoundError for unsupported network", async () => {
 			try {
-				await ProofService.getProof("unsupported", 1, 42, 100);
+				await proofService.getProof("unsupported", 1, 42, 100);
 				expect(false).toBe(true); // Should not reach here
 			} catch (error) {
 				expect(error).toBeInstanceOf(MockNotFoundError);
@@ -314,7 +304,7 @@ describe("ProofService", () => {
 			});
 
 			try {
-				await ProofService.getProof("testnet", 1, 42, 100);
+				await proofService.getProof("testnet", 1, 42, 100);
 				expect(false).toBe(true); // Should not reach here
 			} catch (error) {
 				expect(error).toBeInstanceOf(MockNotFoundError);
@@ -329,7 +319,7 @@ describe("ProofService", () => {
 			mockFetch.mockRejectedValueOnce(new Error("Fetch failed"));
 
 			try {
-				await ProofService.getProof("testnet", 1, 42, 100);
+				await proofService.getProof("testnet", 1, 42, 100);
 				expect(false).toBe(true); // Should not reach here
 			} catch (error) {
 				expect(error).toBeInstanceOf(MockApiError);
@@ -343,7 +333,7 @@ describe("ProofService", () => {
 
 	describe("URL construction", () => {
 		test("should construct URL with correct query parameters", async () => {
-			await ProofService.getProof("testnet", 1, 42, 100);
+			await proofService.getProof("testnet", 1, 42, 100);
 
 			const calledUrl = (mockFetch.mock.calls as any)[0][0];
 			const url = new URL(calledUrl);
@@ -356,7 +346,7 @@ describe("ProofService", () => {
 		});
 
 		test("should handle special characters in URL construction", async () => {
-			await ProofService.getProof("testnet", 1, 42, 100);
+			await proofService.getProof("testnet", 1, 42, 100);
 
 			const calledUrl = (mockFetch.mock.calls as any)[0][0];
 
@@ -369,7 +359,7 @@ describe("ProofService", () => {
 
 	describe("edge cases", () => {
 		test("should handle zero values in parameters", async () => {
-			await ProofService.getProof("testnet", 1, 0, 0);
+			await proofService.getProof("testnet", 1, 0, 0);
 
 			expect(mockFetch).toHaveBeenCalledWith(
 				expect.stringContaining(
@@ -380,7 +370,7 @@ describe("ProofService", () => {
 
 		test("should handle large numeric values", async () => {
 			const largeValue = Number.MAX_SAFE_INTEGER;
-			await ProofService.getProof("testnet", 1, largeValue, largeValue);
+			await proofService.getProof("testnet", 1, largeValue, largeValue);
 
 			expect(mockFetch).toHaveBeenCalledWith(
 				expect.stringContaining(
@@ -390,7 +380,7 @@ describe("ProofService", () => {
 		});
 
 		test("should handle negative values", async () => {
-			await ProofService.getProof("testnet", 1, -1, -1);
+			await proofService.getProof("testnet", 1, -1, -1);
 
 			expect(mockFetch).toHaveBeenCalledWith(
 				expect.stringContaining("deposit_count=-1&leaf_index=-1")

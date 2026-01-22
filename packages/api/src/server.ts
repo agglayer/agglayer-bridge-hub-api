@@ -3,14 +3,19 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { Scalar } from "@scalar/hono-api-reference";
-import router from "./routes";
+import createRouter from "./routes";
 import { MappingsService } from "./services/mappings";
 import { TokenMetadataService } from "./services/token_metadata";
 import { TransactionService } from "./services/transactions";
 import { ProofService } from "./services/proof";
 import { HealthCheckService } from "./services";
-import { DatabaseClient } from "@polygonlabs/servercore-firestore";
-import healthCheckRoutes from "./routes/health_check";
+import { MongoDBClient } from "@agglayer/bridge-hub-commons";
+import createHealthCheckRoutes from "./routes/health_check";
+import {
+	BRIDGE_ADDRESSES,
+	MAPPINGS_COLLECTIONS,
+	TRANSACTIONS_COLLECTIONS,
+} from "./config";
 
 const app = new OpenAPIHono();
 
@@ -25,10 +30,10 @@ async function serve(): Promise<void> {
 		},
 	});
 
-	const database = new DatabaseClient({
-		projectId: process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
-		databaseId: process.env.FIRESTORE_DATABASE_ID ?? "",
-	});
+	const database = new MongoDBClient(
+		process.env.MONGODB_CONNECTION_URI || "mongodb://localhost:27017",
+		process.env.MONGODB_DB_NAME || "bridge_hub"
+	);
 	await database.connect();
 
 	// Parse the PROOF_CONFIG and RPC_CONFIG environment variable and convert it to a Map
@@ -62,42 +67,29 @@ async function serve(): Promise<void> {
 	}
 
 	// Initialize services
-	TransactionService.initializeTransactionService(
-		database,
-		new Map([
-			["mainnet", "bridge_hub_api_transactions"],
-			["testnet", "bridge_hub_api_transactions_testnet"],
-			["devnet", "bridge_hub_api_transactions_testnet"],
-		])
+	const transactionService = new TransactionService(
+		database.getDb(),
+		TRANSACTIONS_COLLECTIONS
 	);
 
-	MappingsService.initializeMappingsService(
-		database,
-		new Map([
-			["mainnet", "bridge_hub_api_mappings"],
-			["testnet", "bridge_hub_api_mappings_testnet"],
-			["devnet", "bridge_hub_api_mappings_testnet"],
-		])
+	const mappingsService = new MappingsService(
+		database.getDb(),
+		MAPPINGS_COLLECTIONS
 	);
 
-	TokenMetadataService.initializeTokenMetadataService(
-		database,
-		new Map([
-			["mainnet", "bridge_hub_api_mappings"],
-			["testnet", "bridge_hub_api_mappings_testnet"],
-			["devnet", "bridge_hub_api_mappings_testnet"],
-		]),
+	const tokenMetadataService = new TokenMetadataService(
+		database.getDb(),
+		MAPPINGS_COLLECTIONS,
 		rpcConfig,
-		new Map([
-			["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
-			["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
-			["devnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
-		])
+		BRIDGE_ADDRESSES
 	);
 
-	HealthCheckService.initializeHealthCheckService(rpcConfig);
+	const healthCheckService = new HealthCheckService(
+		transactionService,
+		rpcConfig
+	);
 
-	ProofService.initializeService(proofConfig);
+	const proofService = new ProofService(proofConfig);
 
 	// Middlewares
 	app.use("*", logger()); // Logs all requests
@@ -134,6 +126,14 @@ async function serve(): Promise<void> {
 	);
 
 	// Register routes with network parameter schema
+	const router = createRouter(
+		transactionService,
+		mappingsService,
+		proofService,
+		tokenMetadataService
+	);
+	const healthCheckRoutes = createHealthCheckRoutes(healthCheckService);
+
 	app.route("/:network", router);
 	app.route("/health-check", healthCheckRoutes);
 }

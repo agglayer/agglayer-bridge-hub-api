@@ -1,32 +1,39 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test";
-import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import { describe, test, expect, beforeEach, mock, beforeAll } from "bun:test";
+import { Logger } from "@polygonlabs/servercore";
 import TokenMappingsService from "../../src/services/mapping";
 import type { IHubTokenMappings } from "../../src/interfaces/token_mapping";
 
-const mockAddDocuments = mock((_params: any) => {});
+// Initialize Logger for tests
+beforeAll(() => {
+	Logger.create({});
+});
 
-const mockDatabase = {
-	addDocuments: mockAddDocuments,
-} as unknown as DatabaseClient;
+const mockBulkWrite = mock((_operations: any) => Promise.resolve({}));
+
+const mockCollection = {
+	bulkWrite: mockBulkWrite,
+	collectionName: "test_tokenMappings",
+	dbName: "test_db",
+} as any;
 
 describe("TokenMappingsService", () => {
 	let service: TokenMappingsService;
 	const mockCollectionId = "test_tokenMappings";
 
 	beforeEach(() => {
-		service = new TokenMappingsService(mockDatabase, mockCollectionId);
-		mockAddDocuments.mockClear();
+		service = new TokenMappingsService(mockCollection, mockCollectionId);
+		mockBulkWrite.mockClear();
 	});
 
 	describe("constructor", () => {
 		test("should initialize with default collection ID", () => {
-			const defaultService = new TokenMappingsService(mockDatabase);
+			const defaultService = new TokenMappingsService(mockCollection);
 			expect(defaultService).toBeInstanceOf(TokenMappingsService);
 		});
 
 		test("should initialize with custom collection ID", () => {
 			const customService = new TokenMappingsService(
-				mockDatabase,
+				mockCollection,
 				"custom_collection"
 			);
 			expect(customService).toBeInstanceOf(TokenMappingsService);
@@ -34,7 +41,7 @@ describe("TokenMappingsService", () => {
 	});
 
 	describe("generateDocId", () => {
-		test("should generate consistent document ID for same inputs", () => {
+		test("should generate consistent document ID for same inputs", async () => {
 			const mapping1: IHubTokenMappings = {
 				originTokenAddress:
 					"0x1234567890123456789012345678901234567890",
@@ -62,20 +69,24 @@ describe("TokenMappingsService", () => {
 			};
 
 			// Call saveTokenMappings to test the private generateDocId method indirectly
-			service.saveTokenMappings([mapping1]);
-			service.saveTokenMappings([mapping2]);
+			await service.saveTokenMappings([mapping1]);
+			await service.saveTokenMappings([mapping2]);
 
-			// Both calls should use the same docId since they have the same key fields
-			expect(mockAddDocuments).toHaveBeenCalledTimes(2);
+			// Both calls should use bulkWrite
+			expect(mockBulkWrite).toHaveBeenCalledTimes(2);
 
-			const firstCall = mockAddDocuments.mock.calls[0]?.[0];
-			const secondCall = mockAddDocuments.mock.calls[1]?.[0];
+			const firstCall = mockBulkWrite.mock.calls[0]?.[0];
+			const secondCall = mockBulkWrite.mock.calls[1]?.[0];
+
+			// Extract _id from replaceOne operations
+			const firstId = firstCall[0]?.replaceOne?.filter?._id;
+			const secondId = secondCall[0]?.replaceOne?.filter?._id;
 
 			// The docIds should be the same for both calls since they use the same key fields
-			expect(firstCall?.docIds[0]).toBe(secondCall?.docIds[0]);
+			expect(firstId).toBe(secondId);
 		});
 
-		test("should generate different document IDs for different key inputs", () => {
+		test("should generate different document IDs for different key inputs", async () => {
 			const mapping1: IHubTokenMappings = {
 				originTokenAddress:
 					"0x1234567890123456789012345678901234567890",
@@ -95,14 +106,18 @@ describe("TokenMappingsService", () => {
 					"0x9876543210987654321098765432109876543210", // Different origin address
 			};
 
-			service.saveTokenMappings([mapping1]);
-			service.saveTokenMappings([mapping2]);
+			await service.saveTokenMappings([mapping1]);
+			await service.saveTokenMappings([mapping2]);
 
-			const firstCall = mockAddDocuments.mock.calls[0]?.[0];
-			const secondCall = mockAddDocuments.mock.calls[1]?.[0];
+			const firstCall = mockBulkWrite.mock.calls[0]?.[0];
+			const secondCall = mockBulkWrite.mock.calls[1]?.[0];
+
+			// Extract _id from replaceOne operations
+			const firstId = firstCall[0]?.replaceOne?.filter?._id;
+			const secondId = secondCall[0]?.replaceOne?.filter?._id;
 
 			// The docIds should be different for different key fields
-			expect(firstCall?.docIds[0]).not.toBe(secondCall?.docIds[0]);
+			expect(firstId).not.toBe(secondId);
 		});
 	});
 
@@ -110,11 +125,7 @@ describe("TokenMappingsService", () => {
 		test("should save empty array without error", async () => {
 			await service.saveTokenMappings([]);
 
-			expect(mockAddDocuments).toHaveBeenCalledWith({
-				collectionPaths: mockCollectionId,
-				docDatas: [],
-				docIds: [],
-			});
+			expect(mockBulkWrite).toHaveBeenCalledWith([]);
 		});
 
 		test("should save single token mapping", async () => {
@@ -134,15 +145,15 @@ describe("TokenMappingsService", () => {
 
 			await service.saveTokenMappings([mapping]);
 
-			expect(mockAddDocuments).toHaveBeenCalledWith({
-				collectionPaths: mockCollectionId,
-				docDatas: [mapping],
-				docIds: expect.arrayContaining([expect.any(String)]),
-			});
+			expect(mockBulkWrite).toHaveBeenCalled();
 
-			const call = mockAddDocuments.mock.calls[0]?.[0];
-			expect(call?.docIds).toHaveLength(1);
-			expect(call?.docIds[0]).toMatch(/^[a-f0-9]{32}$/); // 32-char hex string
+			const call = mockBulkWrite.mock.calls[0]?.[0];
+			expect(call).toHaveLength(1);
+			expect(call[0]).toHaveProperty("replaceOne");
+
+			const docId = call[0]?.replaceOne?.filter?._id;
+			expect(docId).toMatch(/^[a-f0-9]{32}$/); // 32-char hex string
+			expect(docId).toHaveLength(32);
 		});
 
 		test("should save multiple token mappings", async () => {
@@ -177,20 +188,17 @@ describe("TokenMappingsService", () => {
 
 			await service.saveTokenMappings(mappings);
 
-			expect(mockAddDocuments).toHaveBeenCalledWith({
-				collectionPaths: mockCollectionId,
-				docDatas: mappings,
-				docIds: expect.arrayContaining([
-					expect.any(String),
-					expect.any(String),
-				]),
-			});
+			expect(mockBulkWrite).toHaveBeenCalled();
 
-			const call = mockAddDocuments.mock.calls[0]?.[0];
-			expect(call?.docIds).toHaveLength(2);
-			expect(call?.docIds[0]).toMatch(/^[a-f0-9]{32}$/);
-			expect(call?.docIds[1]).toMatch(/^[a-f0-9]{32}$/);
-			expect(call?.docIds[0]).not.toBe(call?.docIds[1]); // Should be different IDs
+			const call = mockBulkWrite.mock.calls[0]?.[0];
+			expect(call).toHaveLength(2);
+
+			const docId1 = call[0]?.replaceOne?.filter?._id;
+			const docId2 = call[1]?.replaceOne?.filter?._id;
+
+			expect(docId1).toMatch(/^[a-f0-9]{32}$/);
+			expect(docId2).toMatch(/^[a-f0-9]{32}$/);
+			expect(docId1).not.toBe(docId2); // Should be different IDs
 		});
 
 		test("should generate 32-character hex document IDs", async () => {
@@ -210,8 +218,8 @@ describe("TokenMappingsService", () => {
 
 			await service.saveTokenMappings([mapping]);
 
-			const call = mockAddDocuments.mock.calls[0]?.[0];
-			const docId = call?.docIds[0];
+			const call = mockBulkWrite.mock.calls[0]?.[0];
+			const docId = call[0]?.replaceOne?.filter?._id;
 
 			expect(docId).toMatch(/^[a-f0-9]{32}$/);
 			expect(docId).toHaveLength(32);
@@ -263,9 +271,12 @@ describe("TokenMappingsService", () => {
 
 			await service.saveTokenMappings([mapping1, mapping2]);
 
-			const call = mockAddDocuments.mock.calls[0]?.[0];
-			expect(call?.docIds).toHaveLength(2);
-			expect(call?.docIds[0]).not.toBe(call?.docIds[1]); // Should generate different IDs
+			const call = mockBulkWrite.mock.calls[0]?.[0];
+			expect(call).toHaveLength(2);
+
+			const docId1 = call[0]?.replaceOne?.filter?._id;
+			const docId2 = call[1]?.replaceOne?.filter?._id;
+			expect(docId1).not.toBe(docId2); // Should generate different IDs
 		});
 
 		test("should handle very long addresses", async () => {
@@ -285,8 +296,9 @@ describe("TokenMappingsService", () => {
 				service.saveTokenMappings([mapping])
 			).resolves.toBeUndefined();
 
-			const call = mockAddDocuments.mock.calls[0]?.[0];
-			expect(call?.docIds[0]).toMatch(/^[a-f0-9]{32}$/);
+			const call = mockBulkWrite.mock.calls[0]?.[0];
+			const docId = call[0]?.replaceOne?.filter?._id;
+			expect(docId).toMatch(/^[a-f0-9]{32}$/);
 		});
 	});
 });

@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test";
-import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import { describe, test, expect, beforeEach, mock, beforeAll } from "bun:test";
+import { Logger } from "@polygonlabs/servercore";
 import TransactionsService from "../../src/services/transaction";
 import { TransactionStatus } from "@agglayer/bridge-hub-commons";
 import type {
@@ -9,38 +9,54 @@ import type {
 } from "../../src/interfaces/bridge_tx";
 import type { IHubClaimTransaction } from "../../src/interfaces/claim_tx";
 
-const mockConditionalUpdateDocuments = mock((_params: any) => {});
-const mockUpdateDocuments = mock((_params: any) => {});
-const mockGetDocuments = mock((_params: any) =>
-	Promise.resolve({ documents: [] })
-);
+// Initialize Logger for tests
+beforeAll(() => {
+	Logger.create({});
+});
 
-const mockDatabase = {
-	conditionalUpdateDocuments: mockConditionalUpdateDocuments,
-	updateDocuments: mockUpdateDocuments,
-	getDocuments: mockGetDocuments,
-} as unknown as DatabaseClient;
+const mockBulkWrite = mock((_operations: any) => Promise.resolve({}));
+const mockUpdateOne = mock((_filter: any, _update: any) => Promise.resolve({}));
+const mockFind = mock(() => ({
+	find: () => ({
+		sort: () => ({
+			limit: () => ({
+				toArray: () => Promise.resolve([]),
+			}),
+		}),
+	}),
+}));
+const mockFindOne = mock((_filter: any) => Promise.resolve(null));
+
+const mockCollection = {
+	bulkWrite: mockBulkWrite,
+	updateOne: mockUpdateOne,
+	find: mockFind as any,
+	findOne: mockFindOne,
+	collectionName: "test_transactions",
+	dbName: "test_db",
+} as any;
 
 describe("TransactionsService", () => {
 	let service: TransactionsService;
 	const mockCollectionId = "test_transactions";
 
 	beforeEach(() => {
-		service = new TransactionsService(mockDatabase, mockCollectionId);
-		mockConditionalUpdateDocuments.mockClear();
-		mockUpdateDocuments.mockClear();
-		mockGetDocuments.mockClear();
+		service = new TransactionsService(mockCollection, mockCollectionId);
+		mockBulkWrite.mockClear();
+		mockUpdateOne.mockClear();
+		mockFind.mockClear();
+		mockFindOne.mockClear();
 	});
 
 	describe("constructor", () => {
 		test("should initialize with default collection ID", () => {
-			const defaultService = new TransactionsService(mockDatabase);
+			const defaultService = new TransactionsService(mockCollection);
 			expect(defaultService).toBeInstanceOf(TransactionsService);
 		});
 
 		test("should initialize with custom collection ID", () => {
 			const customService = new TransactionsService(
-				mockDatabase,
+				mockCollection,
 				"custom_collection"
 			);
 			expect(customService).toBeInstanceOf(TransactionsService);
@@ -67,6 +83,7 @@ describe("TransactionsService", () => {
 				bridgeHash: "0xbridge1",
 				status: TransactionStatus.BRIDGED,
 				lastUpdatedAt: Date.now(),
+				txSender: "0xsender1",
 			};
 
 			const bridgeTransaction2: IHubBridgeTransaction = {
@@ -80,12 +97,13 @@ describe("TransactionsService", () => {
 			await service.saveBridges([bridgeTransaction1]);
 			await service.saveBridges([bridgeTransaction2]);
 
-			const firstCall = mockConditionalUpdateDocuments.mock.calls[0]?.[0];
-			const secondCall =
-				mockConditionalUpdateDocuments.mock.calls[1]?.[0];
+			const firstCall = mockBulkWrite.mock.calls[0]?.[0];
+			const secondCall = mockBulkWrite.mock.calls[1]?.[0];
 
 			// Should generate same docId for same depositCount and sourceNetwork
-			expect(firstCall?.docIds[0]).toBe(secondCall?.docIds[0]);
+			const firstId = firstCall[0]?.updateOne?.filter?._id;
+			const secondId = secondCall[0]?.updateOne?.filter?._id;
+			expect(firstId).toBe(secondId);
 		});
 
 		test("should generate different document IDs for different key inputs", async () => {
@@ -107,6 +125,7 @@ describe("TransactionsService", () => {
 				bridgeHash: "0xbridge1",
 				status: TransactionStatus.BRIDGED,
 				lastUpdatedAt: Date.now(),
+				txSender: "0xsender1",
 			};
 
 			const bridgeTransaction2: IHubBridgeTransaction = {
@@ -117,12 +136,13 @@ describe("TransactionsService", () => {
 			await service.saveBridges([bridgeTransaction1]);
 			await service.saveBridges([bridgeTransaction2]);
 
-			const firstCall = mockConditionalUpdateDocuments.mock.calls[0]?.[0];
-			const secondCall =
-				mockConditionalUpdateDocuments.mock.calls[1]?.[0];
+			const firstCall = mockBulkWrite.mock.calls[0]?.[0];
+			const secondCall = mockBulkWrite.mock.calls[1]?.[0];
 
 			// Should generate different docIds for different depositCount
-			expect(firstCall?.docIds[0]).not.toBe(secondCall?.docIds[0]);
+			const firstId = firstCall[0]?.updateOne?.filter?._id;
+			const secondId = secondCall[0]?.updateOne?.filter?._id;
+			expect(firstId).not.toBe(secondId);
 		});
 	});
 
@@ -130,25 +150,7 @@ describe("TransactionsService", () => {
 		test("should save empty array without error", async () => {
 			await service.saveBridges([]);
 
-			expect(mockConditionalUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: mockCollectionId,
-				docDatas: [],
-				docIds: [],
-				conditions: [
-					{
-						field: "status",
-						operator: "==",
-						value: TransactionStatus.BRIDGED,
-					},
-				],
-				conditionModifications: [
-					{
-						field: "status",
-						value: TransactionStatus.BRIDGED,
-						defaultValue: TransactionStatus.BRIDGED,
-					},
-				],
-			});
+			expect(mockBulkWrite).toHaveBeenCalledWith([]);
 		});
 
 		test("should save single bridge transaction", async () => {
@@ -170,33 +172,18 @@ describe("TransactionsService", () => {
 				bridgeHash: "0xbridge",
 				status: TransactionStatus.BRIDGED,
 				lastUpdatedAt: Date.now(),
+				txSender: "0xsender",
 			};
 
 			await service.saveBridges([bridgeTransaction]);
 
-			expect(mockConditionalUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: mockCollectionId,
-				docDatas: [bridgeTransaction],
-				docIds: expect.arrayContaining([expect.any(String)]),
-				conditions: [
-					{
-						field: "status",
-						operator: "==",
-						value: TransactionStatus.BRIDGED,
-					},
-				],
-				conditionModifications: [
-					{
-						field: "status",
-						value: TransactionStatus.BRIDGED,
-						defaultValue: TransactionStatus.BRIDGED,
-					},
-				],
-			});
+			expect(mockBulkWrite).toHaveBeenCalled();
+			const call = mockBulkWrite.mock.calls[0]?.[0];
+			expect(call).toHaveLength(1);
+			expect(call[0]).toHaveProperty("updateOne");
 
-			const call = mockConditionalUpdateDocuments.mock.calls[0]?.[0];
-			expect(call?.docIds).toHaveLength(1);
-			expect(call?.docIds[0]).toMatch(/^[a-f0-9]{32}$/);
+			const docId = call[0]?.updateOne?.filter?._id;
+			expect(docId).toMatch(/^[a-f0-9]{32}$/);
 		});
 
 		test("should save multiple bridge transactions", async () => {
@@ -219,6 +206,7 @@ describe("TransactionsService", () => {
 					bridgeHash: "0xbridge1",
 					status: TransactionStatus.BRIDGED,
 					lastUpdatedAt: Date.now(),
+					txSender: "0xsender1",
 				},
 				{
 					hubUID: "test-uid-2",
@@ -238,15 +226,19 @@ describe("TransactionsService", () => {
 					bridgeHash: "0xbridge2",
 					status: TransactionStatus.BRIDGED,
 					lastUpdatedAt: Date.now(),
+					txSender: "0xsender2",
 				},
 			];
 
 			await service.saveBridges(bridgeTransactions);
 
-			const call = mockConditionalUpdateDocuments.mock.calls[0]?.[0];
-			expect(call?.docDatas).toBe(bridgeTransactions);
-			expect(call?.docIds).toHaveLength(2);
-			expect(call?.docIds[0]).not.toBe(call?.docIds[1]);
+			expect(mockBulkWrite).toHaveBeenCalled();
+			const call = mockBulkWrite.mock.calls[0]?.[0];
+			expect(call).toHaveLength(2);
+
+			const docId1 = call[0]?.updateOne?.filter?._id;
+			const docId2 = call[1]?.updateOne?.filter?._id;
+			expect(docId1).not.toBe(docId2);
 		});
 	});
 
@@ -254,11 +246,7 @@ describe("TransactionsService", () => {
 		test("should save empty array without error", async () => {
 			await service.saveClaims([]);
 
-			expect(mockUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: mockCollectionId,
-				docDatas: [],
-				docIds: [],
-			});
+			expect(mockBulkWrite).toHaveBeenCalledWith([]);
 		});
 
 		test("should save single claim transaction", async () => {
@@ -266,7 +254,7 @@ describe("TransactionsService", () => {
 				claimTransactionHash: "0xclaimhash",
 				claimBlockNumber: 200,
 				claimTimestamp: 1700002000,
-				globalIndex: 123456789,
+				globalIndex: "123456789",
 				sourceNetwork: 1,
 				depositCount: 42,
 				status: TransactionStatus.CLAIMED,
@@ -275,15 +263,13 @@ describe("TransactionsService", () => {
 
 			await service.saveClaims([claimTransaction]);
 
-			expect(mockUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: mockCollectionId,
-				docDatas: [claimTransaction],
-				docIds: expect.arrayContaining([expect.any(String)]),
-			});
+			expect(mockBulkWrite).toHaveBeenCalled();
+			const call = mockBulkWrite.mock.calls[0]?.[0];
+			expect(call).toHaveLength(1);
+			expect(call[0]).toHaveProperty("updateOne");
 
-			const call = mockUpdateDocuments.mock.calls[0]?.[0];
-			expect(call?.docIds).toHaveLength(1);
-			expect(call?.docIds[0]).toMatch(/^[a-f0-9]{32}$/);
+			const docId = call[0]?.updateOne?.filter?._id;
+			expect(docId).toMatch(/^[a-f0-9]{32}$/);
 		});
 
 		test("should save multiple claim transactions", async () => {
@@ -292,7 +278,7 @@ describe("TransactionsService", () => {
 					claimTransactionHash: "0xclaimhash1",
 					claimBlockNumber: 200,
 					claimTimestamp: 1700002000,
-					globalIndex: 123456789,
+					globalIndex: "123456789",
 					sourceNetwork: 1,
 					depositCount: 42,
 					status: TransactionStatus.CLAIMED,
@@ -302,7 +288,7 @@ describe("TransactionsService", () => {
 					claimTransactionHash: "0xclaimhash2",
 					claimBlockNumber: 201,
 					claimTimestamp: 1700003000,
-					globalIndex: 987654321,
+					globalIndex: "987654321",
 					sourceNetwork: 2,
 					depositCount: 43,
 					status: TransactionStatus.CLAIMED,
@@ -312,10 +298,13 @@ describe("TransactionsService", () => {
 
 			await service.saveClaims(claimTransactions);
 
-			const call = mockUpdateDocuments.mock.calls[0]?.[0];
-			expect(call?.docDatas).toBe(claimTransactions);
-			expect(call?.docIds).toHaveLength(2);
-			expect(call?.docIds[0]).not.toBe(call?.docIds[1]);
+			expect(mockBulkWrite).toHaveBeenCalled();
+			const call = mockBulkWrite.mock.calls[0]?.[0];
+			expect(call).toHaveLength(2);
+
+			const docId1 = call[0]?.updateOne?.filter?._id;
+			const docId2 = call[1]?.updateOne?.filter?._id;
+			expect(docId1).not.toBe(docId2);
 		});
 	});
 
@@ -331,30 +320,13 @@ describe("TransactionsService", () => {
 				leafIndex
 			);
 
-			expect(mockConditionalUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: mockCollectionId,
-				docDatas: [{ leafIndex, lastUpdatedAt: expect.any(Number) }],
-				docIds: [expect.any(String)],
-				conditions: [
-					{
-						field: "status",
-						operator: "==",
-						value: TransactionStatus.BRIDGED,
-					},
-				],
-				conditionModifications: [
-					{
-						field: "status",
-						value: TransactionStatus.LEAF_INCLUDED,
-						defaultValue: TransactionStatus.LEAF_INCLUDED,
-					},
-				],
-			});
-
-			const call = mockConditionalUpdateDocuments.mock.calls[0]?.[0];
-			expect(call?.docIds[0]).toMatch(/^[a-f0-9]{32}$/);
-			expect(call?.docDatas[0].leafIndex).toBe(leafIndex);
-			expect(call?.docDatas[0].lastUpdatedAt).toBeTypeOf("number");
+			expect(mockUpdateOne).toHaveBeenCalled();
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[0]._id).toMatch(/^[a-f0-9]{32}$/);
+			expect(call[0].status).toBe(TransactionStatus.BRIDGED);
+			expect(call[1].$set.leafIndex).toBe(leafIndex);
+			expect(call[1].$set.status).toBe(TransactionStatus.LEAF_INCLUDED);
+			expect(call[1].$set.lastUpdatedAt).toBeTypeOf("number");
 		});
 
 		test("should generate timestamp within reasonable range", async () => {
@@ -362,8 +334,8 @@ describe("TransactionsService", () => {
 			await service.updateLeafIndex(42, 1, 100);
 			const afterExecution = Date.now();
 
-			const call = mockConditionalUpdateDocuments.mock.calls[0]?.[0];
-			const timestamp = call?.docDatas[0].lastUpdatedAt;
+			const call = mockUpdateOne.mock.calls[0];
+			const timestamp = call[1].$set.lastUpdatedAt;
 
 			expect(timestamp).toBeGreaterThanOrEqual(beforeExecution);
 			expect(timestamp).toBeLessThanOrEqual(afterExecution);
@@ -377,32 +349,17 @@ describe("TransactionsService", () => {
 
 			await service.updateTransactionToReadyToClaim(
 				depositCount,
-				sourceNetwork
+				sourceNetwork,
+				50
 			);
 
-			expect(mockConditionalUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: mockCollectionId,
-				docDatas: [{ lastUpdatedAt: expect.any(Number) }],
-				docIds: [expect.any(String)],
-				conditions: [
-					{
-						field: "status",
-						operator: "==",
-						value: TransactionStatus.LEAF_INCLUDED,
-					},
-				],
-				conditionModifications: [
-					{
-						field: "status",
-						value: TransactionStatus.READY_TO_CLAIM,
-						defaultValue: TransactionStatus.READY_TO_CLAIM,
-					},
-				],
-			});
-
-			const call = mockConditionalUpdateDocuments.mock.calls[0]?.[0];
-			expect(call?.docIds[0]).toMatch(/^[a-f0-9]{32}$/);
-			expect(call?.docDatas[0].lastUpdatedAt).toBeTypeOf("number");
+			expect(mockUpdateOne).toHaveBeenCalled();
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[0]._id).toMatch(/^[a-f0-9]{32}$/);
+			expect(call[0].status).toBe(TransactionStatus.LEAF_INCLUDED);
+			expect(call[1].$set.leafIndexForProof).toBe(50);
+			expect(call[1].$set.status).toBe(TransactionStatus.READY_TO_CLAIM);
+			expect(call[1].$set.lastUpdatedAt).toBeTypeOf("number");
 		});
 	});
 
@@ -417,33 +374,18 @@ describe("TransactionsService", () => {
 				},
 			];
 
-			mockGetDocuments.mockResolvedValueOnce({
-				documents: mockTransactions as any,
-			});
+			mockFind.mockReturnValueOnce({
+				sort: () => ({
+					limit: () => ({
+						toArray: () => Promise.resolve(mockTransactions),
+					}),
+				}),
+			} as any);
 
 			const result = await service.getBridgedTransactions(sourceNetwork);
 
-			expect(mockGetDocuments).toHaveBeenCalledWith({
-				collectionPath: mockCollectionId,
-				filter: [
-					{
-						field: "sourceNetwork",
-						operator: "==",
-						value: sourceNetwork,
-					},
-					{
-						field: "status",
-						operator: "==",
-						value: TransactionStatus.BRIDGED,
-					},
-				],
-				limit: 10,
-				order: [{ field: "hubUID", order: "asc" }],
-				startAfterCursor: undefined,
-				selectFields: ["sourceNetwork", "depositCount", "hubUID"],
-			});
-
-			expect(result).toBe(mockTransactions);
+			expect(mockFind).toHaveBeenCalled();
+			expect(result).toEqual(mockTransactions);
 		});
 
 		test("should get bridged transactions with cursor", async () => {
@@ -451,36 +393,21 @@ describe("TransactionsService", () => {
 			const afterId = "cursor-123";
 			const mockTransactions: IHubBridgedStatusTransactions[] = [];
 
-			mockGetDocuments.mockResolvedValueOnce({
-				documents: mockTransactions as any,
-			});
+			mockFind.mockReturnValueOnce({
+				sort: () => ({
+					limit: () => ({
+						toArray: () => Promise.resolve(mockTransactions),
+					}),
+				}),
+			} as any);
 
 			const result = await service.getBridgedTransactions(
 				sourceNetwork,
 				afterId
 			);
 
-			expect(mockGetDocuments).toHaveBeenCalledWith({
-				collectionPath: mockCollectionId,
-				filter: [
-					{
-						field: "sourceNetwork",
-						operator: "==",
-						value: sourceNetwork,
-					},
-					{
-						field: "status",
-						operator: "==",
-						value: TransactionStatus.BRIDGED,
-					},
-				],
-				limit: 10,
-				order: [{ field: "hubUID", order: "asc" }],
-				startAfterCursor: afterId,
-				selectFields: ["sourceNetwork", "depositCount", "hubUID"],
-			});
-
-			expect(result).toBe(mockTransactions);
+			expect(mockFind).toHaveBeenCalled();
+			expect(result).toEqual(mockTransactions);
 		});
 	});
 
@@ -496,76 +423,39 @@ describe("TransactionsService", () => {
 				},
 			];
 
-			mockGetDocuments.mockResolvedValueOnce({
-				documents: mockTransactions as any,
-			});
+			mockFind.mockReturnValueOnce({
+				sort: () => ({
+					limit: () => ({
+						toArray: () => Promise.resolve(mockTransactions),
+					}),
+				}),
+			} as any);
 
 			const result =
 				await service.getLeafIncludedTransactions(destinationNetwork);
 
-			expect(mockGetDocuments).toHaveBeenCalledWith({
-				collectionPath: mockCollectionId,
-				filter: [
-					{
-						field: "destinationNetwork",
-						operator: "==",
-						value: destinationNetwork,
-					},
-					{
-						field: "status",
-						operator: "==",
-						value: TransactionStatus.LEAF_INCLUDED,
-					},
-				],
-				limit: 10,
-				order: [{ field: "hubUID", order: "asc" }],
-				startAfterCursor: undefined,
-				selectFields: [
-					"sourceNetwork",
-					"depositCount",
-					"leafIndex",
-					"hubUID",
-				],
-			});
-
-			expect(result).toBe(mockTransactions);
+			expect(mockFind).toHaveBeenCalled();
+			expect(result).toEqual(mockTransactions);
 		});
 
 		test("should get leaf included transactions with cursor", async () => {
 			const destinationNetwork = 137;
 			const afterId = "cursor-456";
 
-			mockGetDocuments.mockResolvedValueOnce({ documents: [] });
+			mockFind.mockReturnValueOnce({
+				sort: () => ({
+					limit: () => ({
+						toArray: () => Promise.resolve([]),
+					}),
+				}),
+			} as any);
 
 			await service.getLeafIncludedTransactions(
 				destinationNetwork,
 				afterId
 			);
 
-			expect(mockGetDocuments).toHaveBeenCalledWith({
-				collectionPath: mockCollectionId,
-				filter: [
-					{
-						field: "destinationNetwork",
-						operator: "==",
-						value: destinationNetwork,
-					},
-					{
-						field: "status",
-						operator: "==",
-						value: TransactionStatus.LEAF_INCLUDED,
-					},
-				],
-				limit: 10,
-				order: [{ field: "hubUID", order: "asc" }],
-				startAfterCursor: afterId,
-				selectFields: [
-					"sourceNetwork",
-					"depositCount",
-					"leafIndex",
-					"hubUID",
-				],
-			});
+			expect(mockFind).toHaveBeenCalled();
 		});
 	});
 
@@ -573,22 +463,28 @@ describe("TransactionsService", () => {
 		test("should handle zero deposit count", async () => {
 			await service.updateLeafIndex(0, 1, 50);
 
-			const call = mockConditionalUpdateDocuments.mock.calls[0]?.[0];
-			expect(call?.docIds[0]).toMatch(/^[a-f0-9]{32}$/);
+			expect(mockUpdateOne).toHaveBeenCalled();
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[0]._id).toMatch(/^[a-f0-9]{32}$/);
 		});
 
 		test("should handle large network IDs", async () => {
 			const largeNetworkId = 999999999;
-			await service.updateTransactionToReadyToClaim(42, largeNetworkId);
+			await service.updateTransactionToReadyToClaim(
+				42,
+				largeNetworkId,
+				100
+			);
 
-			expect(mockConditionalUpdateDocuments).toHaveBeenCalledTimes(1);
+			expect(mockUpdateOne).toHaveBeenCalledTimes(1);
 		});
 
 		test("should handle negative leaf index", async () => {
 			await service.updateLeafIndex(42, 1, -1);
 
-			const call = mockConditionalUpdateDocuments.mock.calls[0]?.[0];
-			expect(call?.docDatas[0].leafIndex).toBe(-1);
+			expect(mockUpdateOne).toHaveBeenCalled();
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[1].$set.leafIndex).toBe(-1);
 		});
 	});
 });

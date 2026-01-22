@@ -1,12 +1,13 @@
-import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
-import type { IHubTokenMappings } from "../interfaces/token_mapping";
+import {
+	executeMongoOperation,
+	type Collection,
+	type IHubTokenMappings,
+	type IMappingDocument,
+} from "@agglayer/bridge-hub-commons";
 import { CryptoHasher } from "bun";
 
 export default class TokenMappingsService {
-	constructor(
-		private readonly database: DatabaseClient,
-		private readonly collectionId: string = "bridge_hub_api_tokenMappings"
-	) {}
+	constructor(private readonly collection: Collection<IMappingDocument>) {}
 
 	private generateDocId(
 		originTokenAddress: string,
@@ -23,45 +24,54 @@ export default class TokenMappingsService {
 	public async saveTokenMappings(
 		mappings: IHubTokenMappings[]
 	): Promise<void> {
-		const docIds: string[] = [];
-		mappings.forEach((mapping) => {
-			const docId = this.generateDocId(
+		const documents = mappings.map((mapping) => ({
+			_id: this.generateDocId(
 				mapping.originTokenAddress,
 				mapping.originTokenNetwork,
 				mapping.wrappedTokenNetwork
-			);
-			docIds.push(docId);
-		});
+			),
+			...mapping,
+		}));
 
-		this.database.addDocuments({
-			collectionPaths: this.collectionId,
-			docDatas: mappings,
-			docIds: docIds,
-		});
+		await executeMongoOperation(
+			this.collection,
+			async (col) => {
+				// Use bulkWrite for efficient upsert operations
+				const operations = documents.map((doc) => ({
+					replaceOne: {
+						filter: { _id: doc._id },
+						replacement: doc,
+						upsert: true,
+					},
+				}));
+				return col.bulkWrite(operations);
+			},
+			{
+				operationName: "saveTokenMappings",
+				logContext: { count: mappings.length },
+			}
+		);
 	}
 
 	public async getTokenMapping(
 		transactionHash: string,
 		blockNumber: number
 	): Promise<IHubTokenMappings[]> {
-		return await this.database
-			.getDocuments({
-				collectionPath: this.collectionId,
-				filter: [
-					{
-						field: "transactionHash",
-						operator: "==",
-						value: transactionHash,
-					},
-					{
-						field: "blockNumber",
-						operator: "==",
-						value: blockNumber,
-					},
-				],
-				limit: 1,
-				order: [{ field: "blockNumber", order: "desc" }],
-			})
-			.then((res) => res.documents as IHubTokenMappings[]);
+		return await executeMongoOperation(
+			this.collection,
+			(col) =>
+				col
+					.find({
+						transactionHash,
+						blockNumber,
+					})
+					.sort({ blockNumber: -1 })
+					.limit(1)
+					.toArray(),
+			{
+				operationName: "getTokenMapping",
+				logContext: { transactionHash, blockNumber },
+			}
+		);
 	}
 }

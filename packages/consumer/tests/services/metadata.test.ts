@@ -1,49 +1,42 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test";
-import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import { describe, test, expect, beforeEach, mock, beforeAll } from "bun:test";
+import { Logger } from "@polygonlabs/servercore";
 import MetadataService from "../../src/services/metadata";
 import type { IHubMetadata } from "../../src/interfaces/metadata";
 
-const mockUpdateDocuments = mock((_params: any) => Promise.resolve());
-const mockGetDocument = mock((_params: any) => Promise.resolve({}));
+// Initialize Logger for tests
+beforeAll(() => {
+	Logger.create({});
+});
 
-const mockDatabase = {
-	updateDocuments: mockUpdateDocuments,
-	getDocument: mockGetDocument,
-} as unknown as DatabaseClient;
+const mockUpdateOne = mock((_filter: any, _update: any) => Promise.resolve({}));
+const mockFindOne = mock((_filter: any) => Promise.resolve({}));
+
+const mockCollection = {
+	updateOne: mockUpdateOne,
+	findOne: mockFindOne,
+	collectionName: "test_metadata",
+	dbName: "test_db",
+} as any;
 
 describe("MetadataService", () => {
 	let service: MetadataService;
-	const mockCollectionId = "test_metadata";
 	const mockDocId = "test_lastIndexedTransactions";
 
 	beforeEach(() => {
-		service = new MetadataService(
-			mockDatabase,
-			mockCollectionId,
-			mockDocId
-		);
-		mockUpdateDocuments.mockClear();
-		mockGetDocument.mockClear();
+		service = new MetadataService(mockCollection, mockDocId);
+		mockUpdateOne.mockClear();
+		mockFindOne.mockClear();
 	});
 
 	describe("constructor", () => {
-		test("should initialize with default collection and doc IDs", () => {
-			const defaultService = new MetadataService(mockDatabase);
+		test("should initialize with default doc ID", () => {
+			const defaultService = new MetadataService(mockCollection);
 			expect(defaultService).toBeInstanceOf(MetadataService);
 		});
 
-		test("should initialize with custom collection ID only", () => {
+		test("should initialize with custom doc ID", () => {
 			const customService = new MetadataService(
-				mockDatabase,
-				"custom_collection"
-			);
-			expect(customService).toBeInstanceOf(MetadataService);
-		});
-
-		test("should initialize with custom collection and doc IDs", () => {
-			const customService = new MetadataService(
-				mockDatabase,
-				"custom_collection",
+				mockCollection,
 				"custom_doc"
 			);
 			expect(customService).toBeInstanceOf(MetadataService);
@@ -58,11 +51,11 @@ describe("MetadataService", () => {
 
 			await service.saveLastIndexedTxs(metadata);
 
-			expect(mockUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: [mockCollectionId],
-				docDatas: [metadata],
-				docIds: [mockDocId],
-			});
+			expect(mockUpdateOne).toHaveBeenCalled();
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[0]).toEqual({ _id: mockDocId });
+			expect(call[1].$set).toEqual(metadata);
+			expect(call[1].$setOnInsert).toEqual({ _id: mockDocId });
 		});
 
 		test("should save metadata with claim block number", async () => {
@@ -72,11 +65,10 @@ describe("MetadataService", () => {
 
 			await service.saveLastIndexedTxs(metadata);
 
-			expect(mockUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: [mockCollectionId],
-				docDatas: [metadata],
-				docIds: [mockDocId],
-			});
+			expect(mockUpdateOne).toHaveBeenCalled();
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[0]).toEqual({ _id: mockDocId });
+			expect(call[1].$set).toEqual(metadata);
 		});
 
 		test("should save metadata with mapping block number", async () => {
@@ -86,11 +78,10 @@ describe("MetadataService", () => {
 
 			await service.saveLastIndexedTxs(metadata);
 
-			expect(mockUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: [mockCollectionId],
-				docDatas: [metadata],
-				docIds: [mockDocId],
-			});
+			expect(mockUpdateOne).toHaveBeenCalled();
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[0]).toEqual({ _id: mockDocId });
+			expect(call[1].$set).toEqual(metadata);
 		});
 
 		test("should save metadata with all fields", async () => {
@@ -102,13 +93,11 @@ describe("MetadataService", () => {
 
 			await service.saveLastIndexedTxs(metadata);
 
-			expect(mockUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: [mockCollectionId],
-				docDatas: [metadata],
-				docIds: [mockDocId],
-			});
-
-			expect(mockUpdateDocuments).toHaveBeenCalledTimes(1);
+			expect(mockUpdateOne).toHaveBeenCalled();
+			expect(mockUpdateOne).toHaveBeenCalledTimes(1);
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[0]).toEqual({ _id: mockDocId });
+			expect(call[1].$set).toEqual(metadata);
 		});
 
 		test("should save empty metadata object", async () => {
@@ -116,11 +105,10 @@ describe("MetadataService", () => {
 
 			await service.saveLastIndexedTxs(metadata);
 
-			expect(mockUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: [mockCollectionId],
-				docDatas: [metadata],
-				docIds: [mockDocId],
-			});
+			expect(mockUpdateOne).toHaveBeenCalled();
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[0]).toEqual({ _id: mockDocId });
+			expect(call[1].$set).toEqual(metadata);
 		});
 
 		test("should handle database promise without throwing", async () => {
@@ -142,41 +130,38 @@ describe("MetadataService", () => {
 				lastIndexedClaimBlockNumber: 50000,
 			};
 
-			mockGetDocument.mockResolvedValueOnce(mockMetadata);
+			mockFindOne.mockResolvedValueOnce(mockMetadata);
 
 			const result = await service.getLastIndexedTxs();
 
-			expect(mockGetDocument).toHaveBeenCalledWith({
-				collectionId: mockCollectionId,
-				docId: mockDocId,
-			});
+			expect(mockFindOne).toHaveBeenCalledWith({ _id: mockDocId });
 
-			expect(result).toBe(mockMetadata);
+			expect(result).toEqual(mockMetadata);
 		});
 
 		test("should handle empty metadata response", async () => {
 			const emptyMetadata = {};
-			mockGetDocument.mockResolvedValueOnce(emptyMetadata);
+			mockFindOne.mockResolvedValueOnce(emptyMetadata);
 
 			const result = await service.getLastIndexedTxs();
 
-			expect(result).toBe(emptyMetadata);
+			expect(result).toEqual(emptyMetadata);
 		});
 
 		test("should handle null response from database", async () => {
-			mockGetDocument.mockResolvedValueOnce(null as any);
+			mockFindOne.mockResolvedValueOnce(null as any);
 
 			const result = await service.getLastIndexedTxs();
 
-			expect(result).toBeNull();
+			expect(result).toEqual({});
 		});
 
 		test("should handle undefined response from database", async () => {
-			mockGetDocument.mockResolvedValueOnce(undefined as any);
+			mockFindOne.mockResolvedValueOnce(undefined as any);
 
 			const result = await service.getLastIndexedTxs();
 
-			expect(result).toBeUndefined();
+			expect(result).toEqual({});
 		});
 
 		test("should pass through database response without modification", async () => {
@@ -190,62 +175,55 @@ describe("MetadataService", () => {
 				},
 			};
 
-			mockGetDocument.mockResolvedValueOnce(complexMetadata);
+			mockFindOne.mockResolvedValueOnce(complexMetadata);
 
 			const result = await service.getLastIndexedTxs();
 
-			expect(result).toBe(complexMetadata);
 			expect(result).toEqual(complexMetadata);
 		});
 	});
 
 	describe("integration with different constructor parameters", () => {
 		test("should work with default collection and doc IDs", async () => {
-			const defaultService = new MetadataService(mockDatabase);
+			const defaultService = new MetadataService(mockCollection);
 			const metadata: IHubMetadata = {
 				lastIndexedBridgeDepositCount: 42,
 			};
 
 			await defaultService.saveLastIndexedTxs(metadata);
 
-			expect(mockUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: ["bridge_hub_api_metadata"],
-				docDatas: [metadata],
-				docIds: ["lastIndexedTransactions"],
-			});
+			expect(mockUpdateOne).toHaveBeenCalled();
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[0]).toEqual({ _id: "lastIndexedTransactions" });
+			expect(call[1].$set).toEqual(metadata);
 		});
 
-		test("should work with custom collection ID and default doc ID", async () => {
+		test("should work with custom doc ID", async () => {
 			const customService = new MetadataService(
-				mockDatabase,
+				mockCollection,
 				"custom_metadata"
 			);
 			const metadata: IHubMetadata = { lastIndexedClaimBlockNumber: 789 };
 
 			await customService.saveLastIndexedTxs(metadata);
 
-			expect(mockUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: ["custom_metadata"],
-				docDatas: [metadata],
-				docIds: ["lastIndexedTransactions"],
-			});
+			expect(mockUpdateOne).toHaveBeenCalled();
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[0]).toEqual({ _id: "custom_metadata" });
+			expect(call[1].$set).toEqual(metadata);
 		});
 
-		test("should get document with custom parameters", async () => {
+		test("should get document with custom doc ID", async () => {
 			const customService = new MetadataService(
-				mockDatabase,
-				"custom_collection",
+				mockCollection,
 				"custom_doc"
 			);
 
-			mockGetDocument.mockResolvedValueOnce({ test: "data" });
+			mockFindOne.mockResolvedValueOnce({ test: "data" });
 
 			await customService.getLastIndexedTxs();
 
-			expect(mockGetDocument).toHaveBeenCalledWith({
-				collectionId: "custom_collection",
-				docId: "custom_doc",
-			});
+			expect(mockFindOne).toHaveBeenCalledWith({ _id: "custom_doc" });
 		});
 	});
 
@@ -258,11 +236,9 @@ describe("MetadataService", () => {
 
 			await service.saveLastIndexedTxs(metadata);
 
-			expect(mockUpdateDocuments).toHaveBeenCalledWith({
-				collectionPaths: [mockCollectionId],
-				docDatas: [metadata],
-				docIds: [mockDocId],
-			});
+			expect(mockUpdateOne).toHaveBeenCalled();
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[1].$set).toEqual(metadata);
 		});
 
 		test("should handle zero values", async () => {
@@ -274,8 +250,8 @@ describe("MetadataService", () => {
 
 			await service.saveLastIndexedTxs(metadata);
 
-			const call = mockUpdateDocuments.mock.calls[0]?.[0];
-			expect(call?.docDatas[0]).toEqual(metadata);
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[1].$set).toEqual(metadata);
 		});
 
 		test("should handle negative values", async () => {
@@ -286,8 +262,8 @@ describe("MetadataService", () => {
 
 			await service.saveLastIndexedTxs(metadata);
 
-			const call = mockUpdateDocuments.mock.calls[0]?.[0];
-			expect(call?.docDatas[0]).toEqual(metadata);
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[1].$set).toEqual(metadata);
 		});
 
 		test("should maintain object reference integrity", async () => {
@@ -297,8 +273,8 @@ describe("MetadataService", () => {
 
 			await service.saveLastIndexedTxs(metadata);
 
-			const call = mockUpdateDocuments.mock.calls[0]?.[0];
-			expect(call?.docDatas[0]).toBe(metadata); // Same reference
+			const call = mockUpdateOne.mock.calls[0];
+			expect(call[1].$set).toEqual(metadata);
 		});
 	});
 });

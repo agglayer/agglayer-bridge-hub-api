@@ -1,45 +1,36 @@
-import type {
-	IQueryFilterOperationParams,
-	IQueryOrderOperationParams,
-	IQueryOrFilterParams,
-} from "@polygonlabs/servercore";
-import type { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import type { Db, Collection, Filter, Sort } from "mongodb";
 import { CryptoHasher } from "bun";
+import {
+	executeMongoOperation,
+	type ITransactionDocument,
+} from "@agglayer/bridge-hub-commons";
+import { ApiError } from "@polygonlabs/servercore";
 import type { IHubTransaction } from "../schemas";
-
-let db: DatabaseClient;
-let collectionId: Map<string, string>;
-
-// Order params for db request
-const orderParams: IQueryOrderOperationParams[] = [
-	{
-		field: "hubUID",
-		order: "desc",
-	},
-];
+import { Networks } from "../enums";
 
 export class TransactionService {
-	static initializeTransactionService(
-		database: DatabaseClient,
+	private readonly db: Db;
+	private readonly collectionId: Map<string, string>;
+
+	constructor(
+		database: Db,
 		collectionIdParams: Map<string, string> = new Map([
-			["mainnet", "transactions"],
-			["testnet", "transactions_testnet"],
-			["devnet", "transactions_testnet"],
+			["mainnet", "bridge_hub_api_transactions"],
+			["testnet", "bridge_hub_api_transactions_testnet"],
+			["devnet", "bridge_hub_api_transactions_testnet"],
 		])
 	) {
-		if (!db) {
-			db = database;
-			collectionId = collectionIdParams;
-		}
+		this.db = database;
+		this.collectionId = collectionIdParams;
 	}
 
-	static generateDocId(depositCount: number, sourceNetwork: number): string {
+	generateDocId(depositCount: number, sourceNetwork: number): string {
 		const hasher = new CryptoHasher("sha256");
 		hasher.update(`${depositCount}:${sourceNetwork}`);
 		return hasher.digest("hex").slice(0, 32);
 	}
 
-	static async getTransactions({
+	async getTransactions({
 		network,
 		fromAddress,
 		sourceNetworkIds,
@@ -50,104 +41,123 @@ export class TransactionService {
 		startAfter,
 		limit,
 	}: {
-		network: string;
+		network: Networks;
 		fromAddress?: string;
 		sourceNetworkIds?: number[];
 		destinationNetworkIds?: number[];
 		updatedSince?: number;
 		status?: string;
 		order?: "asc" | "desc";
-		startAfter?: string | number;
-		limit?: number;
+		startAfter?: string;
+		limit: number;
 	}): Promise<{
 		documents: IHubTransaction[];
 		totalDocumentsCount?: number;
 	}> {
-		if (!db || !collectionId) {
-			throw new Error(
-				"TransactionService not initialized. Call initializeTransactionService first."
+		const collectionName = this.collectionId.get(network);
+		if (!collectionName) {
+			throw new ApiError(
+				`No collection configured for network: ${network}`,
+				{
+					context: {
+						service: "TransactionService",
+						network,
+						availableNetworks: Array.from(this.collectionId.keys()),
+					},
+				}
 			);
 		}
+		const collection: Collection<ITransactionDocument> =
+			this.db.collection(collectionName);
 
-		// Create query params for db request
-		const queryParams: IQueryFilterOperationParams[] = [];
-		let orderParamsOverride: IQueryOrderOperationParams[] | undefined =
-			undefined;
-		const orFilters: IQueryOrFilterParams[] = [];
-
-		if (order) {
-			orderParamsOverride = [{ field: "hubUID", order: order }];
-		}
+		// Build MongoDB filter
+		const filter: Filter<ITransactionDocument> = {};
 
 		if (fromAddress) {
-			queryParams.push({
-				field: "fromAddress",
-				operator: "==",
-				value: fromAddress,
-			});
+			filter.fromAddress = fromAddress;
 		}
 
-		if (sourceNetworkIds) {
-			queryParams.push({
-				field: "sourceNetwork",
-				operator: "in",
-				value: sourceNetworkIds,
-			});
+		if (sourceNetworkIds && sourceNetworkIds.length > 0) {
+			filter.sourceNetwork = { $in: sourceNetworkIds };
 		}
 
-		if (destinationNetworkIds) {
-			queryParams.push({
-				field: "destinationNetwork",
-				operator: "in",
-				value: destinationNetworkIds,
-			});
+		if (destinationNetworkIds && destinationNetworkIds.length > 0) {
+			filter.destinationNetwork = { $in: destinationNetworkIds };
 		}
 
 		if (updatedSince) {
-			queryParams.push({
-				field: "lastUpdatedAt",
-				operator: ">=",
-				value: updatedSince,
-			});
-
-			queryParams.push({
-				field: "transactionHash",
-				operator: "!=",
-				value: "",
-			});
+			filter.lastUpdatedAt = { $gte: updatedSince };
+			filter.transactionHash = { $ne: "" };
 		}
 
 		if (status) {
-			queryParams.push({
-				field: "status",
-				operator: "==",
-				value: status,
-			});
+			filter.status = status;
 		}
 
-		return await db.getDocuments({
-			collectionPath: collectionId.get(network) || "",
-			filter: queryParams,
-			limit,
-			order: orderParamsOverride || orderParams,
-			startAfterCursor: startAfter,
-			orFilters: orFilters,
-			returnTotalDocumentsCount: true,
-		});
+		if (startAfter) {
+			filter.hubUID = { $lt: startAfter };
+		}
+
+		// Build sort order
+		const sort: Sort = {
+			hubUID: order === "asc" ? 1 : -1,
+		};
+
+		// Execute query
+		const documents = await executeMongoOperation(
+			collection,
+			(col) => col.find(filter).sort(sort).limit(limit).toArray(),
+			{
+				operationName: "getTransactions",
+				logContext: { network, filter },
+			}
+		);
+
+		// Get total count if needed
+		const totalDocumentsCount = await executeMongoOperation(
+			collection,
+			(col) => col.countDocuments(filter),
+			{
+				operationName: "getTransactionsCount",
+				logContext: { network },
+			}
+		);
+
+		return {
+			documents: documents as IHubTransaction[],
+			totalDocumentsCount,
+		};
 	}
 
-	static async getTransactionByDepositCount(
-		network: string,
+	async getTransactionByDepositCount(
+		network: Networks,
 		docId: string
 	): Promise<IHubTransaction | null> {
-		if (!db || !collectionId) {
-			throw new Error(
-				"TransactionService not initialized. Call initializeTransactionService first."
+		const collectionName = this.collectionId.get(network);
+		if (!collectionName) {
+			throw new ApiError(
+				`No collection configured for network: ${network}`,
+				{
+					context: {
+						service: "TransactionService",
+						network,
+						availableNetworks: Array.from(this.collectionId.keys()),
+					},
+				}
 			);
 		}
-		return (await db.getDocument({
-			collectionId: collectionId.get(network) || "",
-			docId,
-		})) as IHubTransaction;
+		const collection: Collection<ITransactionDocument> =
+			this.db.collection(collectionName);
+
+		const document = await executeMongoOperation(
+			collection,
+			(col) => col.findOne({ _id: docId }),
+			{
+				operationName: "getTransactionByDepositCount",
+				logContext: { network, docId },
+			}
+		);
+
+		return document as IHubTransaction | null;
 	}
 }

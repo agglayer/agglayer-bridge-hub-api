@@ -104,7 +104,6 @@ export const mockExpectedHubBridgeTransaction: IHubBridgeTransaction = {
 	status: TransactionStatus.BRIDGED,
 	lastUpdatedAt: expect.any(Number),
 	txSender: "0xrelayer123456789abcdef",
-	metadata: "0x",
 };
 
 export const mockClaimTx: IClaimTx = {

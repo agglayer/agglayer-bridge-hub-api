@@ -3,79 +3,83 @@ import type { Context } from "hono";
 import { getResponseContext } from "../middlewares/response_context";
 import { HealthCheckService } from "../services/health_check";
 
-export const checkServiceHealth = async (c: Context) => {
-	try {
-		// const rawConfig = JSON.parse(process.env.CHAIN_CONFIG || "{}");
-		// const failedServices: string[] = [];
+export class HealthCheckController {
+	constructor(private readonly healthCheckService: HealthCheckService) {}
 
-		// for (const [network, config] of Object.entries(rawConfig)) {
-		//     for (const [chainId, baseUrl] of Object.entries(
-		//         config as Record<string, string>
-		//     )) {
-		//         const healthCheckUrl = `${baseUrl.replace(
-		//             "/claim-proof",
-		//             ""
-		//         )}/l1-info-tree-index?network_id=0&deposit_count=0`;
+	checkServiceHealth = async (c: Context) => {
+		try {
+			// const rawConfig = JSON.parse(process.env.CHAIN_CONFIG || "{}");
+			// const failedServices: string[] = [];
 
-		//         try {
-		//             const response = await fetch(healthCheckUrl, {
-		//                 method: "GET",
-		//                 headers: {
-		//                     Accept: "application/json",
-		//                 },
-		//                 signal: AbortSignal.timeout(5000),
-		//             });
+			// for (const [network, config] of Object.entries(rawConfig)) {
+			//     for (const [chainId, baseUrl] of Object.entries(
+			//         config as Record<string, string>
+			//     )) {
+			//         const healthCheckUrl = `${baseUrl.replace(
+			//             "/claim-proof",
+			//             ""
+			//         )}/l1-info-tree-index?network_id=0&deposit_count=0`;
 
-		//             if (!response.ok) {
-		//                 failedServices.push(
-		//                     `${network}:${chainId} (${healthCheckUrl}) - HTTP ${response.status}`
-		//                 );
-		//             }
-		//         } catch (error) {
-		//             failedServices.push(
-		//                 `${network}:${chainId} (${healthCheckUrl}) - ${
-		//                     error instanceof Error
-		//                         ? error.message
-		//                         : "Unknown error"
-		//                 }`
-		//             );
-		//         }
-		//     }
-		// }
+			//         try {
+			//             const response = await fetch(healthCheckUrl, {
+			//                 method: "GET",
+			//                 headers: {
+			//                     Accept: "application/json",
+			//                 },
+			//                 signal: AbortSignal.timeout(5000),
+			//             });
 
-		// if (failedServices.length > 0) {
-		//     throw new ApiError(
-		//         `One or more proof services are unhealthy: ${failedServices.join(
-		//             ", "
-		//         )}`
-		//     );
-		// }
+			//             if (!response.ok) {
+			//                 failedServices.push(
+			//                     `${network}:${chainId} (${healthCheckUrl}) - HTTP ${response.status}`
+			//                 );
+			//             }
+			//         } catch (error) {
+			//             failedServices.push(
+			//                 `${network}:${chainId} (${healthCheckUrl}) - ${
+			//                     error instanceof Error
+			//                         ? error.message
+			//                         : "Unknown error"
+			//                 }`
+			//             );
+			//         }
+			//     }
+			// }
 
-		return handleResponse(getResponseContext(c), {
-			status: "success",
-			message: "All services are working correctly",
-		});
-	} catch (error) {
-		return handleError(getResponseContext(c), error as ApiError);
-	}
-};
+			// if (failedServices.length > 0) {
+			//     throw new ApiError(
+			//         `One or more proof services are unhealthy: ${failedServices.join(
+			//             ", "
+			//         )}`
+			//     );
+			// }
 
-export const checkAutoClaimServiceHealth = async (c: Context) => {
-	try {
-		const { networkId, sourceNetworkIds } = c.get("validatedQuery");
-		const { network } = c.get("validatedParams");
+			return handleResponse(getResponseContext(c), {
+				status: "success",
+				message: "All services are working correctly",
+			});
+		} catch (error) {
+			return handleError(getResponseContext(c), error as ApiError);
+		}
+	};
 
-		await HealthCheckService.checkForAutoClaim(
-			network,
-			networkId,
-			sourceNetworkIds
-		);
+	checkAutoClaimServiceHealth = async (c: Context) => {
+		try {
+			const { networkId, sourceNetworkIds } = c.get("validatedQuery");
+			const { network } = c.get("validatedParams");
 
-		return handleResponse(getResponseContext(c), {
-			status: "success",
-			message: "All services are working correctly",
-		});
-	} catch (error) {
-		return handleError(getResponseContext(c), error as ApiError);
-	}
-};
+			await this.healthCheckService.checkForAutoClaim(
+				network,
+				networkId,
+				sourceNetworkIds
+			);
+
+			return handleResponse(getResponseContext(c), {
+				status: "success",
+				message: "All services are working correctly",
+			});
+		} catch (error) {
+			return handleError(getResponseContext(c), error as ApiError);
+		}
+	};
+}

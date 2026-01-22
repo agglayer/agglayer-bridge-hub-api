@@ -13,7 +13,14 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodejs && \
       adduser -S bunuser -u 1001
 
+# Copy the consumer dist files
 COPY --from=builder /app/packages/consumer/dist ./dist
+
+# Copy the commons package (workspace dependency)
+COPY --from=builder /app/packages/commons/dist ./node_modules/@agglayer/bridge-hub-commons/dist
+COPY --from=builder /app/packages/commons/package.json ./node_modules/@agglayer/bridge-hub-commons/package.json
+
+# Copy node_modules (for other dependencies)
 COPY --from=builder /app/node_modules ./node_modules
 
 USER bunuser

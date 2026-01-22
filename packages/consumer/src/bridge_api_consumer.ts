@@ -287,7 +287,7 @@ export class BridgeAPIConsumer {
 
 	private async getStartValues(field: MetadataFields): Promise<number> {
 		const metadataDoc = await this.metadataService.getLastIndexedTxs();
-		return metadataDoc ? (metadataDoc[field] as number) : 0;
+		return metadataDoc?.[field] ?? 0;
 	}
 
 	private onError(

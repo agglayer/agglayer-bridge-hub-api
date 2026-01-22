@@ -23,23 +23,19 @@ import TokenMappingsService from "./services/mapping";
 import TransactionsService from "./services/transaction";
 import MetadataService from "./services/metadata";
 import MetadataMapper from "./mappers/metadata";
-import { DatabaseClient } from "@polygonlabs/servercore-firestore";
+import { MongoDBClient } from "@agglayer/bridge-hub-commons";
 import { ClaimReadinessConsumer } from "./claim_readiness_consumer";
 import bridgeAbi from "./interfaces/PolygonZkEVMBridge";
+import { BRIDGE_ADDRESSES, COLLECTIONS_CONFIG } from "./config";
 
-let database: DatabaseClient;
-
-// Static configuration and cached environment variables
-const BRIDGE_ADDRESSES = new Map([
-	["mainnet", "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe"],
-	["testnet", "0x1348947e282138d8f377b467F7D9c2EB0F335d1f"],
-]);
+let database: MongoDBClient;
 
 const NETWORK_ID = process.env.NETWORK_ID || "0";
 const BRIDGE_SERVICE_URL = process.env.BRIDGE_SERVICE_URL;
 const NETWORK = process.env.NETWORK || "mainnet";
 const BRIDGE_CONTRACT_ADDRESS = process.env.BRIDGE_CONTRACT_ADDRESS;
 const ETROG_UPDATE_BLOCK_NUMBER = process.env.ETROG_UPDATE_BLOCK_NUMBER || "0";
+const METADATA_DOC = process.env.METADATA_DOC || "lastIndexedTransactions";
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
 // Helper function to build Bridge API URLs
@@ -58,32 +54,21 @@ const fetchWithValidation = async (url: string): Promise<any> => {
 async function start(): Promise<void> {
 	try {
 		const collectionsConfig =
-			NETWORK === "mainnet"
-				? {
-						transactions: "bridge_hub_api_transactions",
-						tokenMappings: "bridge_hub_api_mappings",
-						metadata: "bridge_hub_api_metadata",
-					}
-				: {
-						transactions: "bridge_hub_api_transactions_testnet",
-						tokenMappings: "bridge_hub_api_mappings_testnet",
-						metadata: "bridge_hub_api_metadata_testnet",
-					};
+			COLLECTIONS_CONFIG.get(NETWORK) ||
+			COLLECTIONS_CONFIG.get("devnet")!;
 
-		database = new DatabaseClient({
-			projectId: process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
-			databaseId: process.env.FIRESTORE_DATABASE_ID ?? "",
-		});
+		database = new MongoDBClient(
+			process.env.MONGODB_CONNECTION_URI || "mongodb://localhost:27017",
+			process.env.MONGODB_DB_NAME || "bridge_hub"
+		);
 		await database.connect();
 
 		const transactionService = new TransactionsService(
-			database,
-			collectionsConfig.transactions
+			database.getCollection(collectionsConfig.transactions)
 		);
 
 		const tokenMappingsService = new TokenMappingsService(
-			database,
-			collectionsConfig.tokenMappings
+			database.getCollection(collectionsConfig.tokenMappings)
 		);
 
 		const bridgeAPIConsumer = new BridgeAPIConsumer(
@@ -135,9 +120,8 @@ async function start(): Promise<void> {
 			transactionService,
 			tokenMappingsService,
 			new MetadataService(
-				database,
-				collectionsConfig.metadata,
-				process.env.METADATA_DOC || "lastIndexedTransactions"
+				database.getCollection(collectionsConfig.metadata),
+				METADATA_DOC
 			)
 		);
 
@@ -193,10 +177,7 @@ async function start(): Promise<void> {
 					const latestClaims = claims?.claims?.[0] || null;
 					const latestBridgeInDB = latestBridgeFromDB[0] || null;
 
-					if (
-						latestBridge &&
-						(!latestBridgeInDB || !latestBridgeInDB.timestamp)
-					) {
+					if (latestBridge && !latestBridgeInDB?.timestamp) {
 						throw new ApiError(
 							"No bridges saved in DB but bridges found in Aggkit API"
 						);
@@ -288,4 +269,4 @@ async function start(): Promise<void> {
 	}
 }
 
-start();
+await start();
