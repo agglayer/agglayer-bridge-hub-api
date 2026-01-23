@@ -23,7 +23,7 @@ export interface IBridgeTx {
 	origin_address: string; // origin token address
 	destination_network: number;
 	destination_address: string;
-	amount: number; // BN
+	amount: string; // BN
 	deposit_count: number; // BN
 	tx_hash: string;
 	from_address: string; // user address
