@@ -37,7 +37,7 @@ export const HubBridgeTransactionSchema = z.object({
 	destinationNetwork: z.number(),
 	receiverAddress: z.string(),
 	fromAddress: z.string(),
-	amount: z.number(),
+	amount: z.string(),
 	depositCount: z.number(),
 	bridgeHash: z.string(),
 	status: TransactionStatusSchema,

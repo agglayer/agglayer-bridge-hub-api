@@ -18,7 +18,7 @@ export interface IClaimTx {
 	origin_network: number; // origin token network
 	destination_address: string;
 	destination_network: number;
-	amount: number; // BN
+	amount: string; // BN
 	from_address: string;
 }
 
