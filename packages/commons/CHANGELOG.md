@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/@agglayer/bridge-hub-commons@1.1.1...@agglayer/bridge-hub-commons@1.1.2) (2026-01-23)
+
+### Bug Fixes
+
+- modify dockerfiles to build commons package ([36fae09](https://github.com/agglayer/agglayer-bridge-hub-api/commit/36fae0923b830e9509ca4104e2ccce1884c15af4))
+
 ## [1.1.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/@agglayer/bridge-hub-commons@1.1.0...@agglayer/bridge-hub-commons@1.1.1) (2026-01-22)
 
 **Note:** Version bump only for package @agglayer/bridge-hub-commons
