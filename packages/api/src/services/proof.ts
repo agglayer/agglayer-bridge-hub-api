@@ -46,23 +46,50 @@ export class ProofService {
 				);
 			}
 
-			const targetUrl = `${sourceNetworkUrl}?network_id=${sourceNetwork}&deposit_count=${depositCount}&leaf_index=${leaf}`;
-			const response = await fetch(targetUrl);
-			const data = await response.json();
-			if (!response.ok) {
+			const proofTargetUrl = `${sourceNetworkUrl}/claim-proof?network_id=${sourceNetwork}&deposit_count=${depositCount}&leaf_index=${leaf}`;
+			const txTargetUrl = `${sourceNetworkUrl}/bridges?network_id=${sourceNetwork}&deposit_count=${depositCount}`;
+
+			const [proofResponse, txResponse] = await Promise.all([
+				fetch(proofTargetUrl),
+				fetch(txTargetUrl),
+			]);
+
+			const [proofData, txData] = await Promise.all([
+				proofResponse.json(),
+				txResponse.json(),
+			]);
+
+			if (!proofResponse.ok) {
 				throw new NotFoundError(
-					data?.error || "Error fetching Proof",
+					proofData?.error || "Error fetching Proof",
 					undefined,
 					undefined,
 					{
-						url: targetUrl,
+						url: proofTargetUrl,
 						sourceNetwork,
 						depositCount,
 						leaf,
 					}
 				);
 			}
-			return data;
+
+			if (!txResponse.ok || !txData.bridges || txData.count === 0) {
+				throw new NotFoundError(
+					txData?.error || "Error fetching Transaction for Proof",
+					undefined,
+					undefined,
+					{
+						url: txTargetUrl,
+						sourceNetwork,
+						depositCount,
+					}
+				);
+			}
+
+			return {
+				...proofData,
+				bridge_transaction_metadata: txData.bridges[0].metadata,
+			};
 		} catch (error) {
 			if (error instanceof NotFoundError) {
 				throw error;
