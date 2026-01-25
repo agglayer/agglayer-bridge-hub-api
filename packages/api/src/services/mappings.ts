@@ -1,11 +1,9 @@
 import type { Db, Collection, Filter, Sort } from "mongodb";
-import {
-	executeMongoOperation,
-	type IMappingDocument,
-} from "@agglayer/bridge-hub-commons";
+import { type IMappingDocument } from "@agglayer/bridge-hub-commons";
 import { ApiError } from "@polygonlabs/servercore";
 import type { HubTokenMapping } from "../schemas";
 import { Networks } from "../enums";
+import { executeMongoOperation } from "@polygonlabs/servercore-mongo";
 
 export class MappingsService {
 	private readonly db: Db;

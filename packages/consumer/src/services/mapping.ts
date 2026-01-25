@@ -1,9 +1,11 @@
 import {
-	executeMongoOperation,
-	type Collection,
 	type IHubTokenMappings,
 	type IMappingDocument,
 } from "@agglayer/bridge-hub-commons";
+import {
+	executeMongoOperation,
+	type Collection,
+} from "@polygonlabs/servercore-mongo";
 import { CryptoHasher } from "bun";
 
 export default class TokenMappingsService {

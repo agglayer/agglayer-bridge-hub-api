@@ -2,7 +2,7 @@ import {
 	executeMongoOperation,
 	type Collection,
 	type Document,
-} from "@agglayer/bridge-hub-commons";
+} from "@polygonlabs/servercore-mongo";
 import type { IHubMetadata } from "../interfaces/metadata";
 
 interface MetadataDocument extends Document, IHubMetadata {

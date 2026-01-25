@@ -1,9 +1,7 @@
 import { BadRequestError, Logger, ApiError } from "@polygonlabs/servercore";
 import type { Db, Collection, Filter } from "mongodb";
-import {
-	executeMongoOperation,
-	type IMappingDocument,
-} from "@agglayer/bridge-hub-commons";
+import { executeMongoOperation } from "@polygonlabs/servercore-mongo";
+import { type IMappingDocument } from "@agglayer/bridge-hub-commons";
 import { createPublicClient, http } from "viem";
 import { ERC20_ABI } from "../constants/erc20";
 import { BRIDGE_ABI_V2, BRIDGE_ABI_V1 } from "../constants/bridge";

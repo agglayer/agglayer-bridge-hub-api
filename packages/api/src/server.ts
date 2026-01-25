@@ -9,7 +9,7 @@ import { TokenMetadataService } from "./services/token_metadata";
 import { TransactionService } from "./services/transactions";
 import { ProofService } from "./services/proof";
 import { HealthCheckService } from "./services";
-import { MongoDBClient } from "@agglayer/bridge-hub-commons";
+import { MongoDBClient } from "@polygonlabs/servercore-mongo";
 import createHealthCheckRoutes from "./routes/health_check";
 import {
 	BRIDGE_ADDRESSES,
