@@ -39,12 +39,12 @@ export const TransactionsByDepositCountQuerySchema = z
 			.string()
 			.max(18, "Network IDs string must not exceed 18 characters")
 			.regex(/^\d+$/, "sourceNetworkId must be a non-negative integer")
-			.transform((val) => parseInt(val, 10)),
+			.transform((val) => Number.parseInt(val, 10)),
 		depositCount: z
 			.string()
 			.max(18, "Network IDs string must not exceed 18 characters")
 			.regex(/^\d+$/, "depositCount must be a non-negative integer")
-			.transform((val) => parseInt(val, 10)),
+			.transform((val) => Number.parseInt(val, 10)),
 	})
 	.merge(NetworkSchema);
 
