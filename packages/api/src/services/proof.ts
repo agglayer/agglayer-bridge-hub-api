@@ -88,7 +88,7 @@ export class ProofService {
 
 			return {
 				...proofData,
-				bridge_transaction_metadata: txData.bridges[0].metadata,
+				bridge_tx_metadata: txData.bridges[0].metadata,
 			};
 		} catch (error) {
 			if (error instanceof NotFoundError) {
