@@ -71,8 +71,9 @@ export const HubTransactionSchema = z.object({
 	leafIndexForProof: z.number().optional(),
 });
 
-export const TransactionResponseSchema =
-	PaginatedResponseSchema(HubTransactionSchema);
+export const TransactionResponseSchema = PaginatedResponseSchema(
+	z.array(HubTransactionSchema)
+);
 
 export const TransactionByDepositCountResponseSchema =
 	ResponseSchema(HubTransactionSchema);
