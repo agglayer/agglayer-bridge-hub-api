@@ -3,8 +3,6 @@ import {
 	TransactionsQuerySchema,
 	TransactionsByDepositCountQuerySchema,
 	NetworkSchema,
-	TransactionResponseSchema,
-	TransactionByDepositCountResponseSchema,
 } from "../schemas";
 import {
 	validateTransactionQueryParams,
@@ -12,6 +10,10 @@ import {
 } from "../middlewares/validate_query_params";
 import { TransactionsController } from "../controllers/transactions";
 import { TransactionService } from "../services/transactions";
+import {
+	TransactionByDepositCountResponseSchema,
+	TransactionResponseSchema,
+} from "@agglayer/bridge-hub-commons";
 
 const createTransactionsRoutes = (transactionService: TransactionService) => {
 	const transactionsRoutes = new OpenAPIHono();

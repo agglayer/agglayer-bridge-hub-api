@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { TransactionStatusSchema } from "../enums/transaction_status";
+import { PaginatedResponseSchema, ResponseSchema } from "./common";
 
 /**
  * Zod schema for the Hub API's Transaction entity with BRIDGED status
@@ -70,6 +71,12 @@ export const HubTransactionSchema = z.object({
 	leafIndexForProof: z.number().optional(),
 });
 
+export const TransactionResponseSchema =
+	PaginatedResponseSchema(HubTransactionSchema);
+
+export const TransactionByDepositCountResponseSchema =
+	ResponseSchema(HubTransactionSchema);
+
 // Export inferred TypeScript types
 export type IHubBridgedStatusTransactions = z.infer<
 	typeof HubBridgedStatusTransactionsSchema
@@ -80,3 +87,7 @@ export type IHubLeafIncludedStatusTransactions = z.infer<
 export type IHubBridgeTransaction = z.infer<typeof HubBridgeTransactionSchema>;
 export type IHubClaimTransaction = z.infer<typeof HubClaimTransactionSchema>;
 export type IHubTransaction = z.infer<typeof HubTransactionSchema>;
+export type ITransactionResponse = z.infer<typeof TransactionResponseSchema>;
+export type ITransactionByDepositCountResponse = z.infer<
+	typeof TransactionByDepositCountResponseSchema
+>;

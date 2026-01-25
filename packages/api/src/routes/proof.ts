@@ -1,13 +1,10 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { validateClaimProofQueryParams } from "../middlewares/validate_query_params";
 import { ProofController } from "../controllers/proof";
-import {
-	ClaimProofQuerySchema,
-	ClaimProofResponseSchema,
-	NetworkSchema,
-} from "../schemas";
+import { ClaimProofQuerySchema, NetworkSchema } from "../schemas";
 import { ProofService } from "../services/proof";
 import { TransactionService } from "../services/transactions";
+import { ClaimProofResponseSchema } from "@agglayer/bridge-hub-commons";
 
 const createProofRoutes = (
 	proofService: ProofService,

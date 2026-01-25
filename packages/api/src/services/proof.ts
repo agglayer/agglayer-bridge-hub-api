@@ -1,6 +1,6 @@
 import { ApiError, NotFoundError } from "@polygonlabs/servercore";
-import type { ClaimProofResponse } from "../schemas/proof_query";
 import { Networks } from "../enums";
+import type { ClaimProofResponse } from "@agglayer/bridge-hub-commons";
 
 export class ProofService {
 	private readonly networkMap: Map<string, Map<number, string>>;

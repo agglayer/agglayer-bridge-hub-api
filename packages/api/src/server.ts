@@ -138,7 +138,7 @@ async function serve(): Promise<void> {
 	app.route("/health-check", healthCheckRoutes);
 }
 
-serve();
+await serve();
 
 export default {
 	port: process.env.PORT || 3001,

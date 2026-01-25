@@ -3,13 +3,13 @@ import {
 	address,
 	networkIdsSchema,
 	NetworkSchema,
-	PaginatedResponseSchema,
 	PaginationSchema,
-	ResponseSchema,
 } from "./common";
 import {
 	HubTokenMappingsSchema,
 	type IHubTokenMappings,
+	PaginatedResponseSchema,
+	ResponseSchema,
 } from "@agglayer/bridge-hub-commons";
 
 export const MappingsQuerySchema = z

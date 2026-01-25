@@ -4,18 +4,8 @@ import {
 	networkIdsSchema,
 	NetworkSchema,
 	PaginationSchema,
-	PaginatedResponseSchema,
-	ResponseSchema,
 } from "./common";
-import {
-	TransactionStatusSchema,
-	HubBridgeTransactionSchema,
-	HubClaimTransactionSchema,
-	HubTransactionSchema,
-	type IHubBridgeTransaction,
-	type IHubClaimTransaction,
-	type IHubTransaction,
-} from "@agglayer/bridge-hub-commons";
+import { TransactionStatusSchema } from "@agglayer/bridge-hub-commons";
 
 export const TransactionsQuerySchema = z
 	.object({
@@ -58,23 +48,7 @@ export const TransactionsByDepositCountQuerySchema = z
 	})
 	.merge(NetworkSchema);
 
-// Re-export schemas from shared types package
-export {
-	HubBridgeTransactionSchema,
-	HubClaimTransactionSchema,
-	HubTransactionSchema,
-};
-
-export const TransactionResponseSchema =
-	PaginatedResponseSchema(HubTransactionSchema);
-
-export const TransactionByDepositCountResponseSchema =
-	ResponseSchema(HubTransactionSchema);
-
 export type TransactionsByDepositCountQuery = z.infer<
 	typeof TransactionsByDepositCountQuerySchema
 >;
 export type TransactionsQuery = z.infer<typeof TransactionsQuerySchema>;
-
-// Re-export types from shared package
-export type { IHubBridgeTransaction, IHubClaimTransaction, IHubTransaction };
