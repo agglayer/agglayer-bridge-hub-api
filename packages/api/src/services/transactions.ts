@@ -1,12 +1,11 @@
 import type { Db, Collection, Filter, Sort } from "mongodb";
 import { CryptoHasher } from "bun";
-import {
-	executeMongoOperation,
-	type ITransactionDocument,
-} from "@agglayer/bridge-hub-commons";
+
+import { type ITransactionDocument } from "@agglayer/bridge-hub-commons";
 import { ApiError } from "@polygonlabs/servercore";
 import type { IHubTransaction } from "../schemas";
 import { Networks } from "../enums";
+import { executeMongoOperation } from "@polygonlabs/servercore-mongo";
 
 export class TransactionService {
 	private readonly db: Db;

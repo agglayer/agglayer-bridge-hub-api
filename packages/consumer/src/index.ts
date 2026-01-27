@@ -23,7 +23,7 @@ import TokenMappingsService from "./services/mapping";
 import TransactionsService from "./services/transaction";
 import MetadataService from "./services/metadata";
 import MetadataMapper from "./mappers/metadata";
-import { MongoDBClient } from "@agglayer/bridge-hub-commons";
+import { MongoDBClient } from "@polygonlabs/servercore-mongo";
 import { ClaimReadinessConsumer } from "./claim_readiness_consumer";
 import bridgeAbi from "./interfaces/PolygonZkEVMBridge";
 import { BRIDGE_ADDRESSES, COLLECTIONS_CONFIG } from "./config";
