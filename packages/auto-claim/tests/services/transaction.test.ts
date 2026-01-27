@@ -45,7 +45,7 @@ describe("TransactionService", () => {
 		test("should fetch and return pending transactions", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponse,
 				],
 			]);
@@ -62,7 +62,7 @@ describe("TransactionService", () => {
 		test("should handle pagination correctly", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponseWithPagination,
 				],
 				[
@@ -81,7 +81,7 @@ describe("TransactionService", () => {
 		test("should return empty array when no transactions found", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50`,
 					mockEmptyTransactionResponse,
 				],
 			]);
@@ -108,7 +108,7 @@ describe("TransactionService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50`,
 					responseWithZeroAmount,
 				],
 			]);
@@ -124,7 +124,7 @@ describe("TransactionService", () => {
 		test("should handle fetch errors gracefully", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50`,
 					new Error("Network error"),
 				],
 			]);
@@ -145,7 +145,7 @@ describe("TransactionService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponse,
 				],
 			]);
@@ -166,7 +166,7 @@ describe("TransactionService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137,42&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137,42&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponse,
 				],
 			]);
@@ -375,7 +375,7 @@ describe("TransactionService", () => {
 		test("should handle complete transaction claiming flow", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponse,
 				],
 				[
@@ -410,7 +410,7 @@ describe("TransactionService", () => {
 		test("should handle empty transaction list gracefully", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50`,
 					mockEmptyTransactionResponse,
 				],
 			]);
@@ -426,7 +426,7 @@ describe("TransactionService", () => {
 		test("should continue processing after proof fetch error", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponse,
 				],
 				[
@@ -447,7 +447,7 @@ describe("TransactionService", () => {
 		test("should handle malformed API responses", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50`,
 					// Malformed response - missing 'data' field
 					{ invalid: "response", success: false },
 				],

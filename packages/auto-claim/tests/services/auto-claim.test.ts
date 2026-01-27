@@ -108,7 +108,7 @@ describe("AutoClaimService", () => {
 		test("should successfully claim ASSET transactions", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponse,
 				],
 				[
@@ -142,7 +142,7 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					responseWithoutLeafIndex,
 				],
 			]);
@@ -168,7 +168,7 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponse,
 				],
 				[
@@ -202,7 +202,7 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					emptyResponse,
 				],
 			]);
@@ -218,7 +218,7 @@ describe("AutoClaimService", () => {
 		test("should use globalIndex from transaction when available", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					{
 						success: true,
 						data: [mockTransaction],
@@ -253,7 +253,7 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					{
 						success: true,
 						data: [txWithoutGlobalIndex],
@@ -284,7 +284,7 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponse,
 				],
 				[
@@ -308,7 +308,7 @@ describe("AutoClaimService", () => {
 		test("should handle errors from getPendingTransactions gracefully", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					new Error("API unavailable"),
 				],
 			]);
@@ -327,7 +327,7 @@ describe("AutoClaimService", () => {
 		test("should call claimAsset with correct parameters for ASSET type", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					{
 						success: true,
 						data: [mockTransaction],
@@ -371,7 +371,7 @@ describe("AutoClaimService", () => {
 		test("should call claimMessage with correct parameters for MESSAGE type", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					{
 						success: true,
 						data: [mockTransactionMessage],
@@ -406,7 +406,7 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					{
 						success: true,
 						data: [mockTransaction],
@@ -435,7 +435,7 @@ describe("AutoClaimService", () => {
 		test("should handle complete claim flow with multiple transactions", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponse,
 				],
 				[
@@ -464,7 +464,7 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponse,
 				],
 				[
@@ -508,7 +508,7 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					firstPageResponse,
 				],
 				[
@@ -542,7 +542,7 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					mockTransactionResponse,
 				],
 				[
@@ -565,7 +565,7 @@ describe("AutoClaimService", () => {
 		test("should handle network errors gracefully", async () => {
 			const responses = new Map([
 				[
-					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=undefined`,
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`,
 					new Error("Network timeout"),
 				],
 			]);
