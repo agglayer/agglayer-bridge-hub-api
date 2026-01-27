@@ -1,6 +1,6 @@
 import { ApiError, NotFoundError } from "@polygonlabs/servercore";
 import { Networks } from "../enums";
-import type { ClaimProofResponse } from "@agglayer/bridge-hub-commons";
+import type { ClaimProof } from "@agglayer/bridge-hub-commons";
 
 export class ProofService {
 	private readonly networkMap: Map<string, Map<number, string>>;
@@ -14,7 +14,7 @@ export class ProofService {
 		sourceNetwork: number,
 		depositCount: number,
 		leaf: number
-	): Promise<ClaimProofResponse> {
+	): Promise<ClaimProof> {
 		try {
 			const networkURLMap = this.networkMap.get(network);
 			if (!networkURLMap) {
