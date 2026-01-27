@@ -20,12 +20,13 @@ export default class TransactionService {
 		let startAfter = undefined;
 		let hasNext = true;
 		let sourceNetworkIds = "";
-		JSON.parse(this.sourceNetworks).forEach((networkId: number) => {
-			sourceNetworkIds = `${sourceNetworkIds}${networkId},`;
-		});
-		sourceNetworkIds = sourceNetworkIds.slice(0, -1);
 
 		try {
+			JSON.parse(this.sourceNetworks).forEach((networkId: number) => {
+				sourceNetworkIds = `${sourceNetworkIds}${networkId},`;
+			});
+			sourceNetworkIds = sourceNetworkIds.slice(0, -1);
+
 			while (hasNext) {
 				const response: Response = await fetch(
 					`${this.bridgeHubAPIUrl}/transactions?destinationNetworkIds=${this.destinationNetwork}&sourceNetworkIds=${sourceNetworkIds}&status=READY_TO_CLAIM&limit=50&startAfter=${startAfter}`
