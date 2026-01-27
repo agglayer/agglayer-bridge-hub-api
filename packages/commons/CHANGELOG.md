@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.3](https://github.com/agglayer/agglayer-bridge-hub-api/compare/@agglayer/bridge-hub-commons@1.1.2...@agglayer/bridge-hub-commons@1.1.3) (2026-01-27)
+
+### Bug Fixes
+
+- move mongodb code from commons to servercore ([3c9191f](https://github.com/agglayer/agglayer-bridge-hub-api/commit/3c9191ff3d3b7ea4d7e7be084668f66522058330))
+
 ## [1.1.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/@agglayer/bridge-hub-commons@1.1.1...@agglayer/bridge-hub-commons@1.1.2) (2026-01-23)
 
 ### Bug Fixes
