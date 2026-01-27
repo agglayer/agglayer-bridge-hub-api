@@ -28,9 +28,8 @@ export default class TransactionService {
 			sourceNetworkIds = sourceNetworkIds.slice(0, -1);
 
 			while (hasNext) {
-				const response: Response = await fetch(
-					`${this.bridgeHubAPIUrl}/transactions?destinationNetworkIds=${this.destinationNetwork}&sourceNetworkIds=${sourceNetworkIds}&status=READY_TO_CLAIM&limit=50&startAfter=${startAfter}`
-				);
+				const url = `${this.bridgeHubAPIUrl}/transactions?destinationNetworkIds=${this.destinationNetwork}&sourceNetworkIds=${sourceNetworkIds}&status=READY_TO_CLAIM&limit=50${startAfter ? `&startAfter=${startAfter}` : ""}`;
+				const response: Response = await fetch(url);
 
 				const transactionData =
 					(await response.json()) as ITransactionResponse;
