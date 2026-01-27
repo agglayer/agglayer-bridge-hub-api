@@ -3,7 +3,7 @@ import { Logger } from "@polygonlabs/servercore";
 import AutoClaimService from "./services/auto-claim";
 import TransactionService from "./services/transaction";
 import { privateKeyToAccount } from "viem/accounts";
-import { createWalletClient } from "viem";
+import { createWalletClient, http } from "viem";
 
 Logger.create({
 	sentry: {
@@ -41,7 +41,7 @@ async function start() {
 		);
 		const wallet = createWalletClient({
 			account,
-			transport: providerURL,
+			transport: http(providerURL),
 		});
 
 		const transactionService = new TransactionService(
