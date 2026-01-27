@@ -4,7 +4,7 @@
     "": {
       "name": "agglayer-bridge-hub",
       "dependencies": {
-        "@polygonlabs/servercore": "^1.3.0",
+        "@polygonlabs/servercore": "^1.5.0",
         "@polygonlabs/servercore-mongo": "0.1.0-dev.0",
         "tsup": "^8.5.0",
         "viem": "^2.38.1",
@@ -401,7 +401,7 @@
 
     "@pkgjs/parseargs": ["@pkgjs/parseargs@0.11.0", "", {}, "sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg=="],
 
-    "@polygonlabs/servercore": ["@polygonlabs/servercore@1.3.0", "", { "dependencies": { "croner": "^9.0.0", "ulid": "^3.0.1", "viem": "^2.26.3", "winston": "^3.17.0", "winston-transport-sentry-node": "^3.0.0", "zod": "^3.24.2" }, "peerDependencies": { "typescript": "^5" } }, "sha512-V4cNZZgdgI2gQv8Qkhi3E0gAGsRIUC8sr/Ic5RCbXQH+ecGLEsb8DbJ0aTJPndbpMrItFqmkDXj6sDGepJZdTw=="],
+    "@polygonlabs/servercore": ["@polygonlabs/servercore@1.5.0", "", { "dependencies": { "croner": "^9.0.0", "ulid": "^3.0.1", "viem": "^2.26.3", "winston": "^3.17.0", "winston-transport-sentry-node": "^3.0.0", "zod": "^3.24.2" }, "peerDependencies": { "typescript": "^5" } }, "sha512-bZRE++OJl8DiXVT+QlXVIf+0Rc5dEQz09SXaqRkBTbZ0ZFehUS4Q7u9gm7xA1KCOvnoc3Di5VS0ME1/gJkY/yw=="],
 
     "@polygonlabs/servercore-mongo": ["@polygonlabs/servercore-mongo@0.1.0-dev.0", "", { "dependencies": { "mongodb": "^7.0.0" }, "peerDependencies": { "@polygonlabs/servercore": "^1.5.0", "typescript": "^5" } }, "sha512-F97jWm/XP9/ArgKQmdZ3mY4DU2CxKyiEIHzWIub/3pgfFGCN4JarQdBjEo29hKG1zHyVL59uiydMtRXNMU6BeQ=="],
 
@@ -1684,8 +1684,6 @@
     "@opentelemetry/resources/@opentelemetry/semantic-conventions": ["@opentelemetry/semantic-conventions@1.28.0", "", {}, "sha512-lp4qAiMTD4sNWW4DbKLBkfiMZ4jbAboJIGOQr5DvciMRI494OapieI9qiODpOt0XBr1LjIDy1xAGAnVs5supTA=="],
 
     "@opentelemetry/sdk-trace-base/@opentelemetry/semantic-conventions": ["@opentelemetry/semantic-conventions@1.28.0", "", {}, "sha512-lp4qAiMTD4sNWW4DbKLBkfiMZ4jbAboJIGOQr5DvciMRI494OapieI9qiODpOt0XBr1LjIDy1xAGAnVs5supTA=="],
-
-    "@polygonlabs/servercore/viem": ["viem@2.38.0", "", { "dependencies": { "@noble/curves": "1.9.1", "@noble/hashes": "1.8.0", "@scure/bip32": "1.7.0", "@scure/bip39": "1.6.0", "abitype": "1.1.0", "isows": "1.0.7", "ox": "0.9.6", "ws": "8.18.3" }, "peerDependencies": { "typescript": ">=5.0.4" }, "optionalPeers": ["typescript"] }, "sha512-YU5TG8dgBNeYPrCMww0u9/JVeq2ZCk9fzk6QybrPkBooFysamHXL1zC3ua10aLPt9iWoA/gSVf1D9w7nc5B1aA=="],
 
     "@polygonlabs/servercore/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
