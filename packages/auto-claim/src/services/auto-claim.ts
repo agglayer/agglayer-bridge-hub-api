@@ -69,28 +69,28 @@ export default class AutoClaimService {
 				txHash = await this.bridgeContract.write.claimAsset(
 					proof.proof_local_exit_root,
 					proof.proof_rollup_exit_root,
-					globalIndex.toString(),
+					globalIndex,
 					proof.l1_info_tree_leaf.mainnet_exit_root,
 					proof.l1_info_tree_leaf.rollup_exit_root,
 					transaction.originTokenNetwork,
 					transaction.originTokenAddress,
 					transaction.destinationNetwork,
 					transaction.receiverAddress,
-					transaction.amount,
+					BigInt(transaction.amount),
 					proof.bridge_tx_metadata
 				);
 			} else {
 				txHash = await this.bridgeContract.write.claimMessage(
 					proof.proof_local_exit_root,
 					proof.proof_rollup_exit_root,
-					globalIndex.toString(),
+					globalIndex,
 					proof.l1_info_tree_leaf.mainnet_exit_root,
 					proof.l1_info_tree_leaf.rollup_exit_root,
 					transaction.originTokenNetwork,
 					transaction.originTokenAddress,
 					transaction.destinationNetwork,
 					transaction.receiverAddress,
-					transaction.amount,
+					BigInt(transaction.amount),
 					proof.bridge_tx_metadata
 				);
 			}

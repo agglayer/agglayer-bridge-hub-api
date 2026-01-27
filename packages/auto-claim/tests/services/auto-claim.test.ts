@@ -242,7 +242,7 @@ describe("AutoClaimService", () => {
 			expect(mockWrite.claimAsset).toHaveBeenCalledTimes(1);
 			// Verify it was called with the global index from the transaction
 			const callArgs = mockWrite.claimAsset.mock.calls[0];
-			expect(callArgs[2]).toBe("123456789");
+			expect(callArgs[2]).toBe(123456789n);
 		});
 
 		test("should compute globalIndex when not in transaction", async () => {
@@ -353,7 +353,7 @@ describe("AutoClaimService", () => {
 			const callArgs = mockWrite.claimAsset.mock.calls[0] as any;
 			expect(callArgs[0]).toEqual(mockClaimProof.proof_local_exit_root);
 			expect(callArgs[1]).toEqual(mockClaimProof.proof_rollup_exit_root);
-			expect(callArgs[2]).toBe("123456789");
+			expect(callArgs[2]).toBe(123456789n);
 			expect(callArgs[3]).toBe(
 				mockClaimProof.l1_info_tree_leaf.mainnet_exit_root
 			);
@@ -364,7 +364,7 @@ describe("AutoClaimService", () => {
 			expect(callArgs[6]).toBe(mockTransaction.originTokenAddress);
 			expect(callArgs[7]).toBe(mockTransaction.destinationNetwork);
 			expect(callArgs[8]).toBe(mockTransaction.receiverAddress);
-			expect(callArgs[9]).toBe(mockTransaction.amount);
+			expect(callArgs[9]).toBe(BigInt(mockTransaction.amount));
 			expect(callArgs[10]).toBe(mockClaimProof.bridge_tx_metadata);
 		});
 
