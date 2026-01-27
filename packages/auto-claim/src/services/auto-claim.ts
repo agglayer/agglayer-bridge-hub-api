@@ -10,17 +10,20 @@ import { waitForTransactionReceipt } from "viem/actions";
 import { BRIDGE_ABI } from "../constants/bridge";
 
 /**
- * AutoClaimService service class is a class which has function to autoclaim transactions
+ * Service for automatically claiming ready bridge transactions.
+ *
+ * Polls the Bridge Hub API for READY_TO_CLAIM transactions, fetches proofs,
+ * and submits claim transactions to the destination blockchain.
  *
  * @class AutoClaimService
  */
 export default class AutoClaimService {
 	/**
-	 * @constructor
+	 * Creates an instance of AutoClaimService.
 	 *
-	 * @param {GetContractReturnType} bridgeContract - Viem contract instance
-	 * @param {TransactionService} transactionService
-	 * @param {PublicClient} publicClient - Viem public client for reading blockchain state
+	 * @param {`0x${string}`} bridgeContractAddress - The bridge contract address on the destination chain
+	 * @param {WalletClient} walletClient - Viem wallet client for signing and sending transactions
+	 * @param {TransactionService} transactionService - Service for fetching transactions and proofs from Bridge Hub API
 	 */
 	private readonly bridgeContract: GetContractReturnType<
 		typeof BRIDGE_ABI,
