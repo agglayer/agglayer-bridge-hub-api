@@ -17,7 +17,7 @@ The Agglayer Bridge Hub consists of four main packages that work together to pro
 
 - Real-time bridge transaction indexing from multiple chains
 - RESTful API with OpenAPI documentation
-- Automated transaction claiming Auto-claim service
+- Automated transaction claiming
 - Support for both ASSET and MESSAGE bridge types
 - Comprehensive test coverage
 - Type-safe development with TypeScript
