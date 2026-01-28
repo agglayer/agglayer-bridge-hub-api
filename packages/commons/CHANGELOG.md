@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/@agglayer/bridge-hub-commons@1.1.3...@agglayer/bridge-hub-commons@1.2.0) (2026-01-28)
+
+### Bug Fixes
+
+- HubTransactionResponse's data field to be an array of HubTransaction objects ([5c5ac19](https://github.com/agglayer/agglayer-bridge-hub-api/commit/5c5ac194a6d1eb71221ed46b62e0fc512ecf2d83))
+- remove db module comment from commons index file ([bc0e05e](https://github.com/agglayer/agglayer-bridge-hub-api/commit/bc0e05ec0e23cdb3325bcc3abbb78bdd3d2aeb53))
+
+### Features
+
+- move proof and transaction response types to commons ([70100b6](https://github.com/agglayer/agglayer-bridge-hub-api/commit/70100b6f949e8682655152fcce715c9612f491fc))
+
 ## [1.1.3](https://github.com/agglayer/agglayer-bridge-hub-api/compare/@agglayer/bridge-hub-commons@1.1.2...@agglayer/bridge-hub-commons@1.1.3) (2026-01-27)
 
 ### Bug Fixes

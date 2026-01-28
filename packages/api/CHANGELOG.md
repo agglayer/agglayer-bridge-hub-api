@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.17...bridge-hub-api@1.6.0) (2026-01-28)
+
+### Bug Fixes
+
+- proofService getProof function return type ([87a7ca7](https://github.com/agglayer/agglayer-bridge-hub-api/commit/87a7ca7a843896faccf10da1442fe15c21471a97))
+- stop re-exporting common's types in api package ([2b2baa9](https://github.com/agglayer/agglayer-bridge-hub-api/commit/2b2baa9a75135fc52cd2d785df06dc1463409be0))
+- typo in bridge_tx_metadata for claim-proof ([dda6d59](https://github.com/agglayer/agglayer-bridge-hub-api/commit/dda6d59d790e2dc9493c0acb37a800bafb1c9bdd))
+
+### Features
+
+- move proof and transaction response types to commons ([70100b6](https://github.com/agglayer/agglayer-bridge-hub-api/commit/70100b6f949e8682655152fcce715c9612f491fc))
+- pass tx metadata for claim with claim-proof ([60de720](https://github.com/agglayer/agglayer-bridge-hub-api/commit/60de720a1d314be5ea1e4c4c85b1e32808caefc1))
+
 ## [1.5.17](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.16...bridge-hub-api@1.5.17) (2026-01-27)
 
 ### Bug Fixes
