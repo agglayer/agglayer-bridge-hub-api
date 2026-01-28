@@ -26,14 +26,16 @@ The Agglayer Bridge Hub consists of four main packages that work together to pro
 ## Architecture
 
 ```
-         COMMONS (Shared Types)
-                 │
-     ┌───────────┼───────────┐
-     ▼           ▼           ▼
+            COMMONS (Shared Types)
+                           │
+     ┌─────────────────────┼───────┐
+     │                     │       │
+     ▼                     ▼       ▼
  CONSUMER  →  MongoDB  ←  API  ←  AUTO-CLAIM
  (Indexer)               (HTTP)    (Claimer)
      │                              │
-     └─ Blockchain              Blockchain
+     └─ Aggkit                 Blockchain
+        Bridge service
 ```
 
 **Data Flow:** Consumer polls Aggkit Bridge Service for indexed data → Writes to MongoDB → API exposes data → Auto-Claim fetches and submits claims.
