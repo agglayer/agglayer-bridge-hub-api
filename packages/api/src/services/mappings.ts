@@ -1,7 +1,9 @@
 import type { Db, Collection, Filter, Sort } from "mongodb";
-import { type IMappingDocument } from "@agglayer/bridge-hub-commons";
+import {
+	type IHubTokenMappings,
+	type IMappingDocument,
+} from "@agglayer/bridge-hub-commons";
 import { ApiError } from "@polygonlabs/servercore";
-import type { HubTokenMapping } from "../schemas";
 import { Networks } from "../enums";
 import { executeMongoOperation } from "@polygonlabs/servercore-mongo";
 
@@ -38,7 +40,7 @@ export class MappingsService {
 		limit: number;
 		startAfter?: number;
 	}): Promise<{
-		documents: HubTokenMapping[];
+		documents: IHubTokenMappings[];
 		totalDocumentsCount?: number;
 	}> {
 		const collectionName = this.collectionId.get(network);
@@ -96,7 +98,7 @@ export class MappingsService {
 		);
 
 		return {
-			documents: documents as HubTokenMapping[],
+			documents: documents as IHubTokenMappings[],
 			totalDocumentsCount: undefined,
 		};
 	}
@@ -106,7 +108,7 @@ export class MappingsService {
 		tokenNetwork: number,
 		network: Networks
 	): Promise<{
-		documents: HubTokenMapping[];
+		documents: IHubTokenMappings[];
 		totalDocumentsCount?: number;
 	}> {
 		const collectionName = this.collectionId.get(network);
@@ -158,8 +160,8 @@ export class MappingsService {
 
 		return {
 			documents: [
-				...(originTokens as HubTokenMapping[]),
-				...(wrappedTokens as HubTokenMapping[]),
+				...(originTokens as IHubTokenMappings[]),
+				...(wrappedTokens as IHubTokenMappings[]),
 			],
 			totalDocumentsCount: originTokens.length + wrappedTokens.length,
 		};
