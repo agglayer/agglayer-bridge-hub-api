@@ -54,6 +54,8 @@ describe("AutoClaimService", () => {
 	const sourceNetworks = "[1]";
 	const destinationNetwork = "2442";
 	let readyToClaimTransactionsUrl: string;
+	let claimProofUrl42: string;
+	let claimProofUrl43: string;
 
 	beforeEach(() => {
 		// Reset all mocks
@@ -99,6 +101,8 @@ describe("AutoClaimService", () => {
 		);
 
 		readyToClaimTransactionsUrl = `${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50`;
+		claimProofUrl42 = `${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`;
+		claimProofUrl43 = `${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=43`;
 	});
 
 	describe("constructor", () => {
@@ -111,14 +115,8 @@ describe("AutoClaimService", () => {
 		test("should successfully claim ASSET transactions", async () => {
 			const responses = new Map([
 				[readyToClaimTransactionsUrl, mockTransactionResponse],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
-					mockClaimProofResponse,
-				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=43`,
-					mockClaimProofResponse,
-				],
+				[claimProofUrl42, mockClaimProofResponse],
+				[claimProofUrl43, mockClaimProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
@@ -165,14 +163,8 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[readyToClaimTransactionsUrl, mockTransactionResponse],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
-					incompleteProofResponse,
-				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=43`,
-					incompleteProofResponse,
-				],
+				[claimProofUrl42, incompleteProofResponse],
+				[claimProofUrl43, incompleteProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
@@ -220,10 +212,7 @@ describe("AutoClaimService", () => {
 						},
 					},
 				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
-					mockClaimProofResponse,
-				],
+				[claimProofUrl42, mockClaimProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
@@ -255,10 +244,7 @@ describe("AutoClaimService", () => {
 						},
 					},
 				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
-					mockClaimProofResponse,
-				],
+				[claimProofUrl42, mockClaimProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
@@ -275,14 +261,8 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[readyToClaimTransactionsUrl, mockTransactionResponse],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
-					mockClaimProofResponse,
-				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=43`,
-					mockClaimProofResponse,
-				],
+				[claimProofUrl42, mockClaimProofResponse],
+				[claimProofUrl43, mockClaimProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
@@ -323,10 +303,7 @@ describe("AutoClaimService", () => {
 						},
 					},
 				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
-					mockClaimProofResponse,
-				],
+				[claimProofUrl42, mockClaimProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
@@ -367,10 +344,7 @@ describe("AutoClaimService", () => {
 						},
 					},
 				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=43`,
-					mockClaimProofResponse,
-				],
+				[claimProofUrl43, mockClaimProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
@@ -402,10 +376,7 @@ describe("AutoClaimService", () => {
 						},
 					},
 				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
-					mockClaimProofResponse,
-				],
+				[claimProofUrl42, mockClaimProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
@@ -420,14 +391,8 @@ describe("AutoClaimService", () => {
 		test("should handle complete claim flow with multiple transactions", async () => {
 			const responses = new Map([
 				[readyToClaimTransactionsUrl, mockTransactionResponse],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
-					mockClaimProofResponse,
-				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=43`,
-					mockClaimProofResponse,
-				],
+				[claimProofUrl42, mockClaimProofResponse],
+				[claimProofUrl43, mockClaimProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
@@ -446,14 +411,8 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[readyToClaimTransactionsUrl, mockTransactionResponse],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
-					mockClaimProofResponse,
-				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=43`,
-					mockClaimProofResponse,
-				],
+				[claimProofUrl42, mockClaimProofResponse],
+				[claimProofUrl43, mockClaimProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
@@ -491,14 +450,8 @@ describe("AutoClaimService", () => {
 					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1&status=READY_TO_CLAIM&limit=50&startAfter=cursor-123`,
 					secondPageResponse,
 				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
-					mockClaimProofResponse,
-				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=43`,
-					mockClaimProofResponse,
-				],
+				[claimProofUrl42, mockClaimProofResponse],
+				[claimProofUrl43, mockClaimProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
@@ -518,14 +471,8 @@ describe("AutoClaimService", () => {
 
 			const responses = new Map([
 				[readyToClaimTransactionsUrl, mockTransactionResponse],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
-					mockClaimProofResponse,
-				],
-				[
-					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=43`,
-					mockClaimProofResponse,
-				],
+				[claimProofUrl42, mockClaimProofResponse],
+				[claimProofUrl43, mockClaimProofResponse],
 			]);
 
 			globalThis.fetch = createMockFetch(responses);
