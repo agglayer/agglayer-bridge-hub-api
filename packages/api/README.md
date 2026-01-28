@@ -25,24 +25,22 @@ bun install
 
 ## Configuration
 
-Create a `.env` file in the package root:
+Create a `.env` file in the package root with the following variables:
 
-```bash
-# Database
-MONGODB_CONNECTION_URI=mongodb://localhost:27017
-MONGODB_DB_NAME=bridge_hub
+**Required:**
 
-# RPC Configuration (JSON format with network keys)
-RPC_CONFIG={"mainnet": {"1": "https://eth-rpc...", "137": "https://polygon-rpc..."}}
-PROOF_CONFIG={"mainnet": {"1": "https://proof-rpc...", "137": "https://proof-rpc..."}}
+- `MONGODB_CONNECTION_URI` - MongoDB connection string
+- `MONGODB_DB_NAME` - Database name
+- `RPC_CONFIG` - RPC endpoints by network (JSON format)
+- `PROOF_CONFIG` - Proof generation endpoints by network (JSON format)
 
-# Server
-PORT=3000
-NODE_ENV=production
+**Optional:**
 
-# Monitoring
-SENTRY_DSN=https://...sentry.io/...
-```
+- `PORT` - HTTP server port (default: 3000)
+- `NODE_ENV` - Environment (development, production)
+- `SENTRY_DSN` - Error tracking DSN
+
+For detailed configuration with examples, JSON format specifications, and best practices, see **[DEPLOYMENT.md - API Configuration](../../DEPLOYMENT.md#api-package)**.
 
 ## Usage
 
@@ -188,7 +186,7 @@ Get token information by address and network.
 - `tokenAddress` (required) - Token contract address
 - `networkId` (required) - Network chain ID
 
-#### `GET /mappings`
+#### `GET /token-mappings`
 
 Get token address mappings between networks.
 
@@ -241,6 +239,8 @@ Client Request
 │  MongoDB    │  (Data persistence)
 └─────────────┘
 ```
+
+**Note**: This shows the internal API architecture. For how the API fits into the overall cluster with multiple consumer instances and shared database, see [ARCHITECTURE.md - Production Cluster Architecture](../../ARCHITECTURE.md#production-cluster-architecture).
 
 ## Project Structure
 
@@ -506,21 +506,6 @@ EXPOSE 3000
 CMD ["bun", "dist/server.js"]
 ```
 
-### Environment Variables
-
-Required in production:
-
-- `MONGODB_CONNECTION_URI`
-- `MONGODB_DB_NAME`
-- `RPC_CONFIG`
-- `PROOF_CONFIG`
-
-Optional but recommended:
-
-- `PORT` (default: 3000)
-- `SENTRY_DSN`
-- `NODE_ENV=production`
-
 ### Scaling
 
 The API is stateless and can be horizontally scaled:
@@ -533,6 +518,8 @@ API_INSTANCE_3: PORT=3003
 ```
 
 ## Security
+
+> **Note**: For security vulnerability reporting and Polygon's bug bounty program, see [SECURITY.md](../../SECURITY.md).
 
 ### Best Practices
 

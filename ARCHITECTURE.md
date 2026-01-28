@@ -25,8 +25,9 @@ The Agglayer Bridge Hub is a microservices-based system designed to facilitate c
 ├────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │
-│  │   Bridge     │  │  Blockchain  │  │   MongoDB    │            │
-│  │  Service API │  │   (Aggkit)   │  │   Database   │            │
+│  │   Aggkit     │  │  Blockchain  │  │   MongoDB    │            │
+│  │    Bridge    │  │              │  │   Database   │            │
+│  │   service    │  │              │  │              │            │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘            │
 └─────────┼──────────────────┼──────────────────┼────────────────────┘
           │                  │                  │
@@ -51,10 +52,105 @@ The Agglayer Bridge Hub is a microservices-based system designed to facilitate c
 │            ▼              ▼              ▼                         │
 │      ┌──────────────────────────┐   ┌─────────────┐             │
 │      │    MongoDB Database      │   │ Blockchain  │             │
-│      └──────────────────────────┘   │ (Claims)    │             │
-│                                      └─────────────┘             │
+│      └──────────────────────────┘   └─────────────┘             │
+│                                                                   │
 └────────────────────────────────────────────────────────────────────┘
 ```
+
+## Production Cluster Architecture
+
+### Multi-Network Deployment
+
+The Bridge Hub is designed to index multiple blockchain networks simultaneously. Each network connected to the Agglayer has a unique network ID (e.g., 0 for Ethereum, 1 for zkEVM, etc.). The production deployment runs **one consumer instance per source network** to index bridge transactions.
+
+```
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                        AGGLAYER HUB API CLUSTER                                │
+├───────────────────────────────────────────────────────────────────────────────┤
+│                                                                                │
+│  ┌─────────────┐        ┌─────────────────────────────────┐                  │
+│  │   Aggkit    │        │      netId_0 Indexer            │                  │
+│  │   Bridge    │──────▶ │  ┌───────────────────────────┐  │                  │
+│  │  Service    │        │  │  bridgesCron              │  │                  │
+│  │  (net 0)    │        │  │  claimsCron               │  │──┐               │
+│  └─────────────┘        │  │  readyToClaimCron         │  │  │               │
+│                         │  │  mappingsCron             │  │  │               │
+│                         │  └───────────────────────────┘  │  │               │
+│  ┌─────────────┐        └─────────────────────────────────┘  │               │
+│  │   Aggkit    │                                              │               │
+│  │   Bridge    │        ┌─────────────────────────────────┐  │               │
+│  │  Service    │──────▶ │      netId_1 Indexer            │  │               │
+│  │  (net 1)    │        │  ┌───────────────────────────┐  │  │               │
+│  └─────────────┘        │  │  bridgesCron              │  │  │               │
+│                         │  │  claimsCron               │  │──┤               │
+│                         │  │  readyToClaimCron         │  │  │               │
+│  ┌─────────────┐        │  │  mappingsCron             │  │  │               │
+│  │   Aggkit    │        │  └───────────────────────────┘  │  │               │
+│  │   Bridge    │        └─────────────────────────────────┘  │               │
+│  │  Service    │──────▶                                      │               │
+│  │  (net n)    │        ┌─────────────────────────────────┐  │               │
+│  └─────────────┘        │      netId_n Indexer            │  │               │
+│                         │  ┌───────────────────────────┐  │  │               │
+│                         │  │  bridgesCron              │  │  │               │
+│                         │  │  claimsCron               │  │──┤               │
+│                         │  │  readyToClaimCron         │  │  │               │
+│                         │  │  mappingsCron             │  │  │               │
+│                         │  └───────────────────────────┘  │  │               │
+│                         └─────────────────────────────────┘  │               │
+│                                                              │               │
+│                                                              ▼               │
+│                         ┌────────────────────────────────────────────┐      │
+│                         │         MongoDB Database                   │      │
+│                         │  ┌──────────────────────────────────────┐  │      │
+│                         │  │  Collections (per environment):      │  │      │
+│                         │  │  • bridge_hub_api_transactions       │  │      │
+│                         │  │  • bridge_hub_api_mappings           │  │      │
+│                         │  │  • bridge_hub_api_metadata           │  │      │
+│                         │  └──────────────────────────────────────┘  │      │
+│                         └────────────┬───────────────────────────────┘      │
+│                                      │                                       │
+│                                      │ Reads from                            │
+│                         ┌────────────▼───────────────────────────────┐      │
+│                         │         API Service                         │      │
+│                         │  ┌──────────────────────────────────────┐  │      │
+│                         │  │  /transactions                       │  │      │
+│                         │  │  /token-mappings                     │  │      │
+│                         │  │  /token-metadata                     │  │      │
+│                         │  │  /claim-proof (proxies to Aggkit)   │  │──┐   │
+│                         │  └──────────────────────────────────────┘  │  │   │
+│                         └─────────────────────────────────────────────┘  │   │
+│                                                                           │   │
+│                                                              HTTP Calls   │   │
+│                         ┌─────────────────────────────────────────────┐  │   │
+│                         │     Auto-Claim Service (per dest network)   │◀─┘   │
+│                         │  ┌──────────────────────────────────────┐  │      │
+│                         │  │  Polls /transactions                 │  │      │
+│                         │  │  Fetches /claim-proof               │  │      │
+│                         │  │  Submits claims to blockchain        │  │      │
+│                         │  └──────────────────────────────────────┘  │      │
+│                         └─────────────────────────────────────────────┘      │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Architecture Points:**
+
+1. **Consumer Instances**: One per source network being indexed (netId_0, netId_1, etc.)
+2. **Naming Convention**: `netId_X` is a generalized naming; actual network IDs are 0=Ethereum, 1=zkEVM, etc.
+3. **Shared Database**: All consumers write to the same MongoDB instance
+4. **Single API**: One API service reads from the database and serves all networks
+5. **Auto-Claim Deployment**: One instance per destination network you want to auto-claim for
+
+### Aggkit Bridge Service
+
+Each blockchain network connected to the Agglayer operates its own **Aggkit Bridge Service**:
+
+- **Ownership**: Maintained by the chain operators (not part of Bridge Hub deployment)
+- **Purpose**: Monitors blockchain events and indexes bridge-related data
+- **Interface**: Exposes APIs for bridge transactions, claims, mappings, and L1 info tree data
+- **Consumer Connection**: Each Bridge Hub consumer connects to the corresponding chain's Aggkit service
+
+**Important**: The consumer does NOT directly monitor the blockchain. Instead, it polls the Aggkit Bridge Service APIs to fetch indexed data.
 
 ### Component Responsibilities
 
@@ -64,6 +160,67 @@ The Agglayer Bridge Hub is a microservices-based system designed to facilitate c
 | **Consumer**   | Data Ingestion | Monitor blockchain, index transactions   |
 | **API**        | Service        | Expose transaction data, generate proofs |
 | **Auto-Claim** | Automation     | Automatically claim ready transactions   |
+
+### Consumer Internal Architecture
+
+The Consumer package consists of two main components that run within a single Node.js process:
+
+#### BridgeAPIConsumer
+
+Contains three cron jobs that fetch data from the Aggkit Bridge Service:
+
+**1. bridgesCron**
+
+- **Purpose**: Fetches new bridge deposit transactions
+- **Data Source**: Polls Aggkit Bridge Service API for bridge events
+- **Database Action**: Inserts new transactions into `transactions` collection with status `BRIDGED`
+- **Metadata Tracking**: Updates `lastIndexedBridgeDepositCount` in metadata collection
+
+**2. claimsCron**
+
+- **Purpose**: Fetches claim events that occurred on the blockchain
+- **Data Source**: Polls Aggkit Bridge Service API for claim events
+- **Database Action**: Updates transactions in `transactions` collection to status `CLAIMED`, adds `claimTransactionHash` and timestamp
+- **Metadata Tracking**: Updates `lastIndexedClaimBlockNumber` in metadata collection
+
+**3. mappingsCron**
+
+- **Purpose**: Fetches token mapping events on the chain
+- **Data Source**: Polls Aggkit Bridge Service API for tokenMapping events
+- **Database Action**: Inserts/updates token mappings in `mappings` collection
+- **Metadata Tracking**: Updates `lastIndexedMappingBlockNumber` in metadata collection
+
+#### ClaimReadinessConsumer
+
+Contains one cron job:
+
+**4. readyToClaimCron**
+
+- **Purpose**: Determines when transactions become claimable
+- **Data Source**: Polls Aggkit Bridge Service API for L1 info tree updates
+- **Database Action**: Updates transactions from `BRIDGED` to `READY_TO_CLAIM` status, sets `leafIndexForProof`
+- **Logic**: Compares L1 info tree data with transaction data to determine claim readiness
+
+#### Data Flow
+
+```
+Aggkit Bridge Service (per network)
+    │
+    ├── /bridges API ────▶ bridgesCron ────▶ transactions collection (BRIDGED)
+    │
+    ├── /claims API ─────▶ claimsCron ─────▶ transactions collection (CLAIMED)
+    │
+    ├── /mappings API ───▶ mappingsCron ───▶ mappings collection
+    │
+    └── /l1-info-tree ───▶ readyToClaimCron ▶ transactions collection (READY_TO_CLAIM)
+```
+
+**Key Points:**
+
+- All 4 crons run in a single Node.js process per network
+- Crons are scheduled jobs that run at configured intervals
+- Consumer does NOT directly monitor blockchain - it polls Aggkit APIs
+- Metadata collection tracks indexing progress for resume capability after restarts
 
 ## Package Architecture
 
@@ -337,6 +494,119 @@ The system maintains eventual consistency through event-driven updates:
 - Duplicate events are handled via upsert
 - No distributed transactions needed
 
+## Database Architecture
+
+### Shared Database Model
+
+The Bridge Hub uses a **single shared MongoDB instance** across all network indexers and the API service. This centralized database approach simplifies operations while supporting horizontal scaling through replica sets.
+
+**Deployment Options:**
+
+- **Single Instance**: For development or low-traffic deployments
+- **Replica Set**: For high availability and read scaling in production
+- **Sharding**: Optional for very high transaction volumes (shard by network or date)
+
+### Collection Structure
+
+Collections are organized by environment, using the naming convention:
+
+```
+bridge_hub_api_[type]_[environment]
+```
+
+**Environments:**
+
+- No suffix: Mainnet/production data
+- `_testnet`: Testnet data
+- `_devnet`: Development network data
+
+**Collection Types:**
+
+#### 1. Transactions Collections
+
+```
+bridge_hub_api_transactions
+bridge_hub_api_transactions_testnet
+bridge_hub_api_transactions_devnet
+```
+
+- **Purpose**: Store all bridge transactions across all networks
+- **Modified By**: `bridgesCron` (inserts), `claimsCron` (updates), `readyToClaimCron` (updates)
+- **Key Fields**: `hubUID`, `sourceNetwork`, `destinationNetwork`, `status`, `depositCount`
+- **Status Values**: `BRIDGED` → `READY_TO_CLAIM` → `CLAIMED`
+
+#### 2. Mappings Collections
+
+```
+bridge_hub_api_mappings
+bridge_hub_api_mappings_testnet
+bridge_hub_api_mappings_devnet
+```
+
+- **Purpose**: Store token address mappings between Agglayer networks
+- **Modified By**: `mappingsCron` (inserts/updates)
+- **Key Fields**: `originNetwork`, `originTokenAddress`, `wrappedTokenAddress`, `destinationNetwork`
+
+#### 3. Metadata Collections
+
+```
+bridge_hub_api_metadata
+bridge_hub_api_metadata_testnet
+bridge_hub_api_metadata_devnet
+```
+
+- **Purpose**: Track indexing progress per network for resume capability
+- **Modified By**: All cron jobs (update their respective checkpoint)
+- **Document per Network**: One document per `NETWORK_ID` being indexed
+
+**Metadata Document Schema:**
+
+```javascript
+{
+  _id: "lastIndexedTransactions",           // Document ID
+  networkId: 0,                             // Network being indexed (0, 1, etc.)
+  lastIndexedBridgeDepositCount: 12345,     // Resume point for bridgesCron
+  lastIndexedClaimBlockNumber: 5678900,     // Resume point for claimsCron
+  lastIndexedMappingBlockNumber: 5678900,   // Resume point for mappingsCron
+  lastUpdated: ISODate("2024-01-27T10:00:00Z")
+}
+```
+
+### Why Metadata is Critical
+
+When a consumer instance restarts (planned maintenance, crash, deployment), it needs to know where to resume indexing. Without metadata:
+
+- **Problem**: Consumer would re-index from genesis block (hours/days of duplicate work)
+- **Solution**: Consumer reads metadata collection to find last indexed position
+- **Behavior**: Each cron job queries its checkpoint field and resumes from that point
+
+**Example Resume Flow:**
+
+1. Consumer starts for network 1 (zkEVM)
+2. `bridgesCron` reads `lastIndexedBridgeDepositCount` → resumes from deposit #12346
+3. `claimsCron` reads `lastIndexedClaimBlockNumber` → resumes from block #5678901
+4. `mappingsCron` reads `lastIndexedMappingBlockNumber` → resumes from block #5678901
+
+### Database Access Patterns
+
+**Consumers (Write-Heavy):**
+
+- Insert new transactions (bridgesCron)
+- Update transaction status (claimsCron, readyToClaimCron)
+- Upsert token mappings (mappingsCron)
+- Update metadata checkpoints (all crons)
+
+**API (Read-Heavy):**
+
+- Query transactions by status, network, filters
+- Query token mappings by network and address
+- Generate proofs (proxied to Aggkit, not from DB)
+
+**Auto-Claim (Read-Only via API):**
+
+- No direct database access
+- Calls API endpoints over HTTP
+
 ## Database Design
 
 ### MongoDB Schema
@@ -533,6 +803,8 @@ The API generates merkle proofs for claiming:
 ```
 
 ## Security Architecture
+
+> **Note**: For security vulnerability reporting and Polygon's bug bounty program, see [SECURITY.md](./SECURITY.md).
 
 ### API Security
 

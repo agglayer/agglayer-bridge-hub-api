@@ -6,6 +6,8 @@ Automated service that claims ready bridge transactions on behalf of users.
 
 The Auto-Claim package is the automation layer of the Bridge Hub system. It continuously monitors the Bridge Hub API for transactions that are ready to be claimed, fetches the necessary proofs, and submits claim transactions to the destination blockchain.
 
+**Deployment**: In production, you deploy **one auto-claim instance per destination network** you want to auto-claim for. For the complete cluster architecture and deployment topology, see [ARCHITECTURE.md - Production Cluster Architecture](../../ARCHITECTURE.md#production-cluster-architecture) and [DEPLOYMENT.md - Multi-Network Deployment](../../DEPLOYMENT.md#multi-network-deployment).
+
 ## Features
 
 - Automated polling of READY_TO_CLAIM transactions
@@ -25,32 +27,23 @@ bun install
 
 ## Configuration
 
-Create a `.env` file in the package root:
+Create a `.env` file in the package root with the following variables:
 
-```bash
-# Bridge Hub API
-BRIDGE_HUB_API_URL=http://localhost:3000
+**Required:**
 
-# Network Configuration
-SOURCE_NETWORKS=[1,137,42161]          # Array of source network IDs to monitor
-DESTINATION_NETWORK=2442                # Destination network ID (for filtering)
-DESTINATION_NETWORK_CHAINID=2442        # Destination chain ID (for RPC)
+- `BRIDGE_HUB_API_URL` - Bridge Hub API base URL
+- `SOURCE_NETWORKS` - Source network IDs to monitor (JSON array)
+- `DESTINATION_NETWORK` - Destination network ID for filtering
+- `DESTINATION_NETWORK_CHAINID` - Destination chain ID for RPC
+- `BRIDGE_CONTRACT` - Bridge contract address
+- `PRIVATE_KEY` - Wallet private key for signing transactions
+- `RPC_CONFIG` or (`BASE_ERPC_URL` + `ERPC_API_KEY`) - RPC endpoints configuration
 
-# Bridge Contract
-BRIDGE_CONTRACT=0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe
+**Optional:**
 
-# Wallet Configuration
-PRIVATE_KEY=0x...                       # Private key for signing transactions
+- `SENTRY_DSN` - Error tracking DSN
 
-# RPC Configuration (JSON format)
-RPC_CONFIG={"2442": "https://rpc.cardona.zkevm-rpc.com"}
-# OR use eRPC
-BASE_ERPC_URL=https://erpc.gateway.com
-ERPC_API_KEY=your-api-key
-
-# Optional
-SENTRY_DSN=https://...                  # Error tracking
-```
+For detailed configuration with examples, security guidelines, and RPC setup options, see **[DEPLOYMENT.md - Auto-Claim Configuration](../../DEPLOYMENT.md#auto-claim-package)**.
 
 ## Usage
 
@@ -450,6 +443,8 @@ DESTINATION_NETWORK=1101 bun start
 
 ## Security Considerations
 
+> **Note**: For security vulnerability reporting and Polygon's bug bounty program, see [SECURITY.md](../../SECURITY.md).
+
 ### Private Key Management
 
 **⚠️ CRITICAL: Never commit private keys to version control**
@@ -549,21 +544,6 @@ cast tx $TX_HASH --rpc-url $RPC_URL
 - `@agglayer/bridge-hub-commons` - Shared types
 - `@polygonlabs/servercore` - Logging
 - `viem` - Blockchain interactions (wallet, contracts)
-
-## Environment Variables Reference
-
-| Variable                      | Required    | Description                     | Example                     |
-| ----------------------------- | ----------- | ------------------------------- | --------------------------- |
-| `BRIDGE_HUB_API_URL`          | Yes         | Bridge Hub API base URL         | `http://localhost:3000`     |
-| `SOURCE_NETWORKS`             | Yes         | Source network IDs (JSON array) | `[1,137,42161]`             |
-| `DESTINATION_NETWORK`         | Yes         | Destination network ID          | `2442`                      |
-| `DESTINATION_NETWORK_CHAINID` | Yes         | Destination chain ID for RPC    | `2442`                      |
-| `BRIDGE_CONTRACT`             | Yes         | Bridge contract address         | `0x2a3DD3...`               |
-| `PRIVATE_KEY`                 | Yes         | Wallet private key              | `0x...`                     |
-| `RPC_CONFIG`                  | Conditional | RPC endpoints (JSON)            | `{"2442": "https://..."}`   |
-| `BASE_ERPC_URL`               | Conditional | eRPC base URL                   | `https://erpc.gateway.com`  |
-| `ERPC_API_KEY`                | Conditional | eRPC API key                    | `your-key`                  |
-| `SENTRY_DSN`                  | No          | Sentry error tracking           | `https://...@sentry.io/...` |
 
 ## Future Enhancements
 

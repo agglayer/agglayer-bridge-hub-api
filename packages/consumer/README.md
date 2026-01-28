@@ -36,27 +36,25 @@ bun install
 
 ## Configuration
 
-Create a `.env` file in the package root:
+Create a `.env` file in the package root with the following variables:
 
-```bash
-# Network Configuration
-NETWORK_ID=1                                    # Chain network identifier
-NETWORK=mainnet                                 # mainnet, testnet, or devnet
-BRIDGE_CONTRACT_ADDRESS=0x...                   # Bridge contract address
+**Required:**
 
-# External Services
-BRIDGE_SERVICE_URL=https://bridge-api.polygon.technology
-RPC_URL=https://eth-mainnet.g.alchemy.com/...  # Optional, for direct RPC access
+- `NETWORK_ID` - Chain network identifier (e.g., 1 for Ethereum)
+- `NETWORK` - Network environment (mainnet, testnet, or devnet)
+- `BRIDGE_SERVICE_URL` - Bridge Service API URL
+- `BRIDGE_CONTRACT_ADDRESS` - Bridge contract address
+- `MONGODB_CONNECTION_URI` - MongoDB connection string
+- `MONGODB_DB_NAME` - Database name
 
-# Database
-MONGODB_CONNECTION_URI=mongodb://localhost:27017
-MONGODB_DB_NAME=bridge_hub
+**Optional:**
 
-# Optional
-ETROG_UPDATE_BLOCK_NUMBER=0                     # Starting block for Etrog upgrade
-METADATA_DOC=lastIndexedTransactions            # Metadata document name
-SENTRY_DSN=https://...                          # Error tracking
-```
+- `RPC_URL` - Optional RPC endpoint for direct blockchain access
+- `ETROG_UPDATE_BLOCK_NUMBER` - Starting block for Etrog upgrade
+- `METADATA_DOC` - Metadata document name (default: lastIndexedTransactions)
+- `SENTRY_DSN` - Error tracking DSN
+
+For detailed configuration with examples, descriptions, and best practices, see **[DEPLOYMENT.md - Consumer Configuration](../../DEPLOYMENT.md#consumer-package)**.
 
 ## Usage
 
@@ -79,41 +77,57 @@ bun start
 
 ## Components
 
+The Consumer runs as a single Node.js process containing two main components, each with scheduled cron jobs that fetch data from the Aggkit Bridge Service.
+
 ### BridgeAPIConsumer
 
-Polls the Bridge Service API for new bridge transactions.
+Contains three cron jobs that poll the Aggkit Bridge Service:
 
-**Responsibilities:**
+#### 1. bridgesCron
 
-- Fetches deposit transactions from Bridge Service API
-- Parses and validates transaction data
-- Maps transactions to internal format
-- Stores transactions in MongoDB
-- Tracks indexing progress via metadata
+- **Purpose**: Fetches new bridge deposit transactions
+- **Data Source**: Aggkit Bridge Service `/bridges` API
+- **Database**: Inserts transactions into `transactions` collection with status `BRIDGED`
+- **Metadata**: Updates `lastIndexedBridgeDepositCount`
+- **Interval**: Configurable (default: 10 seconds)
 
-**Configuration:**
+#### 2. claimsCron
 
-- Poll interval: 10 seconds (configurable via cron expression)
-- Batch size: 2 transactions per poll
-- Uses `deposit_count` as cursor for pagination
+- **Purpose**: Fetches claim events from the blockchain
+- **Data Source**: Aggkit Bridge Service `/claims` API
+- **Database**: Updates transactions to status `CLAIMED`, adds claim hash and timestamp
+- **Metadata**: Updates `lastIndexedClaimBlockNumber`
+- **Interval**: Configurable
+
+#### 3. mappingsCron
+
+- **Purpose**: Fetches token mapping events
+- **Data Source**: Aggkit Bridge Service `/mappings` API
+- **Database**: Inserts/updates token mappings in `mappings` collection
+- **Metadata**: Updates `lastIndexedMappingBlockNumber`
+- **Interval**: Configurable
 
 ### ClaimReadinessConsumer
 
-Monitors blockchain via Aggkit for claim eligibility events.
+Contains one cron job that determines claim eligibility:
 
-**Responsibilities:**
+#### 4. readyToClaimCron
 
-- Monitors destination chain for L1 info tree updates
-- Detects when transactions become claimable
-- Updates transaction status from BRIDGED → READY_TO_CLAIM
-- Detects claim events and updates status to CLAIMED
-- Tracks claim transaction hashes and timestamps
+- **Purpose**: Detects when transactions become claimable
+- **Data Source**: Aggkit Bridge Service `/l1-info-tree` API
+- **Database**: Updates transactions from `BRIDGED` to `READY_TO_CLAIM`, sets `leafIndexForProof`
+- **Logic**: Compares L1 info tree data with transaction data
+- **Interval**: Configurable
 
-**Event Monitoring:**
+**Important**: All cron jobs fetch data from Aggkit Bridge Service APIs - the consumer does NOT directly monitor the blockchain. Aggkit is a per-network service operated by chain owners that indexes blockchain events.
 
-- Listens for bridge contract events
-- Processes events in batches
-- Updates MongoDB in real-time
+**Process Architecture:**
+
+- All 4 crons run in a single Node.js process
+- Each cron is a scheduled job at configured intervals
+- Metadata collection tracks progress for resume after restarts
+
+For detailed architecture, see [ARCHITECTURE.md - Consumer Internal Architecture](../../ARCHITECTURE.md#consumer-internal-architecture).
 
 ### Services
 

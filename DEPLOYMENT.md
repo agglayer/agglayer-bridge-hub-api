@@ -695,6 +695,157 @@ mongorestore \
     - Automatic restart
     - Re-processes unclaimed transactions
 
+## Multi-Network Deployment
+
+### Architecture Overview
+
+The Bridge Hub is designed to index multiple blockchain networks simultaneously. See [ARCHITECTURE.md - Production Cluster Architecture](./ARCHITECTURE.md#production-cluster-architecture) for detailed architecture diagrams and component interactions.
+
+### Deployment Topology
+
+**Consumer Instances: One per Source Network**
+
+Deploy one consumer instance for each blockchain network you want to index:
+
+```bash
+# Network 0 (Ethereum)
+NETWORK_ID=0 NETWORK=mainnet BRIDGE_CONTRACT_ADDRESS=0x... bun start
+
+# Network 1 (zkEVM)
+NETWORK_ID=1 NETWORK=mainnet BRIDGE_CONTRACT_ADDRESS=0x... bun start
+
+# Network 137 (Polygon PoS)
+NETWORK_ID=137 NETWORK=mainnet BRIDGE_CONTRACT_ADDRESS=0x... bun start
+```
+
+Each consumer connects to its network's Aggkit Bridge Service and writes to the shared MongoDB database.
+
+**Auto-Claim Instances: One per Destination Network**
+
+Deploy one auto-claim instance for each destination network you want to auto-claim for:
+
+```bash
+# Auto-claim for network 2442 (Cardona testnet)
+DESTINATION_NETWORK=2442 \
+DESTINATION_NETWORK_CHAINID=2442 \
+SOURCE_NETWORKS=[0,1,137] \
+bun start
+
+# Auto-claim for network 1101 (Polygon zkEVM mainnet)
+DESTINATION_NETWORK=1101 \
+DESTINATION_NETWORK_CHAINID=1101 \
+SOURCE_NETWORKS=[0,1,137] \
+bun start
+```
+
+**API Service: Single Instance (Horizontally Scalable)**
+
+Deploy one API instance that serves all networks:
+
+```bash
+# API serves data from all networks in the database
+PORT=3000 \
+MONGODB_CONNECTION_URI=mongodb://... \
+RPC_CONFIG='{"mainnet":{"0":"https://...","1":"https://...","137":"https://..."}}' \
+PROOF_CONFIG='{"mainnet":{"0":"https://...","1":"https://...","137":"https://..."}}' \
+bun start
+```
+
+**MongoDB: Single Shared Database**
+
+All consumers and the API share one MongoDB instance:
+
+```
+MongoDB (Shared)
+├── bridge_hub_api_transactions (all networks)
+├── bridge_hub_api_mappings (all networks)
+└── bridge_hub_api_metadata (per-network checkpoints)
+```
+
+### Example Production Deployment
+
+**For 3 Networks (Ethereum, zkEVM, Polygon):**
+
+| Component              | Instances          | Configuration              |
+| ---------------------- | ------------------ | -------------------------- |
+| Consumer (net 0)       | 1                  | `NETWORK_ID=0`             |
+| Consumer (net 1)       | 1                  | `NETWORK_ID=1`             |
+| Consumer (net 137)     | 1                  | `NETWORK_ID=137`           |
+| API                    | 2+ (load balanced) | Serves all networks        |
+| Auto-Claim (dest 2442) | 1                  | `DESTINATION_NETWORK=2442` |
+| Auto-Claim (dest 1101) | 1                  | `DESTINATION_NETWORK=1101` |
+| MongoDB                | 1 (replica set)    | Shared by all              |
+
+**Total: 8 services + 1 database**
+
+### Adding a New Network
+
+To add support for a new network to your deployment:
+
+1. **Deploy Consumer Instance**
+
+    ```bash
+    # Add consumer for new network (e.g., network 42161 - Arbitrum)
+    NETWORK_ID=42161 \
+    NETWORK=mainnet \
+    BRIDGE_CONTRACT_ADDRESS=0x... \
+    BRIDGE_SERVICE_URL=https://aggkit-42161.example.com \
+    MONGODB_CONNECTION_URI=mongodb://... \
+    bun start
+    ```
+
+2. **Update API Configuration**
+    - Add network's RPC endpoint to `RPC_CONFIG`
+    - Add network's proof endpoint to `PROOF_CONFIG`
+    - Restart API instances
+
+3. **Update Auto-Claim Configuration**
+    - Add new network ID to `SOURCE_NETWORKS` array
+    - Restart auto-claim instances
+
+4. **Verify Data Flow**
+    - Check consumer is indexing: Query metadata collection for network checkpoint
+    - Check API serves data: `GET /transactions?sourceNetworkIds=42161`
+    - Check auto-claim detects transactions: Monitor auto-claim logs
+
+### Network Configuration
+
+Networks are identified by their chain ID. Common networks:
+
+| Network ID | Network Name     | Type      | Common Use                     |
+| ---------- | ---------------- | --------- | ------------------------------ |
+| 0          | Ethereum Mainnet | L1        | Source for bridges to L2s      |
+| 1          | zkEVM Mainnet    | L2        | Polygon zkEVM                  |
+| 137        | Polygon PoS      | Sidechain | Polygon PoS chain              |
+| 2442       | Cardona Testnet  | L2        | zkEVM testnet                  |
+| 1101       | Polygon zkEVM    | L2        | zkEVM mainnet (alternative ID) |
+| 42161      | Arbitrum One     | L2        | Arbitrum mainnet               |
+
+**Note**: Actual network IDs depend on Agglayer configuration. Check with network operators for canonical IDs.
+
+### Resource Requirements Per Network
+
+**Consumer (per network):**
+
+- CPU: 2+ vCPU
+- RAM: 4GB
+- Storage: 50GB (grows with transaction history)
+- Network: High bandwidth for Aggkit polling
+
+**API (shared):**
+
+- CPU: 4+ vCPU
+- RAM: 8GB
+- Storage: Minimal (reads from DB)
+- Network: High bandwidth for API requests
+
+**Auto-Claim (per destination network):**
+
+- CPU: 1-2 vCPU
+- RAM: 2GB
+- Storage: Minimal
+- Funds: Native tokens for gas on destination chain
+
 ## Scaling
 
 ### Horizontal Scaling
@@ -816,6 +967,8 @@ bun start
 ```
 
 ## Security Checklist
+
+> **Note**: For security vulnerability reporting and Polygon's bug bounty program, see [SECURITY.md](./SECURITY.md).
 
 ### Pre-Deployment
 

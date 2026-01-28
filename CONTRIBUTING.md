@@ -585,7 +585,7 @@ API endpoints are documented via OpenAPI in code. When adding/modifying endpoint
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the project's license.
+By contributing, you agree that your contributions will be licensed under the Source Available License (Copyright 2026 PT Services DMCC). This license allows free non-production use but requires commercial licensing for certain production uses. See the [LICENSE](./LICENSE) file for complete terms and restrictions.
 
 ---
 

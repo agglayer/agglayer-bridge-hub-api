@@ -2,6 +2,8 @@
 
 A comprehensive bridge transaction indexing and claiming system for the Agglayer ecosystem. This monorepo provides services to monitor, store, expose, and automatically claim bridge transactions across multiple blockchain networks.
 
+> **License Notice:** This software is licensed under a Source Available License. Free for non-production use. Production use requires Agglayer-Connected Deployment. See [LICENSE](./LICENSE) for restrictions.
+
 ## Overview
 
 The Agglayer Bridge Hub consists of four main packages that work together to provide a complete bridge transaction management solution:
@@ -24,29 +26,19 @@ The Agglayer Bridge Hub consists of four main packages that work together to pro
 ## Architecture
 
 ```
-                        ┌──────────────────┐
-                        │     COMMONS      │
-                        │  (Types/Schemas) │
-                        └────────┬─────────┘
-                                 │
-                    ┌────────────┼────────────┐
-                    │            │            │
-                    ▼            ▼            ▼
-         ┌─────────────┐  ┌──────────┐  ┌──────────────┐
-         │  CONSUMER   │  │   API    │◀─│ AUTO-CLAIM   │
-         └──────┬──────┘  └────┬─────┘  └──────┬───────┘
-                │              │   HTTP         │
-    Writes to   │              │ Reads from     │ Submits to
-                ▼              ▼                ▼
-         ┌────────────────────────────┐  ┌───────────────────┐
-         │      MongoDB Database      │  │ Blockchain (L2)   │
-         └────────────────────────────┘  └───────────────────┘
-
-Data Flow:
-1. Consumer → Monitors blockchain & Bridge Service API → Writes to MongoDB
-2. API → Reads from MongoDB → Exposes REST endpoints
-3. Auto-Claim → Calls API via HTTP → Gets transactions & proofs → Submits claims to blockchain
+         COMMONS (Shared Types)
+                 │
+     ┌───────────┼───────────┐
+     ▼           ▼           ▼
+ CONSUMER  →  MongoDB  ←  API  ←  AUTO-CLAIM
+ (Indexer)               (HTTP)    (Claimer)
+     │                              │
+     └─ Blockchain              Blockchain
 ```
+
+**Data Flow:** Consumer polls Aggkit Bridge Service for indexed data → Writes to MongoDB → API exposes data → Auto-Claim fetches and submits claims.
+
+For detailed architecture including production cluster setup, cron jobs, and multi-network deployment, see **[ARCHITECTURE.md](./ARCHITECTURE.md)** (specifically [Production Cluster Architecture](./ARCHITECTURE.md#production-cluster-architecture)).
 
 ## Packages
 
@@ -79,7 +71,7 @@ Data Flow:
 - Interactive API documentation via Scalar
 - Health check endpoints
 
-**API Documentation**: Visit `/reference` endpoint when running the API server to access interactive OpenAPI documentation.
+**API Documentation**: Visit `/docs` endpoint when running the API server to access interactive OpenAPI documentation.
 
 ### [auto-claim-service](./packages/auto-claim)
 
@@ -146,79 +138,17 @@ cd packages/auto-claim && bun test
 
 Each package requires specific environment variables. Create `.env` files in each package directory.
 
-### Consumer Package
+**Quick Start Example:**
 
 ```bash
-NETWORK_ID=1
-NETWORK=mainnet
-BRIDGE_SERVICE_URL=https://bridge-api.polygon.technology
-BRIDGE_CONTRACT_ADDRESS=0x...
+# Minimum required for local development
 MONGODB_CONNECTION_URI=mongodb://localhost:27017
 MONGODB_DB_NAME=bridge_hub
-ETROG_UPDATE_BLOCK_NUMBER=1000000
-SENTRY_DSN=https://...
 ```
 
-### API Package
+For complete configuration reference including all environment variables, requirements, and examples for each package, see **[DEPLOYMENT.md - Configuration](./DEPLOYMENT.md#configuration)**.
 
-```bash
-MONGODB_CONNECTION_URI=mongodb://localhost:27017
-MONGODB_DB_NAME=bridge_hub
-PROOF_CONFIG={"mainnet": {"1": "https://rpc..", ...}}
-RPC_CONFIG={"mainnet": {"1": "https://rpc..", ...}}
-SENTRY_DSN=https://...
-PORT=3000
-```
-
-### Auto-Claim Package
-
-```bash
-BRIDGE_HUB_API_URL=http://localhost:3000
-SOURCE_NETWORKS=[1,137]
-DESTINATION_NETWORK=2442
-DESTINATION_NETWORK_CHAINID=2442
-BRIDGE_CONTRACT=0x...
-PRIVATE_KEY=0x...
-RPC_CONFIG={"2442": "https://rpc..."}
-SENTRY_DSN=https://...
-```
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed configuration guide.
-
-## Development Workflow
-
-### Adding Dependencies
-
-```bash
-# Add to root (affects all packages)
-bun add -D <package-name>
-
-# Add to specific package
-cd packages/api && bun add <package-name>
-```
-
-### Code Quality
-
-```bash
-# Format code
-bun run format
-
-# Lint code
-bun run lint
-
-# Type check
-bun run type-check
-
-# Run all checks
-bun run style:check
-```
-
-### Git Hooks
-
-This project uses Husky for git hooks:
-
-- **pre-commit**: Runs formatting and linting
-- **commit-msg**: Validates commit message format (conventional commits)
+For detailed development workflow including branch strategy, code quality checks, testing guidelines, and contribution process, see **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
 
 ## Monorepo Structure
 
@@ -262,40 +192,27 @@ This provides interactive OpenAPI documentation powered by Scalar, where you can
 
 ## Transaction Lifecycle
 
-1. **User Action**: User bridges tokens from source to destination chain
-2. **Consumer Indexing**: Consumer detects bridge event from the chain's Aggkit and saves to MongoDB (status: BRIDGED)
-3. **Readiness Update**: Consumer monitors the chain's Aggkit and updates status to READY_TO_CLAIM
-4. **API Exposure**: Transaction becomes available via API with READY_TO_CLAIM status
-5. **Auto-Claim**: Auto-claim service detects ready transaction and fetches proof
-6. **Claiming**: Auto-claim submits claim transaction to destination chain
-7. **Completion**: Consumer detects claim event from destination's Aggkit and updates status to CLAIMED
+1. **Bridge** → User bridges tokens (status: BRIDGED)
+2. **Index** → Consumer saves to MongoDB
+3. **Ready** → Consumer updates (status: READY_TO_CLAIM)
+4. **Claim** → Auto-claim fetches proof and submits to chain
+5. **Complete** → Consumer updates (status: CLAIMED)
+
+For the complete step-by-step transaction lifecycle with technical details, see **[ARCHITECTURE.md - Transaction Lifecycle](./ARCHITECTURE.md#complete-transaction-lifecycle)**.
 
 ## Testing
 
-All packages include comprehensive test suites:
-
-- **API**: 50+ tests covering controllers, services, and middlewares
-- **Consumer**: 30+ tests covering services and mappers
-- **Auto-Claim**: 39 tests covering transaction and claim services
-- **Commons**: Type checking only (no runtime tests needed)
-
-Run tests with:
+All packages include comprehensive test suites. Run tests with:
 
 ```bash
 bun run test
 ```
 
+For testing guidelines, coverage requirements, and writing new tests, see **[CONTRIBUTING.md - Testing Guidelines](./CONTRIBUTING.md#testing-guidelines)**.
+
 ## Contributing
 
-Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-### Development Guidelines
-
-1. Follow TypeScript strict mode
-2. Write tests for new features
-3. Use conventional commits
-4. Ensure all tests pass before committing
-5. Update documentation for API changes
+Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of conduct, development guidelines, and the process for submitting pull requests.
 
 ## Deployment
 
@@ -323,6 +240,8 @@ All packages use `@polygonlabs/servercore` for structured logging with Sentry in
 - **API Access**: Implement rate limiting in production.
 - **Database**: Use authentication and network isolation.
 - **RPC Endpoints**: Use reliable, authenticated RPC providers.
+
+For security vulnerability reporting and bug bounty information, see [SECURITY.md](./SECURITY.md).
 
 ## Performance
 
@@ -356,7 +275,14 @@ All packages use `@polygonlabs/servercore` for structured logging with Sentry in
 
 ## License
 
-[Add license here]
+This project is licensed under a Source Available License by PT Services DMCC.
+
+**Key Points:**
+
+- Free for non-production use
+- Production use allowed only for Agglayer-Connected Deployments
+- Commercial license required for Bridge-as-a-Service or competing products
+- See the [LICENSE](./LICENSE) file for complete terms and contact information
 
 ## Support
 
