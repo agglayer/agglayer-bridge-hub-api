@@ -1,25 +1,19 @@
 # @agglayer/bridge-hub-commons
 
-Shared TypeScript types, interfaces, and schemas for the Agglayer Bridge Hub ecosystem.
+Shared TypeScript types, interfaces, and schemas for the Agglayer Bridge Hub ecosystem. For complete system architecture, see [root README](../../README.md).
 
-## Overview
-
-This package serves as the foundation layer for the Bridge Hub monorepo, providing type-safe contracts between all packages. It ensures consistency and type safety across the API, Consumer, and Auto-Claim services.
-
-## Purpose
-
-- **Type Safety**: Shared TypeScript interfaces prevent type mismatches between packages
-- **Single Source of Truth**: All data structures defined in one place
-- **Zero Runtime**: Pure TypeScript types with no runtime overhead
-- **Schema Validation**: OpenAPI schema definitions for API contracts
-
-## Installation
-
-This package is part of the monorepo and installed automatically:
+## Quick Start
 
 ```bash
 # From monorepo root
 bun install
+
+# Build this package
+cd packages/commons
+bun run build
+
+# Type check
+bun run type-check
 ```
 
 ## Usage
@@ -39,71 +33,25 @@ import type {
 
 ### Transaction Types
 
-#### `IHubTransaction`
-
-Represents a bridge transaction in the system.
-
-```typescript
-interface IHubTransaction {
-	hubUID: string; // Unique identifier
-	sourceNetwork: number; // Source chain ID
-	destinationNetwork: number; // Destination chain ID
-	status: string; // BRIDGED, READY_TO_CLAIM, CLAIMED
-	leafType: string; // ASSET or MESSAGE
-	amount: string; // Amount bridged (as string)
-	depositCount: number; // Deposit counter
-	leafIndexForProof?: number; // Index for merkle proof generation
-	transactionHash: string; // Source transaction hash
-	claimTransactionHash?: string; // Claim transaction hash (if claimed)
-	// ... additional fields
-}
-```
-
-#### `ITransactionResponse`
-
-API response format for transaction queries.
-
-```typescript
-interface ITransactionResponse {
-	success: boolean;
-	data: IHubTransaction[];
-	pagination: {
-		total: number;
-		limit: number;
-		nextStartAfterCursor?: string;
-	};
-}
-```
+- `IHubTransaction` - Bridge transaction representation with status, networks, amounts, and claim details
+- `ITransactionResponse` - API response format for transaction queries with pagination
+- `ITransactionDocument` - MongoDB document schema for transactions collection
 
 ### Proof Types
 
-#### `ClaimProof`
+- `ClaimProof` - Merkle proof data required for claiming transactions (proof roots, L1 info tree leaf, metadata)
+- `ClaimProofResponse` - API response format for proof requests
+- `L1InfoTreeLeaf` - L1 information tree leaf data structure
 
-Merkle proof data required for claiming transactions.
+### Token Types
 
-```typescript
-interface ClaimProof {
-	proof_local_exit_root: string[];
-	proof_rollup_exit_root: string[];
-	l1_info_tree_leaf: L1InfoTreeLeaf;
-	bridge_tx_metadata: string;
-}
-```
-
-#### `ClaimProofResponse`
-
-API response format for proof requests.
-
-```typescript
-interface ClaimProofResponse {
-	success: boolean;
-	data: ClaimProof;
-}
-```
+- `ITokenMapping` - Token address mappings between Agglayer networks
+- `ITokenMetadata` - Token information (name, symbol, decimals)
 
 ### Enums
 
-Available enums for transaction status, leaf types, and more.
+- Transaction status values: `BRIDGED`, `LEAF_INCLUDED`, `READY_TO_CLAIM`, `CLAIMED`
+- Leaf types: `ASSET`, `MESSAGE`
 
 ## Package Structure
 
@@ -118,62 +66,13 @@ commons/
 │   │   └── ...
 │   └── index.ts           # Main export file
 ├── dist/                  # Compiled output
-├── package.json
-└── tsconfig.json
+└── package.json
 ```
 
-## Dependencies
+## See Also
 
-- `@hono/zod-openapi` - For OpenAPI schema definitions
-
-## Development
-
-### Building
-
-```bash
-bun run build
-```
-
-### Type Checking
-
-```bash
-bun run type-check
-```
-
-## Used By
-
-- **bridge-hub-api** - Uses types for API request/response validation
-- **bridge-hub-consumer** - Uses types for indexing transactions
-- **auto-claim-service** - Uses types for API communication
-
-## Adding New Types
-
-1. Create a new file in `src/interfaces/` or `src/enums/`
-2. Export from the file
-3. Re-export from `src/index.ts`
-4. Run `bun run build` to compile
-5. Dependent packages will automatically have access to the new types
-
-Example:
-
-```typescript
-// src/interfaces/my_new_type.ts
-export interface MyNewType {
-	id: string;
-	name: string;
-}
-
-// src/index.ts
-export * from "./interfaces/my_new_type";
-```
-
-## Versioning
-
-This package follows semantic versioning. Breaking changes to interfaces require a major version bump as they affect all dependent packages.
-
-## Notes
-
-- This package has no runtime code - it's types only
-- All types are exported as TypeScript interfaces/types
-- No unit tests needed (TypeScript compiler validates types)
-- Changes here affect all packages in the monorepo
+- [README.md](../../README.md) - System overview and features
+- [ARCHITECTURE.md](../../ARCHITECTURE.md) - Complete system architecture and database schema
+- [DEPLOYMENT.md](../../DEPLOYMENT.md) - Configuration and deployment guide
+- [CONTRIBUTING.md](../../CONTRIBUTING.md) - Development and testing guidelines
+- [SECURITY.md](../../SECURITY.md) - Security information and bug bounty
