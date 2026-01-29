@@ -76,24 +76,24 @@ The Bridge Hub is designed to index multiple blockchain networks simultaneously.
 │  └─────────────┘        │  │  readyToClaimCron         │  │  │               │
 │                         │  │  mappingsCron             │  │  │               │
 │                         │  └───────────────────────────┘  │  │               │
-│  ┌─────────────┐        └─────────────────────────────────┘  │               │
-│  │   Aggkit    │                                             │               │
-│  │   Bridge    │        ┌─────────────────────────────────┐  │               │
-│  │  Service    │──────▶ │      netId_1 Consumer           │  │               │
-│  │  (net 1)    │        │  ┌───────────────────────────┐  │  │               │
-│  └─────────────┘        │  │  bridgesCron              │  │  │               │
-│                         │  │  claimsCron               │  │──┤               │
-│                         │  │  readyToClaimCron         │  │  │               │
-│  ┌─────────────┐        │  │  mappingsCron             │  │  │               │
-│  │   Aggkit    │        │  └───────────────────────────┘  │  │               │
-│  │   Bridge    │        └─────────────────────────────────┘  │               │
-│  │  Service    │──────▶                                      │               │
-│  │  (net n)    │        ┌─────────────────────────────────┐  │               │
-│  └─────────────┘        │      netId_n Consumer           │  │               │
-│                         │  ┌───────────────────────────┐  │  │               │
-│                         │  │  bridgesCron              │  │  │               │
-│                         │  │  claimsCron               │  │──┤               │
-│                         │  │  readyToClaimCron         │  │  │               │
+│                         └─────────────────────────────────┘  │               │
+│                                                              │               │
+│  ┌─────────────┐        ┌─────────────────────────────────┐  │               │
+│  │   Aggkit    │        │      netId_1 Consumer           │  │               │
+│  │   Bridge    │──────▶ │  ┌───────────────────────────┐  │  │               │
+│  │  Service    │        │  │  bridgesCron              │  │  │               │
+│  │  (net 1)    │        │  │  claimsCron               │  │──┤               │
+│  └─────────────┘        │  │  readyToClaimCron         │  │  │               │
+│                         │  │  mappingsCron             │  │  │               │
+│                         │  └───────────────────────────┘  │  │               │
+│                         └─────────────────────────────────┘  │               │
+│                                                              │               │
+│  ┌─────────────┐        ┌─────────────────────────────────┐  │               │
+│  │   Aggkit    │        │      netId_n Consumer           │  │               │
+│  │   Bridge    │──────▶ │  ┌───────────────────────────┐  │  │               │
+│  │  Service    │        │  │  bridgesCron              │  │  │               │
+│  │  (net n)    │        │  │  claimsCron               │  │──┤               │
+│  └─────────────┘        │  │  readyToClaimCron         │  │  │               │
 │                         │  │  mappingsCron             │  │  │               │
 │                         │  └───────────────────────────┘  │  │               │
 │                         └─────────────────────────────────┘  │               │
@@ -109,8 +109,8 @@ The Bridge Hub is designed to index multiple blockchain networks simultaneously.
 │                         │  └──────────────────────────────────────┘  │       │
 │                         └────────────┬───────────────────────────────┘       │
 │                                      │                                       │
-│                                      │ Reads from                            │
-│                         ┌────────────▼───────────────────────────────┐       │
+│                                      ▼ Reads from                            │
+│                         ┌────────────────────────────────────────────┐       │
 │                         │         API Service                        │       │
 │                         │  ┌──────────────────────────────────────┐  │       │
 │                         │  │  /transactions                       │  │       │
@@ -281,8 +281,8 @@ bridge-hub-consumer
 
 ┌──────────────────┐
 │ ClaimReadiness   │
-│ Consumer         │  ← Listen for events
-└────────┬─────────┘
+│ Consumer         │  ← Polls transactions in Bridged status
+└────────┬─────────┘     every 10s and updates the status
          │
          ▼
     ┌────────────┐
@@ -334,17 +334,17 @@ Request
        │
        ▼
 ┌──────────────┐
-│ Middleware   │  ← CORS, logging, error handling
+│ Middleware   │  ← CORS, input validation, logging, error handling
 └──────┬───────┘
        │
        ▼
 ┌──────────────┐
-│ Controller   │  ← Input validation, response formatting
+│ Controller   │  ← Routing request to corresponding service and response formatting
 └──────┬───────┘
        │
        ▼
 ┌──────────────┐
-│  Service     │  ← Business logic, proof generation
+│  Service     │  ← Business logic
 └──────┬───────┘
        │
        ▼
@@ -435,10 +435,10 @@ auto-claim-service
    ▼
 
 3. CONSUMER: Claim Readiness Detection
-   ClaimReadinessConsumer listens to blockchain events
+   ClaimReadinessConsumer polls txs in bridged status
    → Detects L1 info tree update
    → Updates transaction (status: READY_TO_CLAIM)
-   → Sets leafIndexForProof
+   → Sets leafIndex and leafIndexForProof
 
    ▼
 
@@ -530,9 +530,9 @@ bridge_hub_api_transactions_devnet
 ```
 
 - **Purpose**: Store all bridge transactions across all networks
-- **Modified By**: `bridgesCron` (inserts), `claimsCron` (updates), `readyToClaimCron` (updates)
+- **Modified By**: `bridgesCron` (upserts), `claimsCron` (updates), `readyToClaimCron` (updates)
 - **Key Fields**: `hubUID`, `sourceNetwork`, `destinationNetwork`, `status`, `depositCount`
-- **Status Values**: `BRIDGED` → `READY_TO_CLAIM` → `CLAIMED`
+- **Status Values**: `BRIDGED` → `LEAF_INCLUDED` → `READY_TO_CLAIM` → `CLAIMED`
 
 #### 2. Mappings Collections
 
@@ -590,7 +590,7 @@ When a consumer instance restarts (planned maintenance, crash, deployment), it n
 
 **Consumers (Write-Heavy):**
 
-- Insert new transactions (bridgesCron)
+- Upserts new transactions (bridgesCron)
 - Update transaction status (claimsCron, readyToClaimCron)
 - Upsert token mappings (mappingsCron)
 - Update metadata checkpoints (all crons)
@@ -625,6 +625,7 @@ When a consumer instance restarts (planned maintenance, crash, deployment), it n
   transactionHash: String,             // Source transaction hash
   blockNumber: Number,                 // Block number on source
   timestamp: Number,                   // Unix timestamp
+  bridgeHash: String,
 
   // Bridge Details
   leafType: String,                    // "ASSET" or "MESSAGE"
@@ -633,15 +634,14 @@ When a consumer instance restarts (planned maintenance, crash, deployment), it n
   receiverAddress: String,
   fromAddress: String,
   amount: String,                      // BigInt as string
+  depositCount: Number,                // Deposit counter
 
   // Claiming Details
-  depositCount: Number,                // Deposit counter
   leafIndexForProof: Number,           // Index for merkle proof
   globalIndex: String,                 // Global index as string
-  bridgeHash: String,
 
   // Status Tracking
-  status: String,                      // BRIDGED, READY_TO_CLAIM, CLAIMED
+  status: String,                      // BRIDGED, LEAF_INCLUDED, READY_TO_CLAIM, CLAIMED
   lastUpdatedAt: Number,               // Last update timestamp
 
   // Claim Information (populated after claim)
@@ -680,48 +680,11 @@ When a consumer instance restarts (planned maintenance, crash, deployment), it n
 
 ```javascript
 {
-  _id: String,                         // Document type identifier
-  lastDepositCount: Number,            // Last indexed deposit count
-  lastUpdated: ISODate                 // Last update timestamp
+  _id: String,                                // Document type identifier
+  lastIndexedBridgeDepositCount: Number,      // Last indexed deposit count
+  lastIndexedClaimBlockNumber: Number         // Last indexed claim block number
+  lastIndexedMappingBlockNumber: Number       // Last indexed mappings block number
 }
-```
-
-### Query Patterns
-
-**Most Common Queries**:
-
-1. **Get Ready to Claim Transactions**
-
-```javascript
-db.transactions
-	.find({
-		status: "READY_TO_CLAIM",
-		destinationNetwork: { $in: [2442] },
-	})
-	.limit(50);
-```
-
-2. **Get Transaction by ID**
-
-```javascript
-db.transactions.findOne({
-	hubUID: "unique-id",
-});
-```
-
-3. **Update Transaction Status**
-
-```javascript
-db.transactions.updateOne(
-	{ hubUID: "unique-id" },
-	{
-		$set: {
-			status: "CLAIMED",
-			claimTransactionHash: "0x...",
-			lastUpdatedAt: Date.now(),
-		},
-	}
-);
 ```
 
 ## API Design
@@ -754,39 +717,20 @@ GET /transactions?limit=50&startAfter=<cursor>
 - Efficient for large datasets
 - No deep pagination performance issues
 
-**Implementation**:
-
-```typescript
-const cursor = query.startAfter;
-const transactions = await collection
-	.find({
-		/* filters */
-	})
-	.sort({ hubUID: 1 })
-	.limit(limit + 1) // Fetch one extra to check if more exist
-	.skip(cursor ? 1 : 0);
-
-const hasMore = transactions.length > limit;
-const results = transactions.slice(0, limit);
-const nextCursor = hasMore ? results[results.length - 1].hubUID : undefined;
-```
-
 ### Proof Generation
 
-The API generates merkle proofs for claiming:
+The API proxies merkle proofs for claiming from the respective Aggkit instances:
 
 **Inputs**:
 
 - `sourceNetworkId`: Source chain ID
 - `depositCount`: Deposit counter value
-- `leafIndex`: Index in merkle tree
+- `leafIndex`: Leaf index for proof in merkle tree
 
 **Process**:
 
-1. Fetch transaction data from source chain
-2. Query merkle tree for proofs
-3. Fetch L1 info tree leaf
-4. Construct ClaimProof object
+1. Fetch transaction data from source chain for metadata
+2. Proxy claim proofs from the source chain's Aggkit proof endpoint
 
 **Output**:
 
@@ -894,15 +838,7 @@ The API generates merkle proofs for claiming:
 **Performance Bottlenecks**:
 
 1. **MongoDB Queries**: Solved with proper indexing
-2. **RPC Calls**: Solved with caching or RPC pooling
-3. **Proof Generation**: Computationally expensive, consider caching
-
-### Future Optimizations
-
-1. **Caching Layer**: Redis for frequently accessed data
-2. **Event Bus**: Replace polling with event-driven architecture
-3. **Parallel Claims**: Batch multiple claims with nonce management
-4. **Read Replicas**: Separate MongoDB instances for reads/writes
+2. **Proof Generation**: Computation simplified with proxying proof from Aggkit
 
 ## Design Decisions
 
@@ -967,7 +903,7 @@ The API generates merkle proofs for claiming:
 - Lower throughput
 - Slower processing
 
-**Decision**: Simplicity and reliability are more important than speed for claiming.
+**Decision**: Simplicity and reliability are more important. Can introduce batch processing in future.
 
 ### Why Cursor-Based Pagination?
 
@@ -1036,12 +972,12 @@ Logger.info({
 Each service should expose health endpoint:
 
 ```
-GET /health
+GET /health-check
 {
-  "status": "healthy",
-  "checks": {
-    "database": "connected",
-    "api": "responding"
+  "status": "success",
+  "data": {
+    "status": "success",
+    "message": "All services are working correctly"
   }
 }
 ```
