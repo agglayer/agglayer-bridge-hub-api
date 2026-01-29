@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.6.0...bridge-hub-api@1.6.1) (2026-01-29)
+
+### Bug Fixes
+
+- proofService getProof function return type ([3d9985c](https://github.com/agglayer/agglayer-bridge-hub-api/commit/3d9985cd8d924fa834b5c99a457d4703f2b2bca1))
+- update package documentation to be lean ([ab7dd5d](https://github.com/agglayer/agglayer-bridge-hub-api/commit/ab7dd5d5186f2c74cd7e6b386fece868ab7fa237))
+
 # [1.6.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.5.17...bridge-hub-api@1.6.0) (2026-01-28)
 
 ### Bug Fixes

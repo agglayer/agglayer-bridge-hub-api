@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/@agglayer/bridge-hub-commons@1.2.0...@agglayer/bridge-hub-commons@1.2.1) (2026-01-29)
+
+### Bug Fixes
+
+- update package documentation to be lean ([ab7dd5d](https://github.com/agglayer/agglayer-bridge-hub-api/commit/ab7dd5d5186f2c74cd7e6b386fece868ab7fa237))
+
 # [1.2.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/@agglayer/bridge-hub-commons@1.1.3...@agglayer/bridge-hub-commons@1.2.0) (2026-01-28)
 
 ### Bug Fixes

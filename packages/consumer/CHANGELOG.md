@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.10](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.9...bridge-hub-consumer@1.6.10) (2026-01-29)
+
+### Bug Fixes
+
+- update package documentation to be lean ([ab7dd5d](https://github.com/agglayer/agglayer-bridge-hub-api/commit/ab7dd5d5186f2c74cd7e6b386fece868ab7fa237))
+
 ## [1.6.9](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.8...bridge-hub-consumer@1.6.9) (2026-01-28)
 
 **Note:** Version bump only for package bridge-hub-consumer
