@@ -20,41 +20,41 @@ The Agglayer Bridge Hub is a microservices-based system designed to facilitate c
 ### High-Level Architecture
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
-│                       External Systems                              │
-├────────────────────────────────────────────────────────────────────┤
-│                                                                     │
+┌──────────────────────────────────────────────────────────────────┐
+│                       External Systems                           │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │
 │  │   Aggkit     │  │  Blockchain  │  │   MongoDB    │            │
 │  │    Bridge    │  │              │  │   Database   │            │
 │  │   service    │  │              │  │              │            │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘            │
-└─────────┼──────────────────┼──────────────────┼────────────────────┘
-          │                  │                  │
-          ▼                  ▼                  ▼
-┌────────────────────────────────────────────────────────────────────┐
-│                    Bridge Hub Packages                              │
-│                                                                     │
-│                    ┌───────────────┐                               │
-│                    │    COMMONS    │                               │
-│                    │  (Shared Types)│                               │
-│                    └───────┬───────┘                               │
-│                            │                                        │
-│              ┌─────────────┼─────────────┐                         │
-│              │             │             │                         │
-│              ▼             ▼             ▼                         │
-│      ┌──────────┐    ┌─────────┐   ┌───────────┐                │
-│      │ CONSUMER │    │   API   │   │AUTO-CLAIM │                │
-│      │ (Indexer)│    │(Service)│   │(Claimer)  │                │
-│      └─────┬────┘    └────┬────┘   └─────┬─────┘                │
-│            │              │              │                         │
-│            │ Writes       │ Reads        │ HTTP                   │
-│            ▼              ▼              ▼                         │
-│      ┌──────────────────────────┐   ┌─────────────┐             │
-│      │    MongoDB Database      │   │ Blockchain  │             │
-│      └──────────────────────────┘   └─────────────┘             │
-│                                                                   │
-└────────────────────────────────────────────────────────────────────┘
+└─────────┼─────────────────┼─────────────────┼────────────────────┘
+          │                 │                 │
+          ▼                 ▼                 ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                    Bridge Hub Packages                           │
+│                                                                  │
+│                    ┌───────────────┐                             │
+│                    │    COMMONS    │                             │
+│                    │ (Shared Types)│                             │
+│                    └───────┬───────┘                             │
+│                            │                                     │
+│              ┌─────────────┼─────────────┐                       │
+│              │             │             │                       │
+│              ▼             ▼             ▼                       │
+│      ┌──────────┐    ┌─────────┐   ┌───────────┐                 │
+│      │ CONSUMER │    │   API   │   │AUTO-CLAIM │                 │
+│      │ (Indexer)│    │(Service)│   │(Claimer)  │                 │
+│      └─────┬────┘    └────┬────┘   └─────┬─────┘                 │
+│            │              │              │                       │
+│            │ Writes       │ Reads        │ HTTP                  │
+│            ▼              ▼              ▼                       │
+│      ┌──────────────────────────┐   ┌─────────────┐              │
+│      │    MongoDB Database      │   │ Blockchain  │              │
+│      └──────────────────────────┘   └─────────────┘              │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ## Production Cluster Architecture
@@ -64,12 +64,12 @@ The Agglayer Bridge Hub is a microservices-based system designed to facilitate c
 The Bridge Hub is designed to index multiple blockchain networks simultaneously. Each network connected to the Agglayer has a unique network ID (e.g., 0 for Ethereum, 1 for zkEVM, etc.). The production deployment runs **one consumer instance per source network** to index bridge transactions.
 
 ```
-┌───────────────────────────────────────────────────────────────────────────────┐
-│                        AGGLAYER HUB API CLUSTER                                │
-├───────────────────────────────────────────────────────────────────────────────┤
-│                                                                                │
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        AGGLAYER HUB API CLUSTER                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
 │  ┌─────────────┐        ┌─────────────────────────────────┐                  │
-│  │   Aggkit    │        │      netId_0 Indexer            │                  │
+│  │   Aggkit    │        │      netId_0 Consumer           │                  │
 │  │   Bridge    │──────▶ │  ┌───────────────────────────┐  │                  │
 │  │  Service    │        │  │  bridgesCron              │  │                  │
 │  │  (net 0)    │        │  │  claimsCron               │  │──┐               │
@@ -77,9 +77,9 @@ The Bridge Hub is designed to index multiple blockchain networks simultaneously.
 │                         │  │  mappingsCron             │  │  │               │
 │                         │  └───────────────────────────┘  │  │               │
 │  ┌─────────────┐        └─────────────────────────────────┘  │               │
-│  │   Aggkit    │                                              │               │
+│  │   Aggkit    │                                             │               │
 │  │   Bridge    │        ┌─────────────────────────────────┐  │               │
-│  │  Service    │──────▶ │      netId_1 Indexer            │  │               │
+│  │  Service    │──────▶ │      netId_1 Consumer           │  │               │
 │  │  (net 1)    │        │  ┌───────────────────────────┐  │  │               │
 │  └─────────────┘        │  │  bridgesCron              │  │  │               │
 │                         │  │  claimsCron               │  │──┤               │
@@ -89,7 +89,7 @@ The Bridge Hub is designed to index multiple blockchain networks simultaneously.
 │  │   Bridge    │        └─────────────────────────────────┘  │               │
 │  │  Service    │──────▶                                      │               │
 │  │  (net n)    │        ┌─────────────────────────────────┐  │               │
-│  └─────────────┘        │      netId_n Indexer            │  │               │
+│  └─────────────┘        │      netId_n Consumer           │  │               │
 │                         │  ┌───────────────────────────┐  │  │               │
 │                         │  │  bridgesCron              │  │  │               │
 │                         │  │  claimsCron               │  │──┤               │
@@ -99,38 +99,38 @@ The Bridge Hub is designed to index multiple blockchain networks simultaneously.
 │                         └─────────────────────────────────┘  │               │
 │                                                              │               │
 │                                                              ▼               │
-│                         ┌────────────────────────────────────────────┐      │
-│                         │         MongoDB Database                   │      │
-│                         │  ┌──────────────────────────────────────┐  │      │
-│                         │  │  Collections (per environment):      │  │      │
-│                         │  │  • bridge_hub_api_transactions       │  │      │
-│                         │  │  • bridge_hub_api_mappings           │  │      │
-│                         │  │  • bridge_hub_api_metadata           │  │      │
-│                         │  └──────────────────────────────────────┘  │      │
-│                         └────────────┬───────────────────────────────┘      │
+│                         ┌────────────────────────────────────────────┐       │
+│                         │         MongoDB Database                   │       │
+│                         │  ┌──────────────────────────────────────┐  │       │
+│                         │  │  Collections (per environment):      │  │       │
+│                         │  │  • bridge_hub_api_transactions       │  │       │
+│                         │  │  • bridge_hub_api_mappings           │  │       │
+│                         │  │  • bridge_hub_api_metadata           │  │       │
+│                         │  └──────────────────────────────────────┘  │       │
+│                         └────────────┬───────────────────────────────┘       │
 │                                      │                                       │
 │                                      │ Reads from                            │
-│                         ┌────────────▼───────────────────────────────┐      │
-│                         │         API Service                         │      │
-│                         │  ┌──────────────────────────────────────┐  │      │
-│                         │  │  /transactions                       │  │      │
-│                         │  │  /token-mappings                     │  │      │
-│                         │  │  /token-metadata                     │  │      │
-│                         │  │  /claim-proof (proxies to Aggkit)   │  │──┐   │
-│                         │  └──────────────────────────────────────┘  │  │   │
-│                         └─────────────────────────────────────────────┘  │   │
-│                                                                           │   │
-│                                                              HTTP Calls   │   │
+│                         ┌────────────▼───────────────────────────────┐       │
+│                         │         API Service                        │       │
+│                         │  ┌──────────────────────────────────────┐  │       │
+│                         │  │  /transactions                       │  │       │
+│                         │  │  /token-mappings                     │  │       │
+│                         │  │  /token-metadata                     │  │       │
+│                         │  │  /claim-proof (proxies to Aggkit)    │  │───┐   │
+│                         │  └──────────────────────────────────────┘  │   │   │
+│                         └────────────────────────────────────────────┘   │   │
+│                                                                          │   │
+│                                                              HTTP Calls  │   │
 │                         ┌─────────────────────────────────────────────┐  │   │
 │                         │     Auto-Claim Service (per dest network)   │◀─┘   │
-│                         │  ┌──────────────────────────────────────┐  │      │
-│                         │  │  Polls /transactions                 │  │      │
-│                         │  │  Fetches /claim-proof               │  │      │
-│                         │  │  Submits claims to blockchain        │  │      │
-│                         │  └──────────────────────────────────────┘  │      │
+│                         │  ┌──────────────────────────────────────┐   │      │
+│                         │  │  Polls /transactions                 │   │      │
+│                         │  │  Fetches /claim-proof                │   │      │
+│                         │  │  Submits claims to blockchain        │   │      │
+│                         │  └──────────────────────────────────────┘   │      │
 │                         └─────────────────────────────────────────────┘      │
-│                                                                               │
-└───────────────────────────────────────────────────────────────────────────────┘
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Key Architecture Points:**
@@ -154,12 +154,12 @@ Each blockchain network connected to the Agglayer operates its own **Aggkit Brid
 
 ### Component Responsibilities
 
-| Component      | Layer          | Responsibility                           |
-| -------------- | -------------- | ---------------------------------------- |
-| **Commons**    | Foundation     | Shared types, interfaces, schemas        |
-| **Consumer**   | Data Ingestion | Monitor blockchain, index transactions   |
-| **API**        | Service        | Expose transaction data, generate proofs |
-| **Auto-Claim** | Automation     | Automatically claim ready transactions   |
+| Component      | Layer          | Responsibility                            |
+| -------------- | -------------- | ----------------------------------------- |
+| **Commons**    | Foundation     | Shared types, interfaces, schemas         |
+| **Consumer**   | Data Ingestion | Monitor blockchain, index transactions    |
+| **API**        | Service        | Expose bridge tx data, serve claim-proofs |
+| **Auto-Claim** | Automation     | Automatically claim ready transactions    |
 
 ### Consumer Internal Architecture
 
@@ -388,7 +388,6 @@ auto-claim-service
                  ▼
         ┌─────────────────┐
         │ Filter Txs      │
-        │ (Remove 0-amount)│
         └────────┬────────┘
                  │
                  ▼

@@ -90,7 +90,7 @@ For detailed architecture including production cluster setup, cron jobs, and mul
 - [Bun](https://bun.sh) >= 1.0.0
 - MongoDB >= 4.4
 - Access to blockchain RPC endpoints
-- Bridge Service API access (for consumer)
+- Aggkit Bridge Service access (for consumer)
 
 ## Quick Start
 
@@ -139,14 +139,6 @@ cd packages/auto-claim && bun test
 ## Configuration
 
 Each package requires specific environment variables. Create `.env` files in each package directory.
-
-**Quick Start Example:**
-
-```bash
-# Minimum required for local development
-MONGODB_CONNECTION_URI=mongodb://localhost:27017
-MONGODB_DB_NAME=bridge_hub
-```
 
 For complete configuration reference including all environment variables, requirements, and examples for each package, see **[DEPLOYMENT.md - Configuration](./DEPLOYMENT.md#configuration)**.
 
