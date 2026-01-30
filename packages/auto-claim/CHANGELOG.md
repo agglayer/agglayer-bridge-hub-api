@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/auto-claim-service@1.1.1...auto-claim-service@1.1.2) (2026-01-30)
+
+### Bug Fixes
+
+- deployment.md to include docker deployments ([799a12e](https://github.com/agglayer/agglayer-bridge-hub-api/commit/799a12ea7c8ae578a8a170653113b3666b57bebe))
+
 ## [1.1.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/auto-claim-service@1.1.0...auto-claim-service@1.1.1) (2026-01-29)
 
 ### Bug Fixes
