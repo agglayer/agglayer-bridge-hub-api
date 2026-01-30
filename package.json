@@ -12,6 +12,7 @@
 		"build": "lerna run build",
 		"build:api": "lerna run build --scope=bridge-hub-api",
 		"build:consumer": "lerna run build --scope=bridge-hub-consumer",
+		"build:autoclaim": "lerna run build --scope=auto-claim-service",
 		"dev": "lerna run dev --parallel",
 		"start": "lerna run start --parallel",
 		"test": "lerna run test",

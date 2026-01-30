@@ -263,63 +263,35 @@ sudo systemctl status bridge-hub-api
 
 ### Option 2: Docker Containers
 
-#### Dockerfiles
+The repository includes production-ready Dockerfiles for all services located at the repository root.
 
-**API Dockerfile** (`packages/api/Dockerfile.prod`):
+#### Available Dockerfiles
 
-```dockerfile
-FROM oven/bun:1 AS builder
+- `Dockerfile.api` - API service (exposes port 3001)
+- `Dockerfile.consumer` - Consumer service
+- `Dockerfile.autoclaim` - Auto-claim service
 
-WORKDIR /build
+Each Dockerfile:
 
-# Copy package files
-COPY package.json bun.lockb ./
-COPY packages/commons ./packages/commons
-COPY packages/api ./packages/api
+- Uses `oven/bun:1.2-alpine` for minimal image size
+- Implements multi-stage builds (builder + runtime)
+- Runs as non-root user (`bunuser`) for security
+- Properly handles monorepo structure with commons package
 
-# Install dependencies
-RUN bun install --frozen-lockfile
+#### Building Docker Images
 
-# Build
-WORKDIR /build/packages/api
-RUN bun run build
-
-# Production image
-FROM oven/bun:1-slim
-
-WORKDIR /app
-
-# Copy built files
-COPY --from=builder /build/packages/api/dist ./dist
-COPY --from=builder /build/packages/api/package.json ./
-COPY --from=builder /build/node_modules ./node_modules
-
-ENV NODE_ENV=production
-EXPOSE 3000
-
-CMD ["bun", "dist/server.js"]
-```
-
-**Build and Run**:
+Build each service from the repository root:
 
 ```bash
-# Build
-docker build -f packages/api/Dockerfile.prod -t bridge-hub-api:latest .
-
-# Run
-docker run -d \
-  --name bridge-hub-api \
-  -p 3000:3000 \
-  -e MONGODB_CONNECTION_URI="mongodb://mongo:27017" \
-  -e MONGODB_DB_NAME="bridge_hub" \
-  -e PROOF_CONFIG='{"mainnet":{"1":"https://..."}}' \
-  -e RPC_CONFIG='{"mainnet":{"1":"https://..."}}' \
-  bridge-hub-api:latest
+# Build all images
+docker build -f Dockerfile.api -t bridge-hub-api:latest .
+docker build -f Dockerfile.consumer -t bridge-hub-consumer:latest .
+docker build -f Dockerfile.autoclaim -t bridge-hub-autoclaim:latest .
 ```
 
-#### Docker Compose
+#### Docker Compose Deployment
 
-**`docker-compose.prod.yml`**:
+Create a `docker-compose.yml` file in the repository root:
 
 ```yaml
 version: "3.8"
@@ -330,53 +302,59 @@ services:
         volumes:
             - mongo-data:/data/db
         environment:
-            MONGO_INITDB_ROOT_USERNAME: admin
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
             MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
         ports:
             - "27017:27017"
         restart: unless-stopped
+        networks:
+            - bridge-hub
 
     api:
         build:
             context: .
-            dockerfile: packages/api/Dockerfile.prod
+            dockerfile: Dockerfile.api
         ports:
-            - "3000:3000"
+            - "3001:3001"
         environment:
             NODE_ENV: production
-            MONGODB_CONNECTION_URI: mongodb://admin:${MONGO_PASSWORD}@mongodb:27017/bridge_hub?authSource=admin
-            MONGODB_DB_NAME: bridge_hub
+            MONGODB_CONNECTION_URI: ${MONGODB_CONNECTION_URI}
+            MONGODB_DB_NAME: ${MONGODB_DB_NAME}
             PROOF_CONFIG: ${PROOF_CONFIG}
             RPC_CONFIG: ${RPC_CONFIG}
             SENTRY_DSN: ${SENTRY_DSN}
         depends_on:
             - mongodb
         restart: unless-stopped
+        networks:
+            - bridge-hub
 
-    consumer:
+    consumer-net1:
         build:
             context: .
-            dockerfile: packages/consumer/Dockerfile.prod
+            dockerfile: Dockerfile.consumer
         environment:
             NODE_ENV: production
-            NETWORK_ID: ${NETWORK_ID}
-            NETWORK: ${NETWORK}
+            NETWORK_ID: ${CONSUMER_NETWORK_ID}
+            NETWORK: ${CONSUMER_NETWORK}
             BRIDGE_SERVICE_URL: ${BRIDGE_SERVICE_URL}
             BRIDGE_CONTRACT_ADDRESS: ${BRIDGE_CONTRACT_ADDRESS}
-            MONGODB_CONNECTION_URI: mongodb://admin:${MONGO_PASSWORD}@mongodb:27017/bridge_hub?authSource=admin
-            MONGODB_DB_NAME: bridge_hub
+            MONGODB_CONNECTION_URI: ${MONGODB_CONNECTION_URI}
+            MONGODB_DB_NAME: ${MONGODB_DB_NAME}
             SENTRY_DSN: ${SENTRY_DSN}
         depends_on:
             - mongodb
         restart: unless-stopped
+        networks:
+            - bridge-hub
 
-    auto-claim:
+    autoclaim:
         build:
             context: .
-            dockerfile: packages/auto-claim/Dockerfile.prod
+            dockerfile: Dockerfile.autoclaim
         environment:
             NODE_ENV: production
-            BRIDGE_HUB_API_URL: http://api:3000
+            BRIDGE_HUB_API_URL: http://api:3001
             SOURCE_NETWORKS: ${SOURCE_NETWORKS}
             DESTINATION_NETWORK: ${DESTINATION_NETWORK}
             DESTINATION_NETWORK_CHAINID: ${DESTINATION_NETWORK_CHAINID}
@@ -387,26 +365,67 @@ services:
         depends_on:
             - api
         restart: unless-stopped
+        networks:
+            - bridge-hub
 
 volumes:
     mongo-data:
+
+networks:
+    bridge-hub:
+        driver: bridge
 ```
 
-**Deploy**:
+**Setup and Deployment**:
 
 ```bash
-# Create .env file with secrets
-cp .env.example .env
-# Edit .env with production values
+# Create .env file in repository root
+# Docker Compose automatically picks up this file
+touch .env
 
-# Start services
-docker-compose -f docker-compose.prod.yml up -d
+# Start all services
+docker-compose up -d
 
-# View logs
-docker-compose -f docker-compose.prod.yml logs -f
+# View logs from all services
+docker-compose logs -f
 
-# Stop services
-docker-compose -f docker-compose.prod.yml down
+# View logs from specific service
+docker-compose logs -f api
+
+# Check service status
+docker-compose ps
+
+# Restart a service
+docker-compose restart api
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (WARNING: deletes data)
+docker-compose down -v
+```
+
+**Adding Multiple Consumer Instances**:
+
+For multi-network deployments, add additional consumer services to the docker-compose.yml:
+
+```yaml
+consumer-net137:
+    build:
+        context: .
+        dockerfile: Dockerfile.consumer
+    environment:
+        NETWORK_ID: 137
+        NETWORK: mainnet
+        BRIDGE_SERVICE_URL: ${BRIDGE_SERVICE_URL_NET137}
+        BRIDGE_CONTRACT_ADDRESS: ${BRIDGE_CONTRACT_ADDRESS_NET137}
+        MONGODB_CONNECTION_URI: ${MONGODB_CONNECTION_URI}
+        MONGODB_DB_NAME: ${MONGODB_DB_NAME}
+    depends_on:
+        - mongodb
+    restart: unless-stopped
+    networks:
+        - bridge-hub
 ```
 
 ### Option 3: Kubernetes
