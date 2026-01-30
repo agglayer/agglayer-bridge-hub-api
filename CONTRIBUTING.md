@@ -193,7 +193,7 @@ const processTransaction = (tx: any) => {
 
 ### File Naming
 
-- Use lowercase with dashes for files: `transaction-service.ts`
+- Use snake_case for files: `transaction_service.ts`
 - Use PascalCase for classes: `TransactionService`
 - Use camelCase for functions and variables: `getTransaction`
 - Use UPPER_CASE for constants: `MAX_RETRIES`
