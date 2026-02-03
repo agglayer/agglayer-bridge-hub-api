@@ -2,8 +2,6 @@
 
 A comprehensive bridge transaction indexing and claiming system for the Agglayer ecosystem. This monorepo provides services to monitor, store, expose, and automatically claim bridge transactions across multiple blockchain networks.
 
-> **License Notice:** This software is licensed under a Source Available License. Free for non-production use. Production use requires Agglayer-Connected Deployment. See [LICENSE](./LICENSE) for restrictions.
-
 ## Overview
 
 The Agglayer Bridge Hub consists of four main packages that work together to provide a complete bridge transaction management solution:
@@ -269,14 +267,7 @@ For security vulnerability reporting and bug bounty information, see [SECURITY.m
 
 ## License
 
-This project is licensed under a Source Available License by PT Services DMCC.
-
-**Key Points:**
-
-- Free for non-production use
-- Production use allowed only for Agglayer-Connected Deployments
-- Commercial license required for Bridge-as-a-Service or competing products
-- See the [LICENSE](./LICENSE) file for complete terms and contact information
+This project is licensed under the Apache License, Version 2.0. See the [LICENSE](./LICENSE) file for the full license text.
 
 ## Support
 
