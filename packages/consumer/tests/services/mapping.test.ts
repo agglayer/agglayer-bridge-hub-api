@@ -301,4 +301,140 @@ describe("TokenMappingsService", () => {
 			expect(docId).toMatch(/^[a-f0-9]{32}$/);
 		});
 	});
+
+	describe("getTokenMapping", () => {
+		let mockToArray: any;
+		let mockLimit: any;
+		let mockSort: any;
+		let mockFind: any;
+
+		beforeEach(() => {
+			mockToArray = mock(async () => [
+				{
+					originTokenAddress:
+						"0x1234567890123456789012345678901234567890",
+					originTokenNetwork: 1,
+					wrappedTokenNetwork: 137,
+					wrappedTokenAddress:
+						"0x9876543210987654321098765432109876543210",
+					blockNumber: 100,
+					transactionIndex: 1,
+					timestamp: 1700000000,
+					transactionHash: "0xhash123",
+					lastUpdatedAt: Date.now(),
+				},
+			]);
+
+			mockLimit = mock(() => ({ toArray: mockToArray }));
+			mockSort = mock(() => ({ limit: mockLimit }));
+			mockFind = mock(() => ({ sort: mockSort, limit: mockLimit }));
+
+			mockCollection.find = mockFind;
+		});
+
+		test("should fetch token mapping by transaction hash and block number", async () => {
+			const result = await service.getTokenMapping("0xhash123", 100);
+
+			expect(mockFind).toHaveBeenCalledWith({
+				transactionHash: "0xhash123",
+				blockNumber: 100,
+			});
+			expect(mockSort).toHaveBeenCalledWith({ blockNumber: -1 });
+			expect(mockLimit).toHaveBeenCalledWith(1);
+			expect(result).toHaveLength(1);
+			expect(result[0].transactionHash).toBe("0xhash123");
+		});
+
+		test("should return empty array when no mapping found", async () => {
+			mockToArray.mockResolvedValue([]);
+
+			const result = await service.getTokenMapping("0xnonexistent", 999);
+
+			expect(result).toHaveLength(0);
+		});
+
+		test("should query with correct filter parameters", async () => {
+			await service.getTokenMapping("0xabcdef", 500);
+
+			expect(mockFind).toHaveBeenCalledWith({
+				transactionHash: "0xabcdef",
+				blockNumber: 500,
+			});
+		});
+
+		test("should sort results by blockNumber in descending order", async () => {
+			await service.getTokenMapping("0xhash123", 100);
+
+			expect(mockSort).toHaveBeenCalledWith({ blockNumber: -1 });
+		});
+
+		test("should limit results to 1", async () => {
+			await service.getTokenMapping("0xhash123", 100);
+
+			expect(mockLimit).toHaveBeenCalledWith(1);
+		});
+
+		test("should handle different transaction hashes", async () => {
+			const hash1 = "0xfirst";
+			const hash2 = "0xsecond";
+
+			await service.getTokenMapping(hash1, 100);
+			await service.getTokenMapping(hash2, 200);
+
+			expect(mockFind).toHaveBeenCalledTimes(2);
+			expect(mockFind).toHaveBeenNthCalledWith(1, {
+				transactionHash: hash1,
+				blockNumber: 100,
+			});
+			expect(mockFind).toHaveBeenNthCalledWith(2, {
+				transactionHash: hash2,
+				blockNumber: 200,
+			});
+		});
+
+		test("should handle different block numbers", async () => {
+			await service.getTokenMapping("0xhash", 100);
+			await service.getTokenMapping("0xhash", 200);
+
+			expect(mockFind).toHaveBeenCalledTimes(2);
+			expect(mockFind).toHaveBeenNthCalledWith(1, {
+				transactionHash: "0xhash",
+				blockNumber: 100,
+			});
+			expect(mockFind).toHaveBeenNthCalledWith(2, {
+				transactionHash: "0xhash",
+				blockNumber: 200,
+			});
+		});
+
+		test("should return full mapping object with all fields", async () => {
+			const mappingData: IHubTokenMappings = {
+				originTokenAddress:
+					"0x1234567890123456789012345678901234567890",
+				originTokenNetwork: 1,
+				wrappedTokenNetwork: 137,
+				wrappedTokenAddress:
+					"0x9876543210987654321098765432109876543210",
+				blockNumber: 100,
+				transactionIndex: 1,
+				timestamp: 1700000000,
+				transactionHash: "0xhash123",
+				lastUpdatedAt: 1700000000,
+			};
+
+			mockToArray.mockResolvedValue([mappingData]);
+
+			const result = await service.getTokenMapping("0xhash123", 100);
+
+			expect(result[0]).toEqual(mappingData);
+			expect(result[0]).toHaveProperty("originTokenAddress");
+			expect(result[0]).toHaveProperty("originTokenNetwork");
+			expect(result[0]).toHaveProperty("wrappedTokenNetwork");
+			expect(result[0]).toHaveProperty("wrappedTokenAddress");
+			expect(result[0]).toHaveProperty("blockNumber");
+			expect(result[0]).toHaveProperty("transactionIndex");
+			expect(result[0]).toHaveProperty("timestamp");
+			expect(result[0]).toHaveProperty("transactionHash");
+		});
+	});
 });

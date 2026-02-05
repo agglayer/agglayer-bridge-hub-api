@@ -6,6 +6,7 @@ import {
 	validateMappingsByTokenQueryParams,
 	validateTokenMetadataQueryParams,
 	validateClaimProofQueryParams,
+	validateAutoClaimHealthCheckQueryParams,
 } from "../../src/middlewares/validate_query_params";
 
 // Mock servercore classes
@@ -575,6 +576,63 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalled();
 			expect(mockNext).not.toHaveBeenCalled();
 		});
+
+		test("should handle invalid params when query is valid", async () => {
+			// This tests the else-if block (lines 174-182) where query succeeds but params fail
+			mockContext.req.param.mockReturnValueOnce({
+				network: "invalid-network",
+			});
+			mockContext.req.query.mockReturnValueOnce({
+				depositCount: "42",
+				sourceNetworkId: "1",
+				leafIndex: "100",
+			});
+
+			await validateClaimProofQueryParams(mockContext, mockNext);
+
+			expect(mockHandleError).toHaveBeenCalledWith(
+				expect.any(Object),
+				expect.objectContaining({
+					name: "BadRequestError",
+					context: "validateProofQueryParams",
+				})
+			);
+			expect(mockNext).not.toHaveBeenCalled();
+			expect(mockContext.set).not.toHaveBeenCalled();
+		});
+
+		test("should handle empty network param when query is valid", async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: "" });
+			mockContext.req.query.mockReturnValueOnce({
+				depositCount: "42",
+				sourceNetworkId: "1",
+				leafIndex: "100",
+			});
+
+			await validateClaimProofQueryParams(mockContext, mockNext);
+
+			expect(mockHandleError).toHaveBeenCalled();
+			const errorCall = mockHandleError.mock.calls[0] as any;
+			const error = errorCall[1];
+
+			expect(error).toBeInstanceOf(MockBadRequestError);
+			expect(error.context).toBe("validateProofQueryParams");
+			expect(mockNext).not.toHaveBeenCalled();
+		});
+
+		test("should handle missing network param when query is valid", async () => {
+			mockContext.req.param.mockReturnValueOnce({});
+			mockContext.req.query.mockReturnValueOnce({
+				depositCount: "42",
+				sourceNetworkId: "1",
+				leafIndex: "100",
+			});
+
+			await validateClaimProofQueryParams(mockContext, mockNext);
+
+			expect(mockHandleError).toHaveBeenCalled();
+			expect(mockNext).not.toHaveBeenCalled();
+		});
 	});
 
 	describe("error handling consistency", () => {
@@ -637,5 +695,216 @@ describe("Validate Query Params Middlewares", () => {
 
 			expect(mockContext.set).not.toHaveBeenCalled();
 		});
+	});
+});
+
+describe("validateAutoClaimHealthCheckQueryParams", () => {
+	let mockContext: any;
+	let mockNext: any;
+
+	beforeEach(() => {
+		mockHandleError.mockClear();
+		mockGetResponseContext.mockClear();
+
+		mockNext = mock(async () => {});
+		mockContext = {
+			req: {
+				param: mock(() => ({ network: "mainnet" })),
+				query: mock(() => ({
+					networkId: "1",
+					sourceNetworkIds: "137,42161",
+				})),
+			},
+			set: mock(() => {}),
+		};
+	});
+
+	test("should validate and pass correct query parameters", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "mainnet" });
+		mockContext.req.query.mockReturnValueOnce({
+			networkId: "1",
+			sourceNetworkIds: "137,42161",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockContext.set).toHaveBeenCalledWith("validatedQuery", {
+			networkId: [1],
+			sourceNetworkIds: [137, 42161],
+		});
+		expect(mockContext.set).toHaveBeenCalledWith("validatedParams", {
+			network: "mainnet",
+		});
+		expect(mockNext).toHaveBeenCalled();
+	});
+
+	test("should handle invalid networkId", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "mainnet" });
+		mockContext.req.query.mockReturnValueOnce({
+			networkId: "invalid",
+			sourceNetworkIds: "137",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockHandleError).toHaveBeenCalled();
+		const errorCall = mockHandleError.mock.calls[0] as any;
+		const error = errorCall[1];
+
+		expect(error).toBeInstanceOf(MockBadRequestError);
+		expect(error.context).toBe("validateAutoClaimHealthCheckQueryParams");
+		expect(mockNext).not.toHaveBeenCalled();
+	});
+
+	test("should handle invalid sourceNetworkIds", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "mainnet" });
+		mockContext.req.query.mockReturnValueOnce({
+			networkId: "1",
+			sourceNetworkIds: "invalid,ids",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockHandleError).toHaveBeenCalled();
+		const errorCall = mockHandleError.mock.calls[0] as any;
+		const error = errorCall[1];
+
+		expect(error).toBeInstanceOf(MockBadRequestError);
+		expect(error.context).toBe("validateAutoClaimHealthCheckQueryParams");
+		expect(mockNext).not.toHaveBeenCalled();
+	});
+
+	test("should handle invalid network param", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "invalid" });
+		mockContext.req.query.mockReturnValueOnce({
+			networkId: "1",
+			sourceNetworkIds: "137",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockHandleError).toHaveBeenCalled();
+		const errorCall = mockHandleError.mock.calls[0] as any;
+		const error = errorCall[1];
+
+		expect(error).toBeInstanceOf(MockBadRequestError);
+		expect(error.context).toBe("validateAutoClaimHealthCheckQueryParams");
+		expect(mockNext).not.toHaveBeenCalled();
+	});
+
+	test("should handle missing networkId", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "mainnet" });
+		mockContext.req.query.mockReturnValueOnce({
+			sourceNetworkIds: "137",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockHandleError).toHaveBeenCalled();
+		const errorCall = mockHandleError.mock.calls[0] as any;
+		const error = errorCall[1];
+
+		expect(error).toBeInstanceOf(MockBadRequestError);
+		expect(error.context).toBe("validateAutoClaimHealthCheckQueryParams");
+	});
+
+	test("should handle missing sourceNetworkIds", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "mainnet" });
+		mockContext.req.query.mockReturnValueOnce({
+			networkId: "1",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockHandleError).toHaveBeenCalled();
+		const errorCall = mockHandleError.mock.calls[0] as any;
+		const error = errorCall[1];
+
+		expect(error).toBeInstanceOf(MockBadRequestError);
+		expect(error.context).toBe("validateAutoClaimHealthCheckQueryParams");
+	});
+
+	test("should handle single sourceNetworkId", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "testnet" });
+		mockContext.req.query.mockReturnValueOnce({
+			networkId: "137",
+			sourceNetworkIds: "1",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockContext.set).toHaveBeenCalledWith("validatedQuery", {
+			networkId: [137],
+			sourceNetworkIds: [1],
+		});
+		expect(mockNext).toHaveBeenCalled();
+	});
+
+	test("should handle multiple sourceNetworkIds", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "mainnet" });
+		mockContext.req.query.mockReturnValueOnce({
+			networkId: "1",
+			sourceNetworkIds: "137,42161,10,8453",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockContext.set).toHaveBeenCalledWith("validatedQuery", {
+			networkId: [1],
+			sourceNetworkIds: [137, 42161, 10, 8453],
+		});
+		expect(mockNext).toHaveBeenCalled();
+	});
+
+	test("should work with devnet network", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "devnet" });
+		mockContext.req.query.mockReturnValueOnce({
+			networkId: "1",
+			sourceNetworkIds: "2",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockContext.set).toHaveBeenCalledWith("validatedParams", {
+			network: "devnet",
+		});
+		expect(mockNext).toHaveBeenCalled();
+	});
+
+	test("should not call next when networkId validation fails", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "mainnet" });
+		mockContext.req.query.mockReturnValueOnce({
+			networkId: "abc",
+			sourceNetworkIds: "137",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(mockHandleError).toHaveBeenCalled();
+	});
+
+	test("should not set context on validation failure", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "invalid" });
+		mockContext.req.query.mockReturnValueOnce({
+			networkId: "1",
+			sourceNetworkIds: "137",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockContext.set).not.toHaveBeenCalled();
+	});
+
+	test("should call getResponseContext with correct context", async () => {
+		mockContext.req.param.mockReturnValueOnce({ network: "invalid" });
+		mockContext.req.query.mockReturnValueOnce({
+			networkId: "1",
+			sourceNetworkIds: "137",
+		});
+
+		await validateAutoClaimHealthCheckQueryParams(mockContext, mockNext);
+
+		expect(mockGetResponseContext).toHaveBeenCalledWith(mockContext);
 	});
 });

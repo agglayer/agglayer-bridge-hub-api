@@ -35,7 +35,9 @@ mock.module("../../src/middlewares/response_context", () => ({
 	getResponseContext: mockGetResponseContext,
 }));
 
-const mockHealthCheckService = {} as any;
+const mockHealthCheckService = {
+	checkForAutoClaim: mock(async () => true),
+} as any;
 
 describe("Health Check Controller", () => {
 	let healthCheckController: HealthCheckController;
@@ -44,6 +46,9 @@ describe("Health Check Controller", () => {
 		mockHandleResponse.mockClear();
 		mockHandleError.mockClear();
 		mockGetResponseContext.mockClear();
+		if (mockHealthCheckService.checkForAutoClaim) {
+			mockHealthCheckService.checkForAutoClaim.mockClear();
+		}
 		healthCheckController = new HealthCheckController(
 			mockHealthCheckService
 		);
@@ -161,6 +166,144 @@ describe("Health Check Controller", () => {
 			expect(keys).toHaveLength(2);
 			expect(keys).toContain("status");
 			expect(keys).toContain("message");
+		});
+	});
+
+	describe("checkAutoClaimServiceHealth", () => {
+		test("should call checkForAutoClaim with correct parameters", async () => {
+			const mockContext = createMockContext({
+				validatedQuery: {
+					networkId: "1",
+					sourceNetworkIds: [137, 42161],
+				},
+				validatedParams: { network: "mainnet" },
+			});
+
+			await healthCheckController.checkAutoClaimServiceHealth(
+				mockContext
+			);
+
+			expect(
+				mockHealthCheckService.checkForAutoClaim
+			).toHaveBeenCalledWith("mainnet", "1", [137, 42161]);
+		});
+
+		test("should return success response when auto-claim check passes", async () => {
+			const mockContext = createMockContext({
+				validatedQuery: {
+					networkId: "137",
+					sourceNetworkIds: [1],
+				},
+				validatedParams: { network: "testnet" },
+			});
+
+			mockHealthCheckService.checkForAutoClaim.mockResolvedValue(true);
+
+			await healthCheckController.checkAutoClaimServiceHealth(
+				mockContext
+			);
+
+			expect(mockHandleResponse).toHaveBeenCalledWith(
+				{ requestId: "test-request-id" },
+				{
+					status: "success",
+					message: "All services are working correctly",
+				}
+			);
+		});
+
+		test("should handle errors from checkForAutoClaim", async () => {
+			const mockContext = createMockContext({
+				validatedQuery: {
+					networkId: "1",
+					sourceNetworkIds: [137],
+				},
+				validatedParams: { network: "mainnet" },
+			});
+
+			const mockError = new Error("Auto-claim service unhealthy");
+			mockHealthCheckService.checkForAutoClaim.mockRejectedValue(
+				mockError
+			);
+
+			await healthCheckController.checkAutoClaimServiceHealth(
+				mockContext
+			);
+
+			expect(mockHandleError).toHaveBeenCalledWith(
+				{ requestId: "test-request-id" },
+				mockError
+			);
+		});
+
+		test("should call getResponseContext with correct context", async () => {
+			const mockContext = createMockContext({
+				validatedQuery: {
+					networkId: "1",
+					sourceNetworkIds: [137],
+				},
+				validatedParams: { network: "mainnet" },
+			});
+
+			await healthCheckController.checkAutoClaimServiceHealth(
+				mockContext
+			);
+
+			expect(mockGetResponseContext).toHaveBeenCalledWith(mockContext);
+		});
+
+		test("should work with different network configurations", async () => {
+			const mockContext = createMockContext({
+				validatedQuery: {
+					networkId: "42161",
+					sourceNetworkIds: [1, 137, 10],
+				},
+				validatedParams: { network: "devnet" },
+			});
+
+			await healthCheckController.checkAutoClaimServiceHealth(
+				mockContext
+			);
+
+			expect(
+				mockHealthCheckService.checkForAutoClaim
+			).toHaveBeenCalledWith("devnet", "42161", [1, 137, 10]);
+		});
+
+		test("should handle single source network ID", async () => {
+			const mockContext = createMockContext({
+				validatedQuery: {
+					networkId: "1",
+					sourceNetworkIds: [137],
+				},
+				validatedParams: { network: "mainnet" },
+			});
+
+			await healthCheckController.checkAutoClaimServiceHealth(
+				mockContext
+			);
+
+			expect(
+				mockHealthCheckService.checkForAutoClaim
+			).toHaveBeenCalledWith("mainnet", "1", [137]);
+		});
+
+		test("should not call handleError when check succeeds", async () => {
+			const mockContext = createMockContext({
+				validatedQuery: {
+					networkId: "1",
+					sourceNetworkIds: [137],
+				},
+				validatedParams: { network: "mainnet" },
+			});
+
+			mockHealthCheckService.checkForAutoClaim.mockResolvedValue(true);
+
+			await healthCheckController.checkAutoClaimServiceHealth(
+				mockContext
+			);
+
+			expect(mockHandleError).not.toHaveBeenCalled();
 		});
 	});
 });
