@@ -16,7 +16,7 @@ export class MappingsService {
 		collectionIdParam: Map<string, string> = new Map([
 			["mainnet", "bridge_hub_api_mappings"],
 			["testnet", "bridge_hub_api_mappings_testnet"],
-			["devnet", "bridge_hub_api_mappings_testnet"],
+			["devnet", "bridge_hub_api_mappings_devnet"],
 		])
 	) {
 		this.db = database;
