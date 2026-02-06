@@ -38,6 +38,7 @@ const mockCollection = {
 
 describe("TransactionsService", () => {
 	let service: TransactionsService;
+	const mockCollectionId = "test_transactions";
 
 	beforeEach(() => {
 		service = new TransactionsService(mockCollection);
@@ -54,7 +55,10 @@ describe("TransactionsService", () => {
 		});
 
 		test("should initialize with custom collection ID", () => {
-			const customService = new TransactionsService(mockCollection);
+			const customService = new TransactionsService(
+				mockCollection,
+				"custom_collection"
+			);
 			expect(customService).toBeInstanceOf(TransactionsService);
 		});
 	});

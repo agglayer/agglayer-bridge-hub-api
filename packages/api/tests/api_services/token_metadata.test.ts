@@ -393,7 +393,7 @@ describe("TokenMetadataService", () => {
 			);
 
 			expect(v1Call).toBeDefined();
-			expect(v1Call[0].args).toEqual([
+			expect(v1Call![0].args).toEqual([
 				1,
 				"0xORIGINTOKEN",
 				"Test Token",
@@ -414,7 +414,7 @@ describe("TokenMetadataService", () => {
 			);
 
 			expect(v2Call).toBeDefined();
-			expect(v2Call[0].args).toEqual([1, "0xORIGINTOKEN"]);
+			expect(v2Call![0].args).toEqual([1, "0xORIGINTOKEN"]);
 		});
 
 		test("should handle wrapped address calculation failures gracefully", async () => {

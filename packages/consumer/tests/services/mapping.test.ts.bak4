@@ -18,6 +18,7 @@ const mockCollection = {
 
 describe("TokenMappingsService", () => {
 	let service: TokenMappingsService;
+	const mockCollectionId = "test_tokenMappings";
 
 	beforeEach(() => {
 		service = new TokenMappingsService(mockCollection);
@@ -31,7 +32,10 @@ describe("TokenMappingsService", () => {
 		});
 
 		test("should initialize with custom collection ID", () => {
-			const customService = new TokenMappingsService(mockCollection);
+			const customService = new TokenMappingsService(
+				mockCollection
+				"custom_collection"
+			);
 			expect(customService).toBeInstanceOf(TokenMappingsService);
 		});
 	});
