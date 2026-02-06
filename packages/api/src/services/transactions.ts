@@ -18,7 +18,7 @@ export class TransactionService {
 		collectionIdParams: Map<string, string> = new Map([
 			["mainnet", "bridge_hub_api_transactions"],
 			["testnet", "bridge_hub_api_transactions_testnet"],
-			["devnet", "bridge_hub_api_transactions_testnet"],
+			["devnet", "bridge_hub_api_transactions_devnet"],
 		])
 	) {
 		this.db = database;

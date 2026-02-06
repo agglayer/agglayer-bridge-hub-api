@@ -487,4 +487,258 @@ describe("TransactionsService", () => {
 			expect(call[1].$set.leafIndex).toBe(-1);
 		});
 	});
+
+	describe("getLatestBridgeTransactions", () => {
+		let mockToArray: any;
+		let mockLimit: any;
+		let mockSort: any;
+		let mockFind: any;
+
+		beforeEach(() => {
+			mockToArray = mock(async () => [
+				{
+					sourceNetwork: 1,
+					depositCount: 100,
+					hubUID: "hub-uid-100-1",
+					timestamp: 1700000000,
+				},
+			]);
+
+			mockLimit = mock(() => ({ toArray: mockToArray }));
+			mockSort = mock(() => ({ limit: mockLimit }));
+			mockFind = mock(() => ({ sort: mockSort }));
+
+			mockCollection.find = mockFind;
+		});
+
+		test("should fetch latest bridge transaction for source network", async () => {
+			const result = await service.getLatestBridgeTransactions(1);
+
+			expect(mockFind).toHaveBeenCalledWith(
+				{ sourceNetwork: 1 },
+				{
+					projection: {
+						sourceNetwork: 1,
+						depositCount: 1,
+						hubUID: 1,
+						timestamp: 1,
+					},
+				}
+			);
+			expect(mockSort).toHaveBeenCalledWith({ hubUID: -1 });
+			expect(mockLimit).toHaveBeenCalledWith(1);
+			expect(result).toHaveLength(1);
+		});
+
+		test("should return empty array when no transactions found", async () => {
+			mockToArray.mockResolvedValue([]);
+
+			const result = await service.getLatestBridgeTransactions(999);
+
+			expect(result).toHaveLength(0);
+		});
+
+		test("should use correct projection fields", async () => {
+			await service.getLatestBridgeTransactions(1);
+
+			const callArgs = mockFind.mock.calls[0];
+			expect(callArgs[1].projection).toEqual({
+				sourceNetwork: 1,
+				depositCount: 1,
+				hubUID: 1,
+				timestamp: 1,
+			});
+		});
+
+		test("should sort by hubUID in descending order", async () => {
+			await service.getLatestBridgeTransactions(1);
+
+			expect(mockSort).toHaveBeenCalledWith({ hubUID: -1 });
+		});
+
+		test("should limit results to 1", async () => {
+			await service.getLatestBridgeTransactions(1);
+
+			expect(mockLimit).toHaveBeenCalledWith(1);
+		});
+
+		test("should handle different source networks", async () => {
+			await service.getLatestBridgeTransactions(1);
+			await service.getLatestBridgeTransactions(137);
+			await service.getLatestBridgeTransactions(42161);
+
+			expect(mockFind).toHaveBeenCalledTimes(3);
+			expect(mockFind).toHaveBeenNthCalledWith(
+				1,
+				{ sourceNetwork: 1 },
+				expect.any(Object)
+			);
+			expect(mockFind).toHaveBeenNthCalledWith(
+				2,
+				{ sourceNetwork: 137 },
+				expect.any(Object)
+			);
+			expect(mockFind).toHaveBeenNthCalledWith(
+				3,
+				{ sourceNetwork: 42161 },
+				expect.any(Object)
+			);
+		});
+
+		test("should return transaction with correct fields", async () => {
+			const mockTransaction = {
+				sourceNetwork: 1,
+				depositCount: 100,
+				hubUID: "hub-uid-100-1",
+				timestamp: 1700000000,
+			};
+
+			mockToArray.mockResolvedValue([mockTransaction]);
+
+			const result = await service.getLatestBridgeTransactions(1);
+
+			expect(result[0]).toEqual(mockTransaction);
+			expect(result[0]).toHaveProperty("sourceNetwork");
+			expect(result[0]).toHaveProperty("depositCount");
+			expect(result[0]).toHaveProperty("hubUID");
+			expect(result[0]).toHaveProperty("timestamp");
+		});
+
+		test("should handle large network IDs", async () => {
+			await service.getLatestBridgeTransactions(999999);
+
+			expect(mockFind).toHaveBeenCalledWith(
+				{ sourceNetwork: 999999 },
+				expect.any(Object)
+			);
+		});
+	});
+
+	describe("getClaim", () => {
+		let mockToArray: any;
+		let mockLimit: any;
+		let mockFind: any;
+
+		beforeEach(() => {
+			mockToArray = mock(async () => [
+				{
+					sourceNetwork: 1,
+					depositCount: 100,
+					hubUID: "hub-uid-100-1",
+				},
+			]);
+
+			mockLimit = mock(() => ({ toArray: mockToArray }));
+			mockFind = mock(() => ({ limit: mockLimit }));
+
+			mockCollection.find = mockFind;
+		});
+
+		test("should fetch claim by transaction hash", async () => {
+			const txHash = "0xabcdef123456";
+			const result = await service.getClaim(txHash);
+
+			expect(mockFind).toHaveBeenCalledWith(
+				{ claimTransactionHash: txHash },
+				{
+					projection: {
+						sourceNetwork: 1,
+						depositCount: 1,
+						hubUID: 1,
+					},
+				}
+			);
+			expect(mockLimit).toHaveBeenCalledWith(1);
+			expect(result).toHaveLength(1);
+		});
+
+		test("should return empty array when claim not found", async () => {
+			mockToArray.mockResolvedValue([]);
+
+			const result = await service.getClaim("0xnonexistent");
+
+			expect(result).toHaveLength(0);
+		});
+
+		test("should use correct projection fields", async () => {
+			await service.getClaim("0xhash");
+
+			const callArgs = mockFind.mock.calls[0];
+			expect(callArgs[1].projection).toEqual({
+				sourceNetwork: 1,
+				depositCount: 1,
+				hubUID: 1,
+			});
+		});
+
+		test("should limit results to 1", async () => {
+			await service.getClaim("0xhash");
+
+			expect(mockLimit).toHaveBeenCalledWith(1);
+		});
+
+		test("should handle different transaction hashes", async () => {
+			const hash1 = "0xfirst";
+			const hash2 = "0xsecond";
+			const hash3 = "0xthird";
+
+			await service.getClaim(hash1);
+			await service.getClaim(hash2);
+			await service.getClaim(hash3);
+
+			expect(mockFind).toHaveBeenCalledTimes(3);
+			expect(mockFind).toHaveBeenNthCalledWith(
+				1,
+				{ claimTransactionHash: hash1 },
+				expect.any(Object)
+			);
+			expect(mockFind).toHaveBeenNthCalledWith(
+				2,
+				{ claimTransactionHash: hash2 },
+				expect.any(Object)
+			);
+			expect(mockFind).toHaveBeenNthCalledWith(
+				3,
+				{ claimTransactionHash: hash3 },
+				expect.any(Object)
+			);
+		});
+
+		test("should return claim with correct fields", async () => {
+			const mockClaim = {
+				sourceNetwork: 1,
+				depositCount: 100,
+				hubUID: "hub-uid-100-1",
+			};
+
+			mockToArray.mockResolvedValue([mockClaim]);
+
+			const result = await service.getClaim("0xhash");
+
+			expect(result[0]).toEqual(mockClaim);
+			expect(result[0]).toHaveProperty("sourceNetwork");
+			expect(result[0]).toHaveProperty("depositCount");
+			expect(result[0]).toHaveProperty("hubUID");
+		});
+
+		test("should handle very long transaction hashes", async () => {
+			const longHash = "0x" + "a".repeat(64);
+
+			await service.getClaim(longHash);
+
+			expect(mockFind).toHaveBeenCalledWith(
+				{ claimTransactionHash: longHash },
+				expect.any(Object)
+			);
+		});
+
+		test("should handle empty string transaction hash", async () => {
+			await service.getClaim("");
+
+			expect(mockFind).toHaveBeenCalledWith(
+				{ claimTransactionHash: "" },
+				expect.any(Object)
+			);
+		});
+	});
 });
