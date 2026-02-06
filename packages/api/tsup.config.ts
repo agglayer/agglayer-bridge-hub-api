@@ -9,4 +9,5 @@ export default defineConfig({
 	bundle: false,
 	platform: "node",
 	dts: true,
+	tsconfig: "tsconfig.build.json",
 });

@@ -1,4 +1,11 @@
 {
+	"files": [],
+	"references": [
+		{ "path": "./packages/api" },
+		{ "path": "./packages/auto-claim" },
+		{ "path": "./packages/commons" },
+		{ "path": "./packages/consumer" }
+	],
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {

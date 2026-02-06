@@ -3,7 +3,7 @@
 	"npmClient": "bun",
 	"command": {
 		"exec": {
-			"bail": false
+			"bail": true
 		},
 		"version": {
 			"conventionalCommits": true,
