@@ -192,8 +192,8 @@ describe("Token Metadata Controller", () => {
 				decimals: 6,
 				originTokenAddress: "0xcustom123",
 				originTokenNetwork: 42,
-				wrappedTokenAddress: "0xcustomwrapped456",
-				wrappedTokenNetwork: 137,
+				wrappedTokenAddressV1: "0xcustomwrapped456",
+				wrappedTokenAddressV2: "0xcustomwrappedv2",
 			};
 
 			mockTokenMetadataService.getTokenMetadata.mockResolvedValueOnce(

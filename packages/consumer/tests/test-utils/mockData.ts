@@ -51,7 +51,7 @@ export const mockExpectedHubTokenMapping: IHubTokenMappings = {
 	originTokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
 	wrappedTokenNetwork: 137,
 	wrappedTokenAddress: "0xfedcba0987654321fedcba0987654321fedcba09",
-	lastUpdatedAt: expect.any(Number),
+	lastUpdatedAt: 1700000000,
 };
 
 export const mockBridgeTx: IBridgeTx = {
@@ -66,7 +66,7 @@ export const mockBridgeTx: IBridgeTx = {
 	origin_address: "0x1111222233334444555566667777888899990000",
 	destination_network: 137,
 	destination_address: "0xAAAABBBBCCCCDDDDEEEEFFFF0000111122223333",
-	amount: 1000000,
+	amount: "1000000",
 	deposit_count: 42,
 	tx_hash: "0xBRIDGETXHASH123456789",
 	from_address: "0xFROMUSER123456789ABCDEF",
@@ -86,7 +86,7 @@ export const mockBridgeTxs: IBridgeTx[] = [
 ];
 
 export const mockExpectedHubBridgeTransaction: IHubBridgeTransaction = {
-	hubUID: expect.any(String),
+	hubUID: "test-hub-uid",
 	blockNumber: 54321,
 	transactionIndex: 3,
 	timestamp: 1700001000,
@@ -98,11 +98,11 @@ export const mockExpectedHubBridgeTransaction: IHubBridgeTransaction = {
 	destinationNetwork: 137,
 	receiverAddress: "0xaaaabbbbccccddddeeeeffff0000111122223333",
 	fromAddress: "0xfromuser123456789abcdef",
-	amount: 1000000,
+	amount: "1000000",
 	depositCount: 42,
 	bridgeHash: "0xBRIDGEHASH123456789",
 	status: TransactionStatus.BRIDGED,
-	lastUpdatedAt: expect.any(Number),
+	lastUpdatedAt: 1700001000,
 	txSender: "0xrelayer123456789abcdef",
 };
 
@@ -110,12 +110,12 @@ export const mockClaimTx: IClaimTx = {
 	block_num: 98765,
 	block_timestamp: 1700002000,
 	tx_hash: "0xCLAIMTXHASH123456789",
-	global_index: 184467440737095516202, // This encodes sourceNetwork=42 and depositCount=42
+	global_index: "184467440737095516202", // This encodes sourceNetwork=42 and depositCount=42
 	origin_address: "0x2222333344445555666677778888999900001111",
 	origin_network: 42,
 	destination_address: "0xDESTINATION123456789ABCDEF",
 	destination_network: 137,
-	amount: 2000000,
+	amount: "2000000",
 	from_address: "0xCLAIMUSER123456789ABCDEF",
 };
 
@@ -124,7 +124,7 @@ export const mockClaimTxs: IClaimTx[] = [
 	{
 		...mockClaimTx,
 		block_num: 98766,
-		global_index: 184467440737095516203,
+		global_index: "184467440737095516203",
 		tx_hash: "0xCLAIMTXHASH987654321",
 	},
 ];
@@ -133,11 +133,11 @@ export const mockExpectedHubClaimTransaction: IHubClaimTransaction = {
 	claimTransactionHash: "0xclaimtxhash123456789",
 	claimBlockNumber: 98765,
 	claimTimestamp: 1700002000,
-	globalIndex: 184467440737095516202,
+	globalIndex: "184467440737095516202",
 	sourceNetwork: 43,
 	depositCount: 42,
 	status: TransactionStatus.CLAIMED,
-	lastUpdatedAt: expect.any(Number),
+	lastUpdatedAt: 1700002000,
 };
 
 export const mockLastIndexedBridgeTransaction: ILastIndexedBridgeTransaction = {

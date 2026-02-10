@@ -1,5 +1,9 @@
 {
 	"compilerOptions": {
+		"composite": true,
+		"declaration": true,
+		"declarationMap": true,
+		"rootDir": ".",
 		// Enable latest features
 		"lib": ["ESNext", "DOM"],
 		"target": "ESNext",
@@ -12,7 +16,7 @@
 		"moduleResolution": "bundler",
 		"allowImportingTsExtensions": true,
 		"verbatimModuleSyntax": true,
-		"noEmit": true,
+		"noEmit": false,
 
 		// Best practices
 		"strict": true,
@@ -23,5 +27,8 @@
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
 		"noPropertyAccessFromIndexSignature": false
-	}
+	},
+	"include": ["src/**/*", "tests/**/*"],
+	"exclude": ["node_modules", "dist", "**/dist/*"],
+	"references": [{ "path": "../commons" }]
 }

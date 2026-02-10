@@ -9,5 +9,6 @@ export default defineConfig({
 	bundle: true, // Bundle all imports into a single file
 	platform: "node",
 	dts: true,
+	tsconfig: "tsconfig.build.json",
 	external: ["@polygonlabs/servercore", "@hono/zod-openapi", "mongodb"],
 });

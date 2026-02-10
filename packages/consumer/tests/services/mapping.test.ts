@@ -18,10 +18,9 @@ const mockCollection = {
 
 describe("TokenMappingsService", () => {
 	let service: TokenMappingsService;
-	const mockCollectionId = "test_tokenMappings";
 
 	beforeEach(() => {
-		service = new TokenMappingsService(mockCollection, mockCollectionId);
+		service = new TokenMappingsService(mockCollection);
 		mockBulkWrite.mockClear();
 	});
 
@@ -32,10 +31,7 @@ describe("TokenMappingsService", () => {
 		});
 
 		test("should initialize with custom collection ID", () => {
-			const customService = new TokenMappingsService(
-				mockCollection,
-				"custom_collection"
-			);
+			const customService = new TokenMappingsService(mockCollection);
 			expect(customService).toBeInstanceOf(TokenMappingsService);
 		});
 	});

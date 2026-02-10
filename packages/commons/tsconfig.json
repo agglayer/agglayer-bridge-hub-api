@@ -1,5 +1,9 @@
 {
 	"compilerOptions": {
+		"composite": true,
+		"declaration": true,
+		"declarationMap": true,
+		"rootDir": ".",
 		// Enable latest features
 		"lib": ["ESNext"],
 		"target": "ESNext",
@@ -11,7 +15,7 @@
 		"moduleResolution": "bundler",
 		"allowImportingTsExtensions": true,
 		"verbatimModuleSyntax": true,
-		"noEmit": true,
+		"noEmit": false,
 
 		// Best practices
 		"strict": true,

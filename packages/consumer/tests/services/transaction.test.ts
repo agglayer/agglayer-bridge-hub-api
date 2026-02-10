@@ -38,10 +38,9 @@ const mockCollection = {
 
 describe("TransactionsService", () => {
 	let service: TransactionsService;
-	const mockCollectionId = "test_transactions";
 
 	beforeEach(() => {
-		service = new TransactionsService(mockCollection, mockCollectionId);
+		service = new TransactionsService(mockCollection);
 		mockBulkWrite.mockClear();
 		mockUpdateOne.mockClear();
 		mockFind.mockClear();
@@ -55,10 +54,7 @@ describe("TransactionsService", () => {
 		});
 
 		test("should initialize with custom collection ID", () => {
-			const customService = new TransactionsService(
-				mockCollection,
-				"custom_collection"
-			);
+			const customService = new TransactionsService(mockCollection);
 			expect(customService).toBeInstanceOf(TransactionsService);
 		});
 	});
@@ -78,7 +74,7 @@ describe("TransactionsService", () => {
 				destinationNetwork: 137,
 				receiverAddress: "0xreceiver1",
 				fromAddress: "0xfrom1",
-				amount: 1000,
+				amount: "1000",
 				depositCount: 42,
 				bridgeHash: "0xbridge1",
 				status: TransactionStatus.BRIDGED,
@@ -120,7 +116,7 @@ describe("TransactionsService", () => {
 				destinationNetwork: 137,
 				receiverAddress: "0xreceiver1",
 				fromAddress: "0xfrom1",
-				amount: 1000,
+				amount: "1000",
 				depositCount: 42,
 				bridgeHash: "0xbridge1",
 				status: TransactionStatus.BRIDGED,
@@ -167,7 +163,7 @@ describe("TransactionsService", () => {
 				destinationNetwork: 137,
 				receiverAddress: "0xreceiver",
 				fromAddress: "0xfrom",
-				amount: 1000,
+				amount: "1000",
 				depositCount: 42,
 				bridgeHash: "0xbridge",
 				status: TransactionStatus.BRIDGED,
@@ -201,7 +197,7 @@ describe("TransactionsService", () => {
 					destinationNetwork: 137,
 					receiverAddress: "0xreceiver1",
 					fromAddress: "0xfrom1",
-					amount: 1000,
+					amount: "1000",
 					depositCount: 42,
 					bridgeHash: "0xbridge1",
 					status: TransactionStatus.BRIDGED,
@@ -221,7 +217,7 @@ describe("TransactionsService", () => {
 					destinationNetwork: 137,
 					receiverAddress: "0xreceiver2",
 					fromAddress: "0xfrom2",
-					amount: 2000,
+					amount: "2000",
 					depositCount: 43,
 					bridgeHash: "0xbridge2",
 					status: TransactionStatus.BRIDGED,

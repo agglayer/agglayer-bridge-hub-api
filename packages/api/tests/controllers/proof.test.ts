@@ -182,6 +182,7 @@ describe("Proof Controller", () => {
 					global_exit_root: "0xcustomglobal",
 					hash: "0xcustomhash",
 				},
+				bridge_tx_metadata: "0xcustommetadata",
 			};
 
 			mockProofService.getProof.mockResolvedValueOnce(customProof);
