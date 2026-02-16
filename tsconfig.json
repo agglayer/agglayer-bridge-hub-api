@@ -3,7 +3,7 @@
 	"references": [
 		{ "path": "./packages/api" },
 		{ "path": "./packages/auto-claim" },
-		{ "path": "./packages/commons" },
+		{ "path": "./packages/types" },
 		{ "path": "./packages/consumer" }
 	],
 	"compilerOptions": {

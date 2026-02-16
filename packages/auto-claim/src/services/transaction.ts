@@ -4,7 +4,7 @@ import type {
 	ClaimProofResponse,
 	IHubTransaction,
 	ITransactionResponse,
-} from "@agglayer/bridge-hub-commons";
+} from "@agglayer/bridge-hub-types";
 
 const _GLOBAL_INDEX_MAINNET_FLAG = BigInt(2 ** 64);
 

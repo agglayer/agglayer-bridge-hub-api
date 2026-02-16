@@ -12,7 +12,7 @@
 		"test": "bun test"
 	},
 	"dependencies": {
-		"@agglayer/bridge-hub-commons": "workspace:*"
+		"@agglayer/bridge-hub-types": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/bun": "latest"

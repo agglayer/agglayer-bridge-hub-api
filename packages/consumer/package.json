@@ -17,6 +17,6 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"@agglayer/bridge-hub-commons": "workspace:*"
+		"@agglayer/bridge-hub-types": "workspace:*"
 	}
 }

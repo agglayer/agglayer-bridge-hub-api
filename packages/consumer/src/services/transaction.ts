@@ -4,7 +4,7 @@ import {
 	type IHubBridgeTransaction,
 	type IHubLeafIncludedStatusTransactions,
 	type ITransactionDocument,
-} from "@agglayer/bridge-hub-commons";
+} from "@agglayer/bridge-hub-types";
 import type { IHubClaimTransaction } from "../interfaces/claim_tx";
 import { CryptoHasher } from "bun";
 import {

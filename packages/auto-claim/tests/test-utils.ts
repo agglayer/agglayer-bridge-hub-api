@@ -3,7 +3,7 @@ import type {
 	ClaimProofResponse,
 	IHubTransaction,
 	ITransactionResponse,
-} from "@agglayer/bridge-hub-commons";
+} from "@agglayer/bridge-hub-types";
 
 export const mockTransaction: IHubTransaction = {
 	hubUID: "test-hub-uid-123",

@@ -29,5 +29,5 @@
 	},
 	"include": ["src/**/*", "tests/**/*"],
 	"exclude": ["node_modules", "dist"],
-	"references": [{ "path": "../commons" }]
+	"references": [{ "path": "../types" }]
 }

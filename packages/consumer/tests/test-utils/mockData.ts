@@ -17,7 +17,7 @@ import type {
 	IHubMetadata,
 } from "../../src/interfaces/metadata";
 import { LeafType } from "../../src/enums/leaf_type";
-import { TransactionStatus } from "@agglayer/bridge-hub-commons";
+import { TransactionStatus } from "@agglayer/bridge-hub-types";
 
 export const mockMappingTx: IMappingTx = {
 	metadata: "0x",

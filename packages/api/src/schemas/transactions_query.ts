@@ -5,7 +5,7 @@ import {
 	NetworkSchema,
 	PaginationSchema,
 } from "./common";
-import { TransactionStatusSchema } from "@agglayer/bridge-hub-commons";
+import { TransactionStatusSchema } from "@agglayer/bridge-hub-types";
 
 export const TransactionsQuerySchema = z
 	.object({

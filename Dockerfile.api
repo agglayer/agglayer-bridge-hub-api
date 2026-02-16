@@ -3,8 +3,8 @@ FROM oven/bun:1.2-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN bun install --dev --no-cache
-# Build commons first (required dependency for api)
-RUN cd packages/commons && bun run build
+# Build types first (required dependency for api)
+RUN cd packages/types && bun run build
 # Then build api
 RUN bun run build:api
 
@@ -22,9 +22,9 @@ COPY --from=builder /app/packages/api/dist ./dist
 # Copy node_modules first (includes symlinks)
 COPY --from=builder /app/node_modules ./node_modules
 
-# Copy the commons package to overwrite the symlink with actual files
-COPY --from=builder /app/packages/commons/dist ./node_modules/@agglayer/bridge-hub-commons/dist
-COPY --from=builder /app/packages/commons/package.json ./node_modules/@agglayer/bridge-hub-commons/package.json
+# Copy the types package to overwrite the symlink with actual files
+COPY --from=builder /app/packages/types/dist ./node_modules/@agglayer/bridge-hub-types/dist
+COPY --from=builder /app/packages/types/package.json ./node_modules/@agglayer/bridge-hub-types/package.json
 
 USER bunuser
 EXPOSE 3001

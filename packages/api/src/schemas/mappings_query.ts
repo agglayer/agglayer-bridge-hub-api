@@ -9,7 +9,7 @@ import {
 	HubTokenMappingsSchema,
 	PaginatedResponseSchema,
 	ResponseSchema,
-} from "@agglayer/bridge-hub-commons";
+} from "@agglayer/bridge-hub-types";
 
 export const MappingsQuerySchema = z
 	.object({

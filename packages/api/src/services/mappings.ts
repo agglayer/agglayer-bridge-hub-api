@@ -2,7 +2,7 @@ import type { Db, Collection, Filter, Sort } from "mongodb";
 import {
 	type IHubTokenMappings,
 	type IMappingDocument,
-} from "@agglayer/bridge-hub-commons";
+} from "@agglayer/bridge-hub-types";
 import { ApiError } from "@polygonlabs/servercore";
 import { Networks } from "../enums";
 import { executeMongoOperation } from "@polygonlabs/servercore-mongo";
