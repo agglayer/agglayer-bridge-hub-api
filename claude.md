@@ -26,6 +26,7 @@ bun run type-check       # Type check all packages
 ```
 CONSUMER → polls Aggkit Bridge Service → writes to MongoDB
 API      → reads MongoDB → REST endpoints + OpenAPI docs
+CONSUMER → reads MongoDB for BRIDGED transactions → queries Aggkit Bridge Service → updates status to LEAF_INCLUDED or READY_TO_CLAIM
 AUTO-CLAIM → polls API for READY_TO_CLAIM → submits claims to blockchain
 CONSUMER → detects claim events → updates status to CLAIMED
 ```
@@ -34,7 +35,7 @@ All three service packages depend on `@agglayer/bridge-hub-types` (shared types,
 
 ## Key Conventions
 
-- Transaction status flow: `BRIDGED → READY_TO_CLAIM → CLAIMED`
+- Transaction status flow: `BRIDGED → LEAF_INCLUDED → READY_TO_CLAIM → CLAIMED`
 - All addresses are lowercased before storage
 - Bridge Service API uses snake_case; internal models use camelCase
 - `generateDocId()` hashes are used as MongoDB `_id` fields (exists in consumer + API services)
