@@ -1,6 +1,6 @@
 import { Logger } from "@polygonlabs/servercore";
 import TransactionService from "./transaction";
-import type { ClaimProof, IHubTransaction } from "@agglayer/bridge-hub-commons";
+import type { ClaimProof, IHubTransaction } from "@agglayer/bridge-hub-types";
 import {
 	getContract,
 	type GetContractReturnType,

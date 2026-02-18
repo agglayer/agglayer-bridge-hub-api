@@ -4,7 +4,7 @@ import { CryptoHasher } from "bun";
 import {
 	type IHubTransaction,
 	type ITransactionDocument,
-} from "@agglayer/bridge-hub-commons";
+} from "@agglayer/bridge-hub-types";
 import { ApiError } from "@polygonlabs/servercore";
 import { Networks } from "../enums";
 import { executeMongoOperation } from "@polygonlabs/servercore-mongo";

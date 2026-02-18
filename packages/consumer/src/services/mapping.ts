@@ -1,7 +1,7 @@
 import {
 	type IHubTokenMappings,
 	type IMappingDocument,
-} from "@agglayer/bridge-hub-commons";
+} from "@agglayer/bridge-hub-types";
 import {
 	executeMongoOperation,
 	type Collection,

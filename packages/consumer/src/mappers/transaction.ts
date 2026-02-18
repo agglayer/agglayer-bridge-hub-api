@@ -1,6 +1,6 @@
 import { generateDeterministicULID } from "@polygonlabs/servercore";
 import { LeafType } from "../enums/leaf_type";
-import { TransactionStatus } from "@agglayer/bridge-hub-commons";
+import { TransactionStatus } from "@agglayer/bridge-hub-types";
 import type { IBridgeTx, IHubBridgeTransaction } from "../interfaces/bridge_tx";
 import type { IClaimTx, IHubClaimTransaction } from "../interfaces/claim_tx";
 import type { IDecodedGlobalIndex } from "../interfaces/decoded_global_index";

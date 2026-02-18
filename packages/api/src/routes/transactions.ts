@@ -13,7 +13,7 @@ import { TransactionService } from "../services/transactions";
 import {
 	TransactionByDepositCountResponseSchema,
 	TransactionResponseSchema,
-} from "@agglayer/bridge-hub-commons";
+} from "@agglayer/bridge-hub-types";
 
 const createTransactionsRoutes = (transactionService: TransactionService) => {
 	const transactionsRoutes = new OpenAPIHono();

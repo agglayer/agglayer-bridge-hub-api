@@ -4,7 +4,7 @@ import { ProofController } from "../controllers/proof";
 import { ClaimProofQuerySchema, NetworkSchema } from "../schemas";
 import { ProofService } from "../services/proof";
 import { TransactionService } from "../services/transactions";
-import { ClaimProofResponseSchema } from "@agglayer/bridge-hub-commons";
+import { ClaimProofResponseSchema } from "@agglayer/bridge-hub-types";
 
 const createProofRoutes = (
 	proofService: ProofService,
