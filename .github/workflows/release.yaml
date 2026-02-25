@@ -6,9 +6,7 @@ on:
             - main
         paths:
             - "packages/**" # Watch all packages (api, consumer, types)
-            - ".github/workflows/release.yaml"
-            - ".github/workflows/deploy_api_gcp.yaml"
-            - ".github/workflows/deploy_consumer_gcp.yaml"
+            - ".github/workflows/*" # Watch all workflow changes
     workflow_dispatch:
         inputs:
             branch:
