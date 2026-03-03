@@ -3,8 +3,6 @@ import type { Context } from "hono";
 import { getResponseContext } from "../middlewares/response_context";
 
 export class HealthCheckController {
-	constructor() {}
-
 	checkServiceHealth = async (c: Context) => {
 		try {
 			// const rawConfig = JSON.parse(process.env.CHAIN_CONFIG || "{}");
