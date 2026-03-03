@@ -8,7 +8,6 @@ import { MappingsService } from "./services/mappings";
 import { TokenMetadataService } from "./services/token_metadata";
 import { TransactionService } from "./services/transactions";
 import { ProofService } from "./services/proof";
-import { HealthCheckService } from "./services";
 import { MongoDBClient } from "@polygonlabs/servercore-mongo";
 import createHealthCheckRoutes from "./routes/health_check";
 import {
@@ -84,11 +83,6 @@ async function serve(): Promise<void> {
 		BRIDGE_ADDRESSES
 	);
 
-	const healthCheckService = new HealthCheckService(
-		transactionService,
-		rpcConfig
-	);
-
 	const proofService = new ProofService(proofConfig);
 
 	// Middlewares
@@ -132,7 +126,7 @@ async function serve(): Promise<void> {
 		proofService,
 		tokenMetadataService
 	);
-	const healthCheckRoutes = createHealthCheckRoutes(healthCheckService);
+	const healthCheckRoutes = createHealthCheckRoutes();
 
 	app.route("/:network", router);
 	app.route("/health-check", healthCheckRoutes);
