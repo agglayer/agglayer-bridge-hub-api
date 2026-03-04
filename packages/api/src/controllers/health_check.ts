@@ -1,11 +1,8 @@
 import { handleResponse, handleError, ApiError } from "@polygonlabs/servercore";
 import type { Context } from "hono";
 import { getResponseContext } from "../middlewares/response_context";
-import { HealthCheckService } from "../services/health_check";
 
 export class HealthCheckController {
-	constructor(private readonly healthCheckService: HealthCheckService) {}
-
 	checkServiceHealth = async (c: Context) => {
 		try {
 			// const rawConfig = JSON.parse(process.env.CHAIN_CONFIG || "{}");
@@ -53,26 +50,6 @@ export class HealthCheckController {
 			//         )}`
 			//     );
 			// }
-
-			return handleResponse(getResponseContext(c), {
-				status: "success",
-				message: "All services are working correctly",
-			});
-		} catch (error) {
-			return handleError(getResponseContext(c), error as ApiError);
-		}
-	};
-
-	checkAutoClaimServiceHealth = async (c: Context) => {
-		try {
-			const { networkId, sourceNetworkIds } = c.get("validatedQuery");
-			const { network } = c.get("validatedParams");
-
-			await this.healthCheckService.checkForAutoClaim(
-				network,
-				networkId,
-				sourceNetworkIds
-			);
 
 			return handleResponse(getResponseContext(c), {
 				status: "success",
