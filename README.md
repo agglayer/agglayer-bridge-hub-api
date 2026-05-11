@@ -111,6 +111,15 @@ cd packages/consumer && bun run dev
 cd packages/auto-claim && bun run dev
 ```
 
+### Docker Compose (Quick Local Runtime)
+
+A `docker-compose.yaml` is included to spin up the full stack (MongoDB, API, Consumer, and Auto-Claim) locally with a single command:
+
+```bash
+# Start all services
+docker compose up --build
+```
+
 ### Build
 
 ```bash

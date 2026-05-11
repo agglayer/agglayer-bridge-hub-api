@@ -1,0 +1,126 @@
+# ------------------------------------------------------------------------------
+# docker-compose.yaml for running the complete Agglayer Bridge Hub stack
+#
+# Expected env variables:
+#
+# - DESTINATION_NETWORK_AGGKIT_BRIDGE_URL
+# - DESTINATION_NETWORK_CHAINID
+# - DESTINATION_NETWORK_RPC_URL
+# - L1_NETWORK_CHAINID
+# - L1_RPC_URL
+#
+# ------------------------------------------------------------------------------
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: bridge-hub-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: bridge_hub
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - bridge-hub-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: bridge-hub-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      MONGODB_CONNECTION_URI: mongodb://admin:password@mongodb:27017/bridge_hub?authSource=admin
+      MONGODB_DB_NAME: bridge_hub
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      PROOF_CONFIG: |
+        {
+          "mainnet": {},
+          "testnet": {},
+          "devnet": {
+            "${DESTINATION_NETWORK_CHAINID}": "${DESTINATION_NETWORK_AGGKIT_BRIDGE_URL:-}/bridge/v1"
+          }
+        }
+      RPC_CONFIG: |
+        {
+          "devnet": {
+            "${L1_NETWORK_CHAINID}": "${L1_RPC_URL:-}",
+            "${DESTINATION_NETWORK_CHAINID}": "${DESTINATION_NETWORK_RPC_URL:-}"
+          }
+        }
+    depends_on:
+      - mongodb
+    networks:
+      - bridge-hub-network
+
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    container_name: bridge-hub-consumer
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      HEALTHCHECK_PORT: 8080
+      NETWORK_ID: 0
+      NETWORK: testnet
+      RPC_URL: ${L1_RPC_URL:-}
+      BRIDGE_CONTRACT_ADDRESS: ${BRIDGE_CONTRACT_ADDRESS:-}
+      START_BLOCK: 0
+      METADATA_DOC: lastIndexedTransactions
+      ETROG_UPDATE_BLOCK_NUMBER: 0
+      RESYNCING: false
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      BRIDGE_SERVICE_URL: http://localhost:8080
+      MONGODB_CONNECTION_URI: mongodb://admin:password@mongodb:27017/bridge_hub?authSource=admin
+      MONGODB_DB_NAME: bridge_hub
+    depends_on:
+      - mongodb
+    networks:
+      - bridge-hub-network
+
+  autoclaim:
+    build:
+      context: .
+      dockerfile: Dockerfile.autoclaim
+    container_name: bridge-hub-autoclaim
+    restart: unless-stopped
+    ports:
+      - "3002:3001"
+    environment:
+      NODE_ENV: development
+      NETWORK: devnet
+      BRIDGE_HUB_API_URL: http://api:3001/devnet
+      BRIDGE_CONTRACT: ${BRIDGE_CONTRACT:-}
+      SOURCE_NETWORKS: "[0]"
+      SOURCE_NETWORK_CHAINIDS: "[\"1\"]"
+      DESTINATION_NETWORK: ${DESTINATION_NETWORK_ID:-}
+      DESTINATION_NETWORK_CHAINID: ${DESTINATION_NETWORK_CHAINID:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      PRIVATE_KEY: ${AUTOCLAIM_PRIVATE_KEY:-0x0000000000000000000000000000000000000000000000000000000000000001}
+      BASE_ERPC_URL: ${BASE_ERPC_URL:-}
+      ERPC_API_KEY: ${ERPC_API_KEY:-}
+      RPC_CONFIG: |
+        {
+          "${DESTINATION_NETWORK_CHAINID}": "${DESTINATION_NETWORK_RPC_URL:-}"
+        }
+    depends_on:
+      - api
+    networks:
+      - bridge-hub-network
+
+networks:
+  bridge-hub-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
