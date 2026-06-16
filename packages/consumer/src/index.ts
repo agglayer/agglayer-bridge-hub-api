@@ -3,7 +3,6 @@ import {
 	Logger,
 	setupHealthCheckServer,
 } from "@polygonlabs/servercore";
-import { createPublicClient, http } from "viem";
 
 // Initialize the logger globally
 Logger.create({
@@ -25,31 +24,15 @@ import MetadataService from "./services/metadata";
 import MetadataMapper from "./mappers/metadata";
 import { MongoDBClient } from "@polygonlabs/servercore-mongo";
 import { ClaimReadinessConsumer } from "./claim_readiness_consumer";
-import bridgeAbi from "./interfaces/PolygonZkEVMBridge";
-import { BRIDGE_ADDRESSES, COLLECTIONS_CONFIG } from "./config";
+import { COLLECTIONS_CONFIG } from "./config";
 
 let database: MongoDBClient;
 
 const NETWORK_ID = process.env.NETWORK_ID || "0";
 const BRIDGE_SERVICE_URL = process.env.BRIDGE_SERVICE_URL;
 const NETWORK = process.env.NETWORK || "mainnet";
-const BRIDGE_CONTRACT_ADDRESS = process.env.BRIDGE_CONTRACT_ADDRESS;
 const ETROG_UPDATE_BLOCK_NUMBER = process.env.ETROG_UPDATE_BLOCK_NUMBER || "0";
 const METADATA_DOC = process.env.METADATA_DOC || "lastIndexedTransactions";
-const FIVE_MINUTES_MS = 5 * 60 * 1000;
-
-// Helper function to build Bridge API URLs
-const buildBridgeApiUrl = (endpoint: string, limit = 1): string =>
-	`${BRIDGE_SERVICE_URL}/${endpoint}?network_id=${NETWORK_ID}&limit=${limit}`;
-
-// Helper function to fetch with validation
-const fetchWithValidation = async (url: string): Promise<any> => {
-	const response = await fetch(url);
-	if (!response.ok) {
-		throw new ApiError(`Failed to fetch ${url}: ${response.statusText}`);
-	}
-	return response.json();
-};
 
 async function start(): Promise<void> {
 	try {
@@ -135,116 +118,24 @@ async function start(): Promise<void> {
 			transactionService
 		);
 
-		const client = createPublicClient({
-			transport: http(process.env.RPC_URL || ""),
-		});
-
 		setupHealthCheckServer(
 			[],
 			Number(process.env.HEALTH_CHECK_PORT || "3001"),
 			async () => {
 				try {
-					if (process.env.RESYNCING === "true") {
-						return true;
-					}
-
-					const [
-						depositCount,
-						bridges,
-						mappings,
-						claims,
-						latestBridgeFromDB,
-					] = await Promise.all([
-						client.readContract({
-							address: (BRIDGE_CONTRACT_ADDRESS ||
-								BRIDGE_ADDRESSES.get(NETWORK)) as `0x${string}`,
-							abi: bridgeAbi,
-							functionName: "depositCount",
-						}),
-						fetchWithValidation(buildBridgeApiUrl("bridges")),
-						fetchWithValidation(
-							buildBridgeApiUrl("token-mappings")
-						),
-						fetchWithValidation(buildBridgeApiUrl("claims")),
-						transactionService.getLatestBridgeTransactions(
-							Number(NETWORK_ID)
-						),
-					]);
-
-					const depositCnt = Number(depositCount) - 1;
-					const latestBridge = bridges?.bridges?.[0] || null;
-					const latestMapping = mappings?.token_mappings?.[0] || null;
-					const latestClaims = claims?.claims?.[0] || null;
-					const latestBridgeInDB = latestBridgeFromDB[0] || null;
-
-					if (latestBridge && !latestBridgeInDB?.timestamp) {
-						throw new ApiError(
-							"No bridges saved in DB but bridges found in Aggkit API"
-						);
-					}
-
-					// if deposit count from contract is larger then saved
-					if (depositCnt !== latestBridge.deposit_count) {
-						throw new ApiError(`Aggkit not in sync`);
-					}
-
-					// Cache current timestamp for multiple comparisons
-					const now = Date.now();
-
-					// if deposit count from contract is larger then saved
-					if (
-						latestBridge.deposit_count >
-							latestBridgeInDB.depositCount &&
-						now -
-							new Date(latestBridge.timestamp * 1000).getTime() >
-							FIVE_MINUTES_MS
-					) {
-						throw new ApiError(
-							`Deposits in DB not in sync. Aggkit: ${latestBridge.deposit_count}, DB: ${latestBridgeInDB.depositCount}`
-						);
-					}
-
-					const [mappingsFromDb, claimFromDb] = await Promise.all([
-						latestMapping
-							? tokenMappingsService.getTokenMapping(
-									latestMapping.tx_hash.toLowerCase(),
-									latestMapping.block_num
-								)
-							: Promise.resolve(null),
-						latestClaims
-							? transactionService.getClaim(
-									latestClaims.tx_hash.toLowerCase()
-								)
-							: Promise.resolve(null),
-					]);
-
-					if (
-						latestMapping &&
-						(!mappingsFromDb || mappingsFromDb.length === 0) &&
-						now -
-							new Date(
-								latestMapping.block_timestamp * 1000
-							).getTime() >
-							FIVE_MINUTES_MS
-					) {
-						throw new ApiError(
-							`Mappings in DB not in sync. Aggkit: ${latestMapping.tx_hash}`
-						);
-					}
-
-					if (
-						latestClaims &&
-						(!claimFromDb || claimFromDb.length === 0) &&
-						now -
-							new Date(
-								latestClaims.block_timestamp * 1000
-							).getTime() >
-							FIVE_MINUTES_MS
-					) {
-						throw new ApiError(
-							`Claims in DB not in sync. Aggkit: ${latestClaims.tx_hash}`
-						);
-					}
+					// Liveness is gated solely on the DB connection — a
+					// round-trip command surfaces a dropped/unauthenticated
+					// connection without depending on the RPC node or the
+					// Aggkit Bridge Service, neither of which the consumer can
+					// keep healthy on its own.
+					//
+					// Use `hello`, not `ping`: prod runs on Firestore's
+					// MongoDB-compatible API, whose supported-command surface
+					// omits `ping` (and `serverStatus`) but includes `hello`.
+					// `hello` is the canonical driver handshake and is the
+					// confirmed-supported lightweight liveness check there.
+					// https://docs.cloud.google.com/firestore/mongodb-compatibility/docs/supported-features-80
+					await database.getDb().command({ hello: 1 });
 
 					return true;
 				} catch (error: any) {
