@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.12](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.11...bridge-hub-consumer@1.6.12) (2026-06-16)
+
+### Bug Fixes
+
+- **consumer:** add timeouts to claim-readiness AggKit fetches ([dd653f7](https://github.com/agglayer/agglayer-bridge-hub-api/commit/dd653f7574674441165085cdc92ae0d938edbfb9))
+- **consumer:** scope healthcheck to DB connectivity only ([eac538d](https://github.com/agglayer/agglayer-bridge-hub-api/commit/eac538ddc4c3f1b2d16a4389155ac104e3a59e07))
+- delete backup test files ([3c1d6aa](https://github.com/agglayer/agglayer-bridge-hub-api/commit/3c1d6aa36e2a7887b4a3b75384e43e80535798de))
+- fix test coverage ([a3ae6c3](https://github.com/agglayer/agglayer-bridge-hub-api/commit/a3ae6c38ea276584d47e3a01a34f51b0786e5c47))
+- solve type issues in tests ([c567148](https://github.com/agglayer/agglayer-bridge-hub-api/commit/c56714873f1ca093bf27e9d71999b5ecd10ce1c5))
+
 ## [1.6.11](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.10...bridge-hub-consumer@1.6.11) (2026-01-30)
 
 ### Bug Fixes

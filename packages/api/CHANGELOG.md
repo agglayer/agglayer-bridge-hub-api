@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.7.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.6.2...bridge-hub-api@1.7.0) (2026-06-16)
+
+### Bug Fixes
+
+- **build:** unblock release build — build before type-check + fix proof leafIndex type ([5754ba6](https://github.com/agglayer/agglayer-bridge-hub-api/commit/5754ba6fdac62e810d57c491c45743b79505df90))
+- change default collection names for devnet ([43be8e9](https://github.com/agglayer/agglayer-bridge-hub-api/commit/43be8e90db239ef097de17199a9a4001ef6c7383))
+- delete backup test files ([3c1d6aa](https://github.com/agglayer/agglayer-bridge-hub-api/commit/3c1d6aa36e2a7887b4a3b75384e43e80535798de))
+- fix test coverage ([a3ae6c3](https://github.com/agglayer/agglayer-bridge-hub-api/commit/a3ae6c38ea276584d47e3a01a34f51b0786e5c47))
+- remove unnecessary constructor on health-check controller ([84b02ba](https://github.com/agglayer/agglayer-bridge-hub-api/commit/84b02ba7c41b0c64769ab65605e3f783cf6b75e3))
+- solve type issues in tests ([c567148](https://github.com/agglayer/agglayer-bridge-hub-api/commit/c56714873f1ca093bf27e9d71999b5ecd10ce1c5))
+
+### Features
+
+- remove auto claim health-check from hub api ([dace7b5](https://github.com/agglayer/agglayer-bridge-hub-api/commit/dace7b547fdad6b8775dde9dd80db1f15bb96deb))
+
 ## [1.6.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.6.1...bridge-hub-api@1.6.2) (2026-01-30)
 
 ### Bug Fixes
