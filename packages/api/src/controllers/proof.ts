@@ -58,6 +58,14 @@ export class ProofController {
 				}
 			}
 
+			// By here leafIndex is either supplied in the query or back-filled
+			// from a READY_TO_CLAIM transaction above; guard to narrow the
+			// optional type for getProof (which requires a number) rather than
+			// asserting non-null.
+			if (validatedQuery.leafIndex == null) {
+				throw new BadRequestError("Transaction not ready to claim");
+			}
+
 			const proof = await this.proofService.getProof(
 				network,
 				validatedQuery.sourceNetworkId,
