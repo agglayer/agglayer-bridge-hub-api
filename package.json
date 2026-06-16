@@ -9,7 +9,7 @@
 	],
 	"scripts": {
 		"bootstrap": "lerna bootstrap --npm-client=bun",
-		"build": "npm run type-check && lerna run build",
+		"build": "lerna run build && npm run type-check",
 		"build:api": "lerna run build --scope=bridge-hub-api",
 		"build:consumer": "lerna run build --scope=bridge-hub-consumer",
 		"build:autoclaim": "lerna run build --scope=auto-claim-service",
