@@ -6,6 +6,16 @@ import {
 import type { IClaimReadinessConfig } from "./interfaces/claim_readiness_config";
 import type TransactionsService from "./services/transaction";
 
+/**
+ * Per-request timeout for the AggKit HTTP calls. `fetch` has no default timeout,
+ * so a single unresponsive AggKit request hangs forever. Because the cron runs
+ * with overrun protection (`protect: true`), one hung request silently blocks
+ * every subsequent tick — the consumer keeps "running" but never promotes
+ * another transaction. A bounded timeout aborts the request so it's caught and
+ * logged below and the transaction is simply retried on the next tick.
+ */
+const AGGKIT_FETCH_TIMEOUT_MS = 10_000;
+
 export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 	constructor(
 		private config: IClaimReadinessConfig,
@@ -69,7 +79,8 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 					afterId = tx.hubUID;
 
 					const leafResponse = await fetch(
-						`${this.config.l1InfoTreeIndexUrl}?network_id=${this.config.networkId}&deposit_count=${tx.depositCount}`
+						`${this.config.l1InfoTreeIndexUrl}?network_id=${this.config.networkId}&deposit_count=${tx.depositCount}`,
+						{ signal: AbortSignal.timeout(AGGKIT_FETCH_TIMEOUT_MS) }
 					);
 					if (!leafResponse.ok) {
 						throw new ApiError(
@@ -136,7 +147,8 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 				try {
 					afterId = tx.hubUID;
 					const injectedTreeResponse = await fetch(
-						`${this.config.injectedL1InfoLeafUrl}?network_id=${this.config.networkId}&leaf_index=${tx.leafIndex}`
+						`${this.config.injectedL1InfoLeafUrl}?network_id=${this.config.networkId}&leaf_index=${tx.leafIndex}`,
+						{ signal: AbortSignal.timeout(AGGKIT_FETCH_TIMEOUT_MS) }
 					);
 
 					if (!injectedTreeResponse.ok) {
