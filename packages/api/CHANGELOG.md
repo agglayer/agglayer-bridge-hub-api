@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.7.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.7.0...bridge-hub-api@1.7.1) (2026-06-17)
+
+### Bug Fixes
+
+- **api:** exclude orphan claims without transactionHash from getTransactions ([a47daea](https://github.com/agglayer/agglayer-bridge-hub-api/commit/a47daea17d7c873cfd25fa29f1bd35636fae487b))
+
 # [1.7.0](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.6.2...bridge-hub-api@1.7.0) (2026-06-16)
 
 ### Bug Fixes
