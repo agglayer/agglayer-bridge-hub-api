@@ -88,8 +88,15 @@ export class TransactionService {
 
 		if (updatedSince) {
 			filter.lastUpdatedAt = { $gte: updatedSince };
-			filter.transactionHash = { $ne: "" };
 		}
+
+		// Exclude orphan/incomplete records that carry no source transactionHash
+		// — e.g. a CLAIMED claim event recorded with no matching deposit, which
+		// has none of the origin-side fields downstream consumers expect.
+		// MongoDB's $ne MATCHES documents where the field is absent, so the
+		// previous { $ne: "" } let these records through; require the field to
+		// be present and a non-empty string instead ($type excludes missing/null).
+		filter.transactionHash = { $type: "string", $ne: "" };
 
 		if (status) {
 			filter.status = status;
