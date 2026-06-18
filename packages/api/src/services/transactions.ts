@@ -102,8 +102,17 @@ export class TransactionService {
 			filter.status = status;
 		}
 
+		// The cursor must advance in the same direction as the sort, otherwise
+		// pagination walks the wrong way. nextStartAfterCursor is the last
+		// hubUID of a page, so for ascending order the next page is everything
+		// AFTER it ($gt); for descending, everything BEFORE it ($lt). Hard-coding
+		// $lt (correct only for desc) made asc callers re-read records before the
+		// cursor, so any updatedSince window larger than `limit` silently dropped
+		// its tail. cf. the consumer's correct $gt+asc pagination in
+		// packages/consumer/src/services/transaction.ts.
 		if (startAfter) {
-			filter.hubUID = { $lt: startAfter };
+			filter.hubUID =
+				order === "asc" ? { $gt: startAfter } : { $lt: startAfter };
 		}
 
 		// Build sort order
