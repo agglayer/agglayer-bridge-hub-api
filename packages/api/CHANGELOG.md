@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.7.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.7.1...bridge-hub-api@1.7.2) (2026-06-18)
+
+### Bug Fixes
+
+- **api:** paginate transactions forward when order=asc ([c2f6cfd](https://github.com/agglayer/agglayer-bridge-hub-api/commit/c2f6cfd77dbbffe008c4a45d8f4fd41a27467814))
+
 ## [1.7.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.7.0...bridge-hub-api@1.7.1) (2026-06-17)
 
 ### Bug Fixes
