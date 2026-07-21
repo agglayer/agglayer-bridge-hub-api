@@ -23,19 +23,19 @@ class MockBadRequestError extends Error {
 
 const mockHandleError = mock(() => Promise.resolve());
 
+// NOTE: deliberately no mock.module of "../../src/middlewares/response_context"
+// here. Bun's mock.module is process-global for the whole `bun test` run, so a
+// module mock registered in this file leaks into every test file that loads
+// after it. When file discovery order put this file before
+// response_context.test.ts (order differs per filesystem), that file ended up
+// testing the mock instead of the real implementation and failed. The real
+// getResponseContext is side-effect-free with the contexts used below, so no
+// mock is needed. ApiError is included in the servercore mock because the real
+// response_context module imports it.
 mock.module("@polygonlabs/servercore", () => ({
+	ApiError: class ApiError extends Error {},
 	BadRequestError: MockBadRequestError,
 	handleError: mockHandleError,
-}));
-
-// Mock response context
-const mockGetResponseContext = mock(() => ({
-	status: mock(() => ({})),
-	json: mock(() => ({})),
-}));
-
-mock.module("../../src/middlewares/response_context", () => ({
-	getResponseContext: mockGetResponseContext,
 }));
 
 describe("Validate Query Params Middlewares", () => {
@@ -45,7 +45,6 @@ describe("Validate Query Params Middlewares", () => {
 	beforeEach(() => {
 		mockNext = mock(() => Promise.resolve());
 		mockHandleError.mockClear();
-		mockGetResponseContext.mockClear();
 
 		mockContext = {
 			req: {
@@ -53,6 +52,8 @@ describe("Validate Query Params Middlewares", () => {
 				query: mock(() => ({})),
 			},
 			set: mock(() => {}),
+			status: mock(() => {}),
+			json: mock(() => ({})),
 		};
 	});
 
@@ -635,20 +636,22 @@ describe("Validate Query Params Middlewares", () => {
 	});
 
 	describe("error handling consistency", () => {
-		test("should call handleError with consistent response context", async () => {
-			const mockResponseContext = { status: mock(), json: mock() };
-			mockGetResponseContext.mockReturnValue(mockResponseContext);
-
+		test("should call handleError with a response context wired to the Hono context", async () => {
 			mockContext.req.param.mockReturnValue({ network: "invalid" });
 			mockContext.req.query.mockReturnValue({});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
 
-			expect(mockGetResponseContext).toHaveBeenCalledWith(mockContext);
-			expect(mockHandleError).toHaveBeenCalledWith(
-				mockResponseContext,
-				expect.any(MockBadRequestError)
-			);
+			expect(mockHandleError).toHaveBeenCalledTimes(1);
+			const [responseContext, error] = mockHandleError.mock
+				.calls[0] as any;
+			expect(error).toBeInstanceOf(MockBadRequestError);
+			// The response context passed to handleError must delegate to the
+			// Hono context's status/json methods.
+			responseContext.status(400);
+			responseContext.json({ ok: false });
+			expect(mockContext.status).toHaveBeenCalledWith(400);
+			expect(mockContext.json).toHaveBeenCalledWith({ ok: false });
 		});
 
 		test("should create BadRequestError with proper structure", async () => {
