@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.7.3](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.7.2...bridge-hub-api@1.7.3) (2026-07-21)
+
+### Bug Fixes
+
+- **errors:** stop echoing raw error messages and internal URLs in proof error responses ([b4e5a70](https://github.com/agglayer/agglayer-bridge-hub-api/commit/b4e5a70c899c719bbb06cb896c358ee227833f3f))
+- make bun tests order-independent and fix lerna hang in nested checkouts ([be97af3](https://github.com/agglayer/agglayer-bridge-hub-api/commit/be97af3b8bf60fc3a42eca38a91690c429ba8a0e))
+
 ## [1.7.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.7.1...bridge-hub-api@1.7.2) (2026-06-18)
 
 ### Bug Fixes
