@@ -22,19 +22,19 @@ class MockBadRequestError extends Error {
 
 const mockHandleError = mock(() => Promise.resolve());
 
+// NOTE: deliberately no mock.module of "../../src/middlewares/response_context"
+// here. Bun's mock.module is process-global for the whole `bun test` run, so a
+// module mock registered in this file leaks into every test file that loads
+// after it. When file discovery order put this file before
+// response_context.test.ts (order differs per filesystem), that file ended up
+// testing the mock instead of the real implementation and failed. The real
+// getResponseContext is side-effect-free with the contexts used below, so no
+// mock is needed. ApiError is included in the servercore mock because the real
+// response_context module imports it.
 mock.module("@polygonlabs/servercore", () => ({
+	ApiError: class ApiError extends Error {},
 	BadRequestError: MockBadRequestError,
 	handleError: mockHandleError,
-}));
-
-// Mock response context
-const mockGetResponseContext = mock(() => ({
-	status: mock(() => ({})),
-	json: mock(() => ({})),
-}));
-
-mock.module("../../src/middlewares/response_context", () => ({
-	getResponseContext: mockGetResponseContext,
 }));
 
 describe("Fuzzy Tests for API Parameter Validations", () => {
@@ -44,7 +44,6 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 	beforeEach(() => {
 		mockNext = mock(() => Promise.resolve());
 		mockHandleError.mockClear();
-		mockGetResponseContext.mockClear();
 
 		mockContext = {
 			req: {

@@ -1,4 +1,15 @@
 # Based on https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore
+#
+# The `!*` below is a no-op for git itself (nothing is ignored yet at this
+# point, and a parent repository's .gitignore never applies inside a nested
+# repository). It exists for Nx's native file walker (used by `lerna run`):
+# unlike git, the walker applies .gitignore files from ancestor directories
+# OUTSIDE this repository. If this repo is checked out inside an outer git
+# repo whose .gitignore ignores everything (`*`), the walker discovers zero
+# files and `lerna run` deadlocks at startup. `!*` re-includes everything at
+# this repo's scope so file discovery works regardless of where the repo is
+# checked out; the rules below still apply because later rules win.
+!*
 
 # Logs
 
