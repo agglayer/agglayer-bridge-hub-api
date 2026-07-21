@@ -1,4 +1,4 @@
-import { ApiError, NotFoundError } from "@polygonlabs/servercore";
+import { ApiError, Logger, NotFoundError } from "@polygonlabs/servercore";
 import { Networks } from "../enums";
 import type { ClaimProof } from "@agglayer/bridge-hub-types";
 
@@ -59,13 +59,22 @@ export class ProofService {
 				txResponse.json(),
 			]);
 
+			// NOTE: never put the upstream URL in the error context — servercore's
+			// handleError serialises `context` into the response body (`details`),
+			// so anything here is visible to the API client. The URLs identify
+			// internal Bridge Service endpoints and must stay server-side.
 			if (!proofResponse.ok) {
+				Logger.warn({
+					location: "ProofService",
+					function: "getProof",
+					url: proofTargetUrl,
+					status: proofResponse.status,
+				});
 				throw new NotFoundError(
 					proofData?.error || "Error fetching Proof",
 					undefined,
 					undefined,
 					{
-						url: proofTargetUrl,
 						sourceNetwork,
 						depositCount,
 						leaf,
@@ -74,12 +83,17 @@ export class ProofService {
 			}
 
 			if (!txResponse.ok || !txData.bridges || txData.count === 0) {
+				Logger.warn({
+					location: "ProofService",
+					function: "getProof",
+					url: txTargetUrl,
+					status: txResponse.status,
+				});
 				throw new NotFoundError(
 					txData?.error || "Error fetching Transaction for Proof",
 					undefined,
 					undefined,
 					{
-						url: txTargetUrl,
 						sourceNetwork,
 						depositCount,
 					}
@@ -94,17 +108,23 @@ export class ProofService {
 			if (error instanceof NotFoundError) {
 				throw error;
 			}
-			throw new ApiError(
-				error instanceof Error ? error.message : "Error fetching Proof",
-				{
-					context: {
-						url: this.networkMap.get(network)?.get(sourceNetwork),
-						sourceNetwork,
-						depositCount,
-						leaf,
-					},
-				}
-			);
+			// Log the raw error server-side, but never copy error.message into
+			// the ApiError: handleError echoes the ApiError's message (and
+			// context) to the client, and raw fetch/RPC error messages can embed
+			// internal URLs — including credentials — in their text.
+			Logger.error({
+				location: "ProofService",
+				function: "getProof",
+				error,
+				url: this.networkMap.get(network)?.get(sourceNetwork),
+			});
+			throw new ApiError("Error fetching Proof", {
+				context: {
+					sourceNetwork,
+					depositCount,
+					leaf,
+				},
+			});
 		}
 	}
 }
