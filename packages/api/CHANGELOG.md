@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.7.4](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.7.3...bridge-hub-api@1.7.4) (2026-07-23)
+
+**Note:** Version bump only for package bridge-hub-api
+
+
+
+
+
 ## [1.7.3](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.7.2...bridge-hub-api@1.7.3) (2026-07-21)
 
 ### Bug Fixes

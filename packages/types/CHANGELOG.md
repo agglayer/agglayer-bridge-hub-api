@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.3](https://github.com/agglayer/agglayer-bridge-hub-api/compare/@agglayer/bridge-hub-types@1.2.2...@agglayer/bridge-hub-types@1.2.3) (2026-07-23)
+
+**Note:** Version bump only for package @agglayer/bridge-hub-types
+
+
+
+
+
 ## [1.2.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/@agglayer/bridge-hub-types@1.0.1...@agglayer/bridge-hub-types@1.2.2) (2026-06-16)
 
 **Note:** Version bump only for package @agglayer/bridge-hub-types

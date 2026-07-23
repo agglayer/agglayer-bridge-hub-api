@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-auto-claim@1.2.0...bridge-hub-auto-claim@1.2.1) (2026-07-23)
+
+**Note:** Version bump only for package bridge-hub-auto-claim
+
+
+
+
+
 # 1.2.0 (2026-06-16)
 
 ### Bug Fixes
