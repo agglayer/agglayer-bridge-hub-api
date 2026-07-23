@@ -1,10 +1,11 @@
-import type {
-	IHubTokenMappings,
-	IMappingTx,
-} from "../interfaces/token_mapping";
+import type { IHubTokenMappings, IMappingTx } from '../interfaces/token_mapping.ts';
 
-export default class TokenMappingsMapper {
-	constructor(private readonly networkId: number) {}
+export class TokenMappingsMapper {
+	private readonly networkId: number;
+
+	constructor(networkId: number) {
+		this.networkId = networkId;
+	}
 
 	public mapMappings(events: IMappingTx[]): IHubTokenMappings[] {
 		const formattedMappings: IHubTokenMappings[] = [];
@@ -15,12 +16,10 @@ export default class TokenMappingsMapper {
 				timestamp: mappingEvent.block_timestamp,
 				transactionHash: mappingEvent.tx_hash.toLowerCase(),
 				originTokenNetwork: mappingEvent.origin_network,
-				originTokenAddress:
-					mappingEvent.origin_token_address.toLowerCase(),
+				originTokenAddress: mappingEvent.origin_token_address.toLowerCase(),
 				wrappedTokenNetwork: this.networkId,
-				wrappedTokenAddress:
-					mappingEvent.wrapped_token_address.toLowerCase(),
-				lastUpdatedAt: Date.now(),
+				wrappedTokenAddress: mappingEvent.wrapped_token_address.toLowerCase(),
+				lastUpdatedAt: Date.now()
 			});
 		});
 

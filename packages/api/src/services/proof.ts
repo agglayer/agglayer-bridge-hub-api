@@ -1,6 +1,8 @@
-import { ApiError, Logger, NotFoundError } from "@polygonlabs/servercore";
-import { Networks } from "../enums";
-import type { ClaimProof } from "@agglayer/bridge-hub-types";
+import type { ClaimProof } from '@agglayer/bridge-hub-types';
+
+import { ApiError, Logger, NotFoundError } from '@polygonlabs/servercore';
+
+import type { Networks } from '../enums/index.ts';
 
 export class ProofService {
 	private readonly networkMap: Map<string, Map<number, string>>;
@@ -18,32 +20,22 @@ export class ProofService {
 		try {
 			const networkURLMap = this.networkMap.get(network);
 			if (!networkURLMap) {
-				throw new NotFoundError(
-					"Network URL isn't supported",
-					undefined,
-					undefined,
-					{
-						network: network,
-						sourceNetwork,
-						depositCount,
-						leaf,
-					}
-				);
+				throw new NotFoundError("Network URL isn't supported", undefined, undefined, {
+					network: network,
+					sourceNetwork,
+					depositCount,
+					leaf
+				});
 			}
 
 			const sourceNetworkUrl = networkURLMap.get(sourceNetwork);
 			if (!sourceNetworkUrl) {
-				throw new NotFoundError(
-					"Network URL isn't supported",
-					undefined,
-					undefined,
-					{
-						network: network,
-						sourceNetwork,
-						depositCount,
-						leaf,
-					}
-				);
+				throw new NotFoundError("Network URL isn't supported", undefined, undefined, {
+					network: network,
+					sourceNetwork,
+					depositCount,
+					leaf
+				});
 			}
 
 			const proofTargetUrl = `${sourceNetworkUrl}/claim-proof?network_id=${sourceNetwork}&deposit_count=${depositCount}&leaf_index=${leaf}`;
@@ -51,13 +43,10 @@ export class ProofService {
 
 			const [proofResponse, txResponse] = await Promise.all([
 				fetch(proofTargetUrl),
-				fetch(txTargetUrl),
+				fetch(txTargetUrl)
 			]);
 
-			const [proofData, txData] = await Promise.all([
-				proofResponse.json(),
-				txResponse.json(),
-			]);
+			const [proofData, txData] = await Promise.all([proofResponse.json(), txResponse.json()]);
 
 			// NOTE: never put the upstream URL in the error context — servercore's
 			// handleError serialises `context` into the response body (`details`),
@@ -65,44 +54,39 @@ export class ProofService {
 			// internal Bridge Service endpoints and must stay server-side.
 			if (!proofResponse.ok) {
 				Logger.warn({
-					location: "ProofService",
-					function: "getProof",
+					location: 'ProofService',
+					function: 'getProof',
 					url: proofTargetUrl,
-					status: proofResponse.status,
+					status: proofResponse.status
 				});
-				throw new NotFoundError(
-					proofData?.error || "Error fetching Proof",
-					undefined,
-					undefined,
-					{
-						sourceNetwork,
-						depositCount,
-						leaf,
-					}
-				);
+				throw new NotFoundError(proofData?.error || 'Error fetching Proof', undefined, undefined, {
+					sourceNetwork,
+					depositCount,
+					leaf
+				});
 			}
 
 			if (!txResponse.ok || !txData.bridges || txData.count === 0) {
 				Logger.warn({
-					location: "ProofService",
-					function: "getProof",
+					location: 'ProofService',
+					function: 'getProof',
 					url: txTargetUrl,
-					status: txResponse.status,
+					status: txResponse.status
 				});
 				throw new NotFoundError(
-					txData?.error || "Error fetching Transaction for Proof",
+					txData?.error || 'Error fetching Transaction for Proof',
 					undefined,
 					undefined,
 					{
 						sourceNetwork,
-						depositCount,
+						depositCount
 					}
 				);
 			}
 
 			return {
 				...proofData,
-				bridge_tx_metadata: txData.bridges[0].metadata,
+				bridge_tx_metadata: txData.bridges[0].metadata
 			};
 		} catch (error) {
 			if (error instanceof NotFoundError) {
@@ -113,17 +97,17 @@ export class ProofService {
 			// context) to the client, and raw fetch/RPC error messages can embed
 			// internal URLs — including credentials — in their text.
 			Logger.error({
-				location: "ProofService",
-				function: "getProof",
+				location: 'ProofService',
+				function: 'getProof',
 				error,
-				url: this.networkMap.get(network)?.get(sourceNetwork),
+				url: this.networkMap.get(network)?.get(sourceNetwork)
 			});
-			throw new ApiError("Error fetching Proof", {
+			throw new ApiError('Error fetching Proof', {
 				context: {
 					sourceNetwork,
 					depositCount,
-					leaf,
-				},
+					leaf
+				}
 			});
 		}
 	}

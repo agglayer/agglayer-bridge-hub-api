@@ -8,24 +8,28 @@
 	"types": "./dist/index.d.ts",
 	"exports": {
 		".": {
-			"import": "./dist/index.js",
-			"types": "./dist/index.d.ts"
+			"@polygonlabs/source": "./src/index.ts",
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
 		}
 	},
 	"files": [
 		"dist"
 	],
 	"scripts": {
-		"build": "tsup",
-		"type-check": "tsc --noEmit"
+		"build": "pnpm run typecheck && tsc -b tsconfig.lib.json",
+		"build:clean": "pnpm run typecheck && rm -rf dist out-tsc *.tsbuildinfo && tsc -b tsconfig.lib.json",
+		"prepublishOnly": "pnpm run build:clean",
+		"typecheck": "tsc -b"
 	},
 	"devDependencies": {
-		"@types/bun": "latest"
-	},
-	"peerDependencies": {
+		"@tsconfig/node-ts": "^23.0.0",
+		"@tsconfig/node24": "^24.0.0",
+		"@types/node": "^24.0.0",
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"@hono/zod-openapi": "^1.1.2"
+		"@hono/zod-openapi": "^1.1.2",
+		"mongodb": "^7.0.0"
 	}
 }

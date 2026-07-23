@@ -1,11 +1,11 @@
-import type { Db, Collection, Filter, Sort } from "mongodb";
-import {
-	type IHubTokenMappings,
-	type IMappingDocument,
-} from "@agglayer/bridge-hub-types";
-import { ApiError } from "@polygonlabs/servercore";
-import { Networks } from "../enums";
-import { executeMongoOperation } from "@polygonlabs/servercore-mongo";
+import type { Db, Collection, Filter, Sort } from 'mongodb';
+
+import type { IHubTokenMappings, IMappingDocument } from '@agglayer/bridge-hub-types';
+
+import { ApiError } from '@polygonlabs/servercore';
+import { executeMongoOperation } from '@polygonlabs/servercore-mongo';
+
+import type { Networks } from '../enums/index.ts';
 
 export class MappingsService {
 	private readonly db: Db;
@@ -14,9 +14,9 @@ export class MappingsService {
 	constructor(
 		database: Db,
 		collectionIdParam: Map<string, string> = new Map([
-			["mainnet", "bridge_hub_api_mappings"],
-			["testnet", "bridge_hub_api_mappings_testnet"],
-			["devnet", "bridge_hub_api_mappings_devnet"],
+			['mainnet', 'bridge_hub_api_mappings'],
+			['testnet', 'bridge_hub_api_mappings_testnet'],
+			['devnet', 'bridge_hub_api_mappings_devnet']
 		])
 	) {
 		this.db = database;
@@ -30,7 +30,7 @@ export class MappingsService {
 		wrappedNetworkIds,
 		network,
 		limit,
-		startAfter,
+		startAfter
 	}: {
 		originTokenAddress?: string;
 		wrappedTokenAddress?: string;
@@ -45,19 +45,15 @@ export class MappingsService {
 	}> {
 		const collectionName = this.collectionId.get(network);
 		if (!collectionName) {
-			throw new ApiError(
-				`No collection configured for network: ${network}`,
-				{
-					context: {
-						service: "MappingsService",
-						network,
-						availableNetworks: Array.from(this.collectionId.keys()),
-					},
+			throw new ApiError(`No collection configured for network: ${network}`, {
+				context: {
+					service: 'MappingsService',
+					network,
+					availableNetworks: Array.from(this.collectionId.keys())
 				}
-			);
+			});
 		}
-		const collection: Collection<IMappingDocument> =
-			this.db.collection(collectionName);
+		const collection: Collection<IMappingDocument> = this.db.collection(collectionName);
 
 		// Build MongoDB filter
 		const filter: Filter<IMappingDocument> = {};
@@ -84,7 +80,7 @@ export class MappingsService {
 
 		// Build sort order
 		const sort: Sort = {
-			timestamp: -1,
+			timestamp: -1
 		};
 
 		// Execute query
@@ -92,14 +88,14 @@ export class MappingsService {
 			collection,
 			(col) => col.find(filter).sort(sort).limit(limit).toArray(),
 			{
-				operationName: "getMappings",
-				logContext: { network, filter },
+				operationName: 'getMappings',
+				logContext: { network, filter }
 			}
 		);
 
 		return {
 			documents: documents as IHubTokenMappings[],
-			totalDocumentsCount: undefined,
+			totalDocumentsCount: undefined
 		};
 	}
 
@@ -113,57 +109,45 @@ export class MappingsService {
 	}> {
 		const collectionName = this.collectionId.get(network);
 		if (!collectionName) {
-			throw new ApiError(
-				`No collection configured for network: ${network}`,
-				{
-					context: {
-						service: "MappingsService",
-						network,
-						availableNetworks: Array.from(this.collectionId.keys()),
-					},
+			throw new ApiError(`No collection configured for network: ${network}`, {
+				context: {
+					service: 'MappingsService',
+					network,
+					availableNetworks: Array.from(this.collectionId.keys())
 				}
-			);
+			});
 		}
-		const collection: Collection<IMappingDocument> =
-			this.db.collection(collectionName);
+		const collection: Collection<IMappingDocument> = this.db.collection(collectionName);
 
 		// Query for origin tokens
 		const originTokenFilter = {
 			originTokenAddress: tokenAddress,
-			originTokenNetwork: tokenNetwork,
+			originTokenNetwork: tokenNetwork
 		};
 
 		// Query for wrapped tokens
 		const wrappedTokenFilter = {
 			wrappedTokenAddress: tokenAddress,
-			wrappedTokenNetwork: tokenNetwork,
+			wrappedTokenNetwork: tokenNetwork
 		};
 
 		const [originTokens, wrappedTokens] = await Promise.all([
-			executeMongoOperation(
-				collection,
-				(col) => col.find(originTokenFilter).toArray(),
-				{
-					operationName: "getMappingsByToken:originTokens",
-					logContext: { network, tokenAddress, tokenNetwork },
-				}
-			),
-			executeMongoOperation(
-				collection,
-				(col) => col.find(wrappedTokenFilter).toArray(),
-				{
-					operationName: "getMappingsByToken:wrappedTokens",
-					logContext: { network, tokenAddress, tokenNetwork },
-				}
-			),
+			executeMongoOperation(collection, (col) => col.find(originTokenFilter).toArray(), {
+				operationName: 'getMappingsByToken:originTokens',
+				logContext: { network, tokenAddress, tokenNetwork }
+			}),
+			executeMongoOperation(collection, (col) => col.find(wrappedTokenFilter).toArray(), {
+				operationName: 'getMappingsByToken:wrappedTokens',
+				logContext: { network, tokenAddress, tokenNetwork }
+			})
 		]);
 
 		return {
 			documents: [
 				...(originTokens as IHubTokenMappings[]),
-				...(wrappedTokens as IHubTokenMappings[]),
+				...(wrappedTokens as IHubTokenMappings[])
 			],
-			totalDocumentsCount: originTokens.length + wrappedTokens.length,
+			totalDocumentsCount: originTokens.length + wrappedTokens.length
 		};
 	}
 }

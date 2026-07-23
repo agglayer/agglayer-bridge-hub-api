@@ -1,6 +1,7 @@
-import { z } from "@hono/zod-openapi";
-import { TransactionStatusSchema } from "../enums/transaction_status";
-import { PaginatedResponseSchema, ResponseSchema } from "./common";
+import { z } from '@hono/zod-openapi';
+
+import { TransactionStatusSchema } from '../enums/transaction_status.ts';
+import { PaginatedResponseSchema, ResponseSchema } from './common.ts';
 
 /**
  * Zod schema for the Hub API's Transaction entity with BRIDGED status
@@ -9,7 +10,7 @@ export const HubBridgedStatusTransactionsSchema = z.object({
 	sourceNetwork: z.number(),
 	depositCount: z.number(),
 	hubUID: z.string(),
-	timestamp: z.number().optional(),
+	timestamp: z.number().optional()
 });
 
 /**
@@ -19,7 +20,7 @@ export const HubLeafIncludedStatusTransactionsSchema = z.object({
 	sourceNetwork: z.number(),
 	depositCount: z.number(),
 	leafIndex: z.number(),
-	hubUID: z.string(),
+	hubUID: z.string()
 });
 
 /**
@@ -31,7 +32,7 @@ export const HubBridgeTransactionSchema = z.object({
 	blockNumber: z.number(),
 	transactionIndex: z.number(),
 	timestamp: z.number(),
-	leafType: z.enum(["ASSET", "MESSAGE"]),
+	leafType: z.enum(['ASSET', 'MESSAGE']),
 	originTokenNetwork: z.number(),
 	originTokenAddress: z.string(),
 	sourceNetwork: z.number(),
@@ -43,7 +44,7 @@ export const HubBridgeTransactionSchema = z.object({
 	bridgeHash: z.string(),
 	status: TransactionStatusSchema,
 	lastUpdatedAt: z.number().optional(),
-	txSender: z.string(),
+	txSender: z.string()
 });
 
 /**
@@ -57,7 +58,7 @@ export const HubClaimTransactionSchema = z.object({
 	sourceNetwork: z.number(),
 	depositCount: z.number(),
 	status: TransactionStatusSchema,
-	lastUpdatedAt: z.number().optional(),
+	lastUpdatedAt: z.number().optional()
 });
 
 /**
@@ -68,20 +69,15 @@ export const HubTransactionSchema = z.object({
 	...HubBridgeTransactionSchema.shape,
 	...HubClaimTransactionSchema.shape,
 	leafIndex: z.number().optional(),
-	leafIndexForProof: z.number().optional(),
+	leafIndexForProof: z.number().optional()
 });
 
-export const TransactionResponseSchema = PaginatedResponseSchema(
-	z.array(HubTransactionSchema)
-);
+export const TransactionResponseSchema = PaginatedResponseSchema(z.array(HubTransactionSchema));
 
-export const TransactionByDepositCountResponseSchema =
-	ResponseSchema(HubTransactionSchema);
+export const TransactionByDepositCountResponseSchema = ResponseSchema(HubTransactionSchema);
 
 // Export inferred TypeScript types
-export type IHubBridgedStatusTransactions = z.infer<
-	typeof HubBridgedStatusTransactionsSchema
->;
+export type IHubBridgedStatusTransactions = z.infer<typeof HubBridgedStatusTransactionsSchema>;
 export type IHubLeafIncludedStatusTransactions = z.infer<
 	typeof HubLeafIncludedStatusTransactionsSchema
 >;

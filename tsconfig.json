@@ -1,22 +1,10 @@
 {
+	"extends": "./tsconfig.base.json",
 	"files": [],
 	"references": [
+		{ "path": "./packages/types" },
 		{ "path": "./packages/api" },
 		{ "path": "./packages/auto-claim" },
-		{ "path": "./packages/types" },
 		{ "path": "./packages/consumer" }
-	],
-	"compilerOptions": {
-		"baseUrl": ".",
-		"paths": {
-			"api": ["./packages/api"],
-			"consumer": ["./packages/consumer"]
-		},
-		"module": "ESNext",
-		"moduleResolution": "Bundler",
-		"target": "ESNext",
-		"lib": ["ESNext"],
-		"esModuleInterop": true,
-		"strict": true
-	}
+	]
 }

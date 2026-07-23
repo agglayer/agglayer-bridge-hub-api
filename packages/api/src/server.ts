@@ -1,80 +1,69 @@
-import { Logger } from "@polygonlabs/servercore";
-import { OpenAPIHono } from "@hono/zod-openapi";
-import { cors } from "hono/cors";
-import { logger } from "hono/logger";
-import { Scalar } from "@scalar/hono-api-reference";
-import createRouter from "./routes";
-import { MappingsService } from "./services/mappings";
-import { TokenMetadataService } from "./services/token_metadata";
-import { TransactionService } from "./services/transactions";
-import { ProofService } from "./services/proof";
-import { MongoDBClient } from "@polygonlabs/servercore-mongo";
-import createHealthCheckRoutes from "./routes/health_check";
-import {
-	BRIDGE_ADDRESSES,
-	MAPPINGS_COLLECTIONS,
-	TRANSACTIONS_COLLECTIONS,
-} from "./config";
+import { serve } from '@hono/node-server';
+import { OpenAPIHono } from '@hono/zod-openapi';
+import { Scalar } from '@scalar/hono-api-reference';
+import { cors } from 'hono/cors';
+import { logger } from 'hono/logger';
+
+import { Logger } from '@polygonlabs/servercore';
+import { MongoDBClient } from '@polygonlabs/servercore-mongo';
+
+import { BRIDGE_ADDRESSES, MAPPINGS_COLLECTIONS, TRANSACTIONS_COLLECTIONS } from './config.ts';
+import { createHealthCheckRoutes } from './routes/health_check.ts';
+import { createRouter } from './routes/index.ts';
+import { MappingsService } from './services/mappings.ts';
+import { ProofService } from './services/proof.ts';
+import { TokenMetadataService } from './services/token_metadata.ts';
+import { TransactionService } from './services/transactions.ts';
 
 const app = new OpenAPIHono();
 
-async function serve(): Promise<void> {
+async function bootstrap(): Promise<void> {
 	Logger.create({
 		sentry: {
 			dsn: process.env.SENTRY_DSN,
-			level: "error",
+			level: 'error'
 		},
 		console: {
-			level: "info",
-		},
+			level: 'info'
+		}
 	});
 
 	const database = new MongoDBClient(
-		process.env.MONGODB_CONNECTION_URI || "mongodb://localhost:27017",
-		process.env.MONGODB_DB_NAME || "bridge_hub"
+		process.env.MONGODB_CONNECTION_URI || 'mongodb://localhost:27017',
+		process.env.MONGODB_DB_NAME || 'bridge_hub'
 	);
 	await database.connect();
 
 	// Parse the PROOF_CONFIG and RPC_CONFIG environment variable and convert it to a Map
 	// Parse PROOF_CONFIG and RPC_CONFIG as an objects with "mainnet", "testnet" and "devnet" keys, each mapping to an object of chainId -> url
-	const rawProofConfig = JSON.parse(process.env.PROOF_CONFIG || "{}");
+	const rawProofConfig = JSON.parse(process.env.PROOF_CONFIG || '{}');
 	// Convert each network's config to a Map<number, string>
 	const proofConfig: Map<string, Map<number, string>> = new Map();
 	for (const [network, config] of Object.entries(rawProofConfig)) {
 		proofConfig.set(
 			network,
 			new Map<number, string>(
-				Object.entries(config as Map<string, string>).map(
-					([key, value]) => [Number(key), value]
-				)
+				Object.entries(config as Map<string, string>).map(([key, value]) => [Number(key), value])
 			)
 		);
 	}
 
-	const rawRPCConfig = JSON.parse(process.env.RPC_CONFIG || "{}");
+	const rawRPCConfig = JSON.parse(process.env.RPC_CONFIG || '{}');
 	// Convert each network's config to a Map<number, string>
 	const rpcConfig: Map<string, Map<number, string>> = new Map();
 	for (const [network, config] of Object.entries(rawRPCConfig)) {
 		rpcConfig.set(
 			network,
 			new Map<number, string>(
-				Object.entries(config as Map<string, string>).map(
-					([key, value]) => [Number(key), value]
-				)
+				Object.entries(config as Map<string, string>).map(([key, value]) => [Number(key), value])
 			)
 		);
 	}
 
 	// Initialize services
-	const transactionService = new TransactionService(
-		database.getDb(),
-		TRANSACTIONS_COLLECTIONS
-	);
+	const transactionService = new TransactionService(database.getDb(), TRANSACTIONS_COLLECTIONS);
 
-	const mappingsService = new MappingsService(
-		database.getDb(),
-		MAPPINGS_COLLECTIONS
-	);
+	const mappingsService = new MappingsService(database.getDb(), MAPPINGS_COLLECTIONS);
 
 	const tokenMetadataService = new TokenMetadataService(
 		database.getDb(),
@@ -86,36 +75,34 @@ async function serve(): Promise<void> {
 	const proofService = new ProofService(proofConfig);
 
 	// Middlewares
-	app.use("*", logger()); // Logs all requests
-	app.use("*", cors()); // Enables CORS for all routes
+	app.use('*', logger()); // Logs all requests
+	app.use('*', cors()); // Enables CORS for all routes
 
 	// The OpenAPI documentation will be available at /openapi
-	app.doc("/openapi", {
-		openapi: "3.0.0",
+	app.doc('/openapi', {
+		openapi: '3.0.0',
 		info: {
-			version: "v1",
-			title: "Agglayer Bridge Hub API",
+			version: 'v1',
+			title: 'Agglayer Bridge Hub API',
 			description:
-				"The Agglayer Bridge Hub API provides access to query agglayer bridge transaction statuses, retrieve token address mappings across chains, generate claim proofs for asset withdrawals, and access comprehensive token metadata. Supports mainnet, testnet, and devnet environments for seamless integration with bridge-enabled applications.",
+				'The Agglayer Bridge Hub API provides access to query agglayer bridge transaction statuses, retrieve token address mappings across chains, generate claim proofs for asset withdrawals, and access comprehensive token metadata. Supports mainnet, testnet, and devnet environments for seamless integration with bridge-enabled applications.'
 		},
 		servers: [
 			{
-				url: process.env.API_BASE_URL || "http://localhost:3001",
+				url: process.env.API_BASE_URL || 'http://localhost:3001',
 				description:
-					process.env.NODE_ENV === "prod-api"
-						? "Production server"
-						: "Development server",
-			},
-		],
+					process.env.NODE_ENV === 'prod-api' ? 'Production server' : 'Development server'
+			}
+		]
 	});
 
 	// Scalar API Reference UI
 	app.get(
-		"/docs",
+		'/docs',
 		Scalar({
-			theme: "kepler",
-			url: "/openapi",
-			pageTitle: "Agglayer Bridge Hub API Documentation",
+			theme: 'kepler',
+			url: '/openapi',
+			pageTitle: 'Agglayer Bridge Hub API Documentation'
 		})
 	);
 
@@ -128,13 +115,13 @@ async function serve(): Promise<void> {
 	);
 	const healthCheckRoutes = createHealthCheckRoutes();
 
-	app.route("/:network", router);
-	app.route("/health-check", healthCheckRoutes);
+	app.route('/:network', router);
+	app.route('/health-check', healthCheckRoutes);
 }
 
-await serve();
+await bootstrap();
 
-export default {
-	port: process.env.PORT || 3001,
+serve({
 	fetch: app.fetch,
-};
+	port: Number(process.env.PORT) || 3001
+});

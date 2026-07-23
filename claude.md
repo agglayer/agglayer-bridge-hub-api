@@ -4,21 +4,21 @@ TypeScript monorepo for bridge transaction management in the Agglayer ecosystem.
 
 ## Stack
 
-- **Runtime**: Bun
-- **Monorepo**: Lerna + Bun workspaces
+- **Runtime**: Node 24
+- **Monorepo**: Lerna + pnpm workspaces
 - **DB**: MongoDB (via `@polygonlabs/servercore-mongo`)
 - **API**: Hono + Zod + OpenAPI (Scalar docs)
 - **Blockchain**: viem
 - **Build**: tsup
-- **Test**: `bun test`
+- **Test**: Vitest
 
 ## Commands
 
 ```bash
-bun install              # Install all deps
-bun run build            # Build all packages
-bun run test             # Run all tests
-bun run type-check       # Type check all packages
+pnpm install          # Install all deps
+pnpm run build        # Build all packages
+pnpm run test         # Run all tests
+pnpm run typecheck    # Type check all packages
 ```
 
 ## Architecture

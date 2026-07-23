@@ -3,21 +3,28 @@
 	"version": "1.2.0",
 	"module": "src/index.ts",
 	"exports": "./dist/",
+	"files": [
+		"dist"
+	],
 	"description": "auto claim service to claim bridge transactions",
 	"type": "module",
 	"scripts": {
-		"build": "tsup",
-		"dev": "bun run --hot src/index.ts",
-		"start": "bun dist/index.js",
-		"test": "bun test"
+		"build": "tsc -b tsconfig.lib.json",
+		"dev": "node --conditions @polygonlabs/source --watch src/index.ts",
+		"start": "node dist/index.js",
+		"test": "vitest run",
+		"typecheck": "tsc -b"
 	},
 	"dependencies": {
-		"@agglayer/bridge-hub-types": "workspace:*"
+		"@agglayer/bridge-hub-types": "workspace:*",
+		"@polygonlabs/servercore": "^1.5.0",
+		"viem": "2.38.1"
 	},
 	"devDependencies": {
-		"@types/bun": "latest"
-	},
-	"peerDependencies": {
-		"typescript": "^5"
+		"@tsconfig/node-ts": "^23.0.0",
+		"@tsconfig/node24": "^24.0.0",
+		"@types/node": "^24.0.0",
+		"typescript": "^5",
+		"vitest": "^4.1.5"
 	}
 }

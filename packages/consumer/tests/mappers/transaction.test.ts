@@ -1,28 +1,27 @@
-import { describe, test, expect, beforeEach } from "bun:test";
-import TransactionMapper from "../../src/mappers/transaction";
-import { LeafType } from "../../src/enums/leaf_type";
-import { TransactionStatus } from "@agglayer/bridge-hub-types";
+import { describe, test, expect, beforeEach } from 'vitest';
+
+import { TransactionStatus } from '@agglayer/bridge-hub-types';
+
+import { LeafType } from '../../src/enums/leaf_type.ts';
+import { TransactionMapper } from '../../src/mappers/transaction.ts';
 import {
 	mockBridgeTx,
 	mockBridgeTxs,
 	mockClaimTx,
 	mockClaimTxs,
-	MOCK_NETWORK_ID,
-} from "../test-utils";
+	MOCK_NETWORK_ID
+} from '../test-utils/index.ts';
 
-describe("TransactionMapper", () => {
+describe('TransactionMapper', () => {
 	let mapper: TransactionMapper;
 	const MOCK_ETROG_UPDATE_BLOCK = 1000;
 
 	beforeEach(() => {
-		mapper = new TransactionMapper(
-			MOCK_NETWORK_ID,
-			MOCK_ETROG_UPDATE_BLOCK
-		);
+		mapper = new TransactionMapper(MOCK_NETWORK_ID, MOCK_ETROG_UPDATE_BLOCK);
 	});
 
-	describe("constructor", () => {
-		test("should initialize with network ID and etrog block", () => {
+	describe('constructor', () => {
+		test('should initialize with network ID and etrog block', () => {
 			const networkId = 42;
 			const etrogBlock = 500;
 			const testMapper = new TransactionMapper(networkId, etrogBlock);
@@ -30,13 +29,13 @@ describe("TransactionMapper", () => {
 		});
 	});
 
-	describe("mapBridgeTransactions", () => {
-		test("should map empty array correctly", () => {
+	describe('mapBridgeTransactions', () => {
+		test('should map empty array correctly', () => {
 			const result = mapper.mapBridgeTransactions([]);
 			expect(result).toEqual([]);
 		});
 
-		test("should map single bridge transaction correctly", () => {
+		test('should map single bridge transaction correctly', () => {
 			const result = mapper.mapBridgeTransactions([mockBridgeTx]);
 
 			expect(result).toHaveLength(1);
@@ -46,7 +45,7 @@ describe("TransactionMapper", () => {
 				transactionIndex: mockBridgeTx.block_pos,
 				timestamp: mockBridgeTx.block_timestamp,
 				transactionHash: mockBridgeTx.tx_hash.toLowerCase(),
-				leafType: "ASSET",
+				leafType: 'ASSET',
 				originTokenNetwork: mockBridgeTx.origin_network,
 				originTokenAddress: mockBridgeTx.origin_address.toLowerCase(),
 				sourceNetwork: MOCK_NETWORK_ID,
@@ -58,80 +57,73 @@ describe("TransactionMapper", () => {
 				bridgeHash: mockBridgeTx.bridge_hash,
 				status: TransactionStatus.BRIDGED,
 				lastUpdatedAt: expect.any(Number),
-				txSender: mockBridgeTx.txn_sender.toLowerCase(),
+				txSender: mockBridgeTx.txn_sender.toLowerCase()
 			});
 		});
 
-		test("should map multiple bridge transactions correctly", () => {
+		test('should map multiple bridge transactions correctly', () => {
 			const result = mapper.mapBridgeTransactions(mockBridgeTxs);
 
 			expect(result).toHaveLength(2);
-			expect(result[0].leafType).toBe("ASSET");
-			expect(result[1].leafType).toBe("MESSAGE");
+			expect(result[0].leafType).toBe('ASSET');
+			expect(result[1].leafType).toBe('MESSAGE');
 		});
 
-		test("should map leaf type correctly", () => {
+		test('should map leaf type correctly', () => {
 			const assetTx = { ...mockBridgeTx, leaf_type: LeafType.ASSET };
 			const messageTx = { ...mockBridgeTx, leaf_type: LeafType.MESSAGE };
 
 			const assetResult = mapper.mapBridgeTransactions([assetTx]);
 			const messageResult = mapper.mapBridgeTransactions([messageTx]);
 
-			expect(assetResult[0].leafType).toBe("ASSET");
-			expect(messageResult[0].leafType).toBe("MESSAGE");
+			expect(assetResult[0].leafType).toBe('ASSET');
+			expect(messageResult[0].leafType).toBe('MESSAGE');
 		});
 
-		test("should convert addresses and hash to lowercase", () => {
+		test('should convert addresses and hash to lowercase', () => {
 			const txWithUppercase = {
 				...mockBridgeTx,
-				tx_hash: "0xUPPERCASEHASH123",
-				origin_address: "0xUPPERCASEORIGIN123",
-				destination_address: "0xUPPERCASEDEST123",
-				from_address: "0xUPPERCASEFROM123",
-				txn_sender: "0xUPPERCASESENDER123",
+				tx_hash: '0xUPPERCASEHASH123',
+				origin_address: '0xUPPERCASEORIGIN123',
+				destination_address: '0xUPPERCASEDEST123',
+				from_address: '0xUPPERCASEFROM123',
+				txn_sender: '0xUPPERCASESENDER123'
 			};
 
 			const result = mapper.mapBridgeTransactions([txWithUppercase]);
 
-			expect(result[0].transactionHash).toBe("0xuppercasehash123");
-			expect(result[0].originTokenAddress).toBe("0xuppercaseorigin123");
-			expect(result[0].receiverAddress).toBe("0xuppercasedest123");
-			expect(result[0].fromAddress).toBe("0xuppercasefrom123");
-			expect(result[0].txSender).toBe("0xuppercasesender123");
+			expect(result[0].transactionHash).toBe('0xuppercasehash123');
+			expect(result[0].originTokenAddress).toBe('0xuppercaseorigin123');
+			expect(result[0].receiverAddress).toBe('0xuppercasedest123');
+			expect(result[0].fromAddress).toBe('0xuppercasefrom123');
+			expect(result[0].txSender).toBe('0xuppercasesender123');
 		});
 
-		test("should generate deterministic hubUID", () => {
+		test('should generate deterministic hubUID', () => {
 			const result1 = mapper.mapBridgeTransactions([mockBridgeTx]);
 			const result2 = mapper.mapBridgeTransactions([mockBridgeTx]);
 
 			expect(result1[0].hubUID).toBe(result2[0].hubUID);
-			expect(result1[0].hubUID).toMatch(
-				/^[0-9A-HJKMNP-TV-Z]{26}-\d+-\d+$/
-			); // ULID format with network and deposit count
+			expect(result1[0].hubUID).toMatch(/^[0-9A-HJKMNP-TV-Z]{26}-\d+-\d+$/); // ULID format with network and deposit count
 		});
 
-		test("should set source network from constructor", () => {
+		test('should set source network from constructor', () => {
 			const differentNetworkId = 1;
-			const differentMapper = new TransactionMapper(
-				differentNetworkId,
-				MOCK_ETROG_UPDATE_BLOCK
-			);
+			const differentMapper = new TransactionMapper(differentNetworkId, MOCK_ETROG_UPDATE_BLOCK);
 
-			const result = differentMapper.mapBridgeTransactions([
-				mockBridgeTx,
-			]);
+			const result = differentMapper.mapBridgeTransactions([mockBridgeTx]);
 
 			expect(result[0].sourceNetwork).toBe(differentNetworkId);
 		});
 	});
 
-	describe("mapClaimTransactions", () => {
-		test("should map empty array correctly", () => {
+	describe('mapClaimTransactions', () => {
+		test('should map empty array correctly', () => {
 			const result = mapper.mapClaimTransactions([]);
 			expect(result).toEqual([]);
 		});
 
-		test("should map single claim transaction correctly", () => {
+		test('should map single claim transaction correctly', () => {
 			const result = mapper.mapClaimTransactions([mockClaimTx]);
 
 			expect(result).toHaveLength(1);
@@ -143,11 +135,11 @@ describe("TransactionMapper", () => {
 				sourceNetwork: expect.any(Number),
 				depositCount: expect.any(Number),
 				status: TransactionStatus.CLAIMED,
-				lastUpdatedAt: expect.any(Number),
+				lastUpdatedAt: expect.any(Number)
 			});
 		});
 
-		test("should map multiple claim transactions correctly", () => {
+		test('should map multiple claim transactions correctly', () => {
 			const result = mapper.mapClaimTransactions(mockClaimTxs);
 
 			expect(result).toHaveLength(2);
@@ -155,26 +147,24 @@ describe("TransactionMapper", () => {
 			expect(result[1].globalIndex).toBe(mockClaimTxs[1].global_index);
 		});
 
-		test("should convert transaction hash to lowercase", () => {
+		test('should convert transaction hash to lowercase', () => {
 			const claimWithUppercase = {
 				...mockClaimTx,
-				tx_hash: "0xUPPERCASECLAIMHASH123",
+				tx_hash: '0xUPPERCASECLAIMHASH123'
 			};
 
 			const result = mapper.mapClaimTransactions([claimWithUppercase]);
 
-			expect(result[0].claimTransactionHash).toBe(
-				"0xuppercaseclaimhash123"
-			);
+			expect(result[0].claimTransactionHash).toBe('0xuppercaseclaimhash123');
 		});
 	});
 
-	describe("decodeGlobalIndex", () => {
-		test("should decode global index correctly for small values (post-etrog)", () => {
+	describe('decodeGlobalIndex', () => {
+		test('should decode global index correctly for small values (post-etrog)', () => {
 			// Test with a small global index (42) for post-etrog block
-			const smallGlobalIndex = "42";
+			const smallGlobalIndex = '42';
 			const result = mapper.mapClaimTransactions([
-				{ ...mockClaimTx, global_index: smallGlobalIndex },
+				{ ...mockClaimTx, global_index: smallGlobalIndex }
 			]);
 
 			// Post-etrog logic: small hex length (<= 16), so sourceNetwork = (42 >> 32) + 1 = 1
@@ -182,65 +172,53 @@ describe("TransactionMapper", () => {
 			expect(result[0].depositCount).toBe(42); // 42 & 0xffffffff
 		});
 
-		test("should decode global index correctly for pre-etrog blocks", () => {
+		test('should decode global index correctly for pre-etrog blocks', () => {
 			// Test with pre-etrog block (below MOCK_ETROG_UPDATE_BLOCK)
-			const mapperNetworkId0 = new TransactionMapper(
-				0,
-				MOCK_ETROG_UPDATE_BLOCK
-			);
-			const smallGlobalIndex = "42";
+			const mapperNetworkId0 = new TransactionMapper(0, MOCK_ETROG_UPDATE_BLOCK);
+			const smallGlobalIndex = '42';
 			const preEtrogClaimTx = {
 				...mockClaimTx,
 				block_num: 500,
-				global_index: smallGlobalIndex,
+				global_index: smallGlobalIndex
 			};
-			const result = mapperNetworkId0.mapClaimTransactions([
-				preEtrogClaimTx,
-			]);
+			const result = mapperNetworkId0.mapClaimTransactions([preEtrogClaimTx]);
 
 			// Pre-etrog logic: networkId === 0, so returns 1
 			expect(result[0].sourceNetwork).toBe(1);
 			expect(result[0].depositCount).toBe(42);
 
 			// Test with networkId !== 0 for pre-etrog
-			const mapperNetworkIdNonZero = new TransactionMapper(
-				137,
-				MOCK_ETROG_UPDATE_BLOCK
-			);
-			const result2 = mapperNetworkIdNonZero.mapClaimTransactions([
-				preEtrogClaimTx,
-			]);
+			const mapperNetworkIdNonZero = new TransactionMapper(137, MOCK_ETROG_UPDATE_BLOCK);
+			const result2 = mapperNetworkIdNonZero.mapClaimTransactions([preEtrogClaimTx]);
 			expect(result2[0].sourceNetwork).toBe(0); // networkId !== 0, so returns 0
 			expect(result2[0].depositCount).toBe(42);
 		});
 
-		test("should decode global index correctly for large values", () => {
+		test('should decode global index correctly for large values', () => {
 			// Test with a large global index that encodes both network and deposit count
 			// Use a smaller value that has hex length <= 16
 			const largeGlobalIndex = (42 * Math.pow(2, 32) + 100).toString(); // This will be hex length <= 16
 			const result = mapper.mapClaimTransactions([
-				{ ...mockClaimTx, global_index: largeGlobalIndex },
+				{ ...mockClaimTx, global_index: largeGlobalIndex }
 			]);
 
 			expect(result[0].sourceNetwork).toBe(43); // 42 + 1
 			expect(result[0].depositCount).toBe(100);
 		});
 
-		test("should handle global index with hex length > 16", () => {
+		test('should handle global index with hex length > 16', () => {
 			// Test with a very large global index that has hex length > 16
 			// Use a value larger than what fits in 16 hex digits
-			const veryLargeGlobalIndex = BigInt("0x10000000000000000"); // 17 hex digits
+			const veryLargeGlobalIndex = BigInt('0x10000000000000000'); // 17 hex digits
 			const result = mapper.mapClaimTransactions([
 				{
 					...mockClaimTx,
-					global_index: veryLargeGlobalIndex.toString(),
-				},
+					global_index: veryLargeGlobalIndex.toString()
+				}
 			]);
 
 			expect(result[0].sourceNetwork).toBe(0);
-			expect(result[0].depositCount).toBe(
-				Number(veryLargeGlobalIndex & 0xffffffffn)
-			);
+			expect(result[0].depositCount).toBe(Number(veryLargeGlobalIndex & 0xffffffffn));
 		});
 	});
 });

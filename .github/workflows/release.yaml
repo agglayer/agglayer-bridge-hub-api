@@ -1,51 +1,61 @@
 name: Release Packages
 
 on:
-    push:
-        branches:
-            - main
-        paths:
-            - "packages/**" # Watch all packages (api, consumer, types)
-            - ".github/workflows/*" # Watch all workflow changes
-    workflow_dispatch:
-        inputs:
-            branch:
-                description: "Branch to release from"
-                required: false
-                default: "main"
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/**' # Watch all packages (api, consumer, types)
+      - '.github/workflows/*' # Watch all workflow changes
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to release from'
+        required: false
+        default: 'main'
+
+permissions:
+  contents: write
 
 jobs:
-    release:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/create-github-app-token@v1
-              id: app-token
-              with:
-                  app-id: ${{ secrets.SEMANTIC_RELEASE_BOT_APP_ID }}
-                  private-key: ${{ secrets.SEMANTIC_RELEASE_BOT_APP_PRIVATE_KEY }}
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.SEMANTIC_RELEASE_BOT_APP_ID }}
+          private-key: ${{ secrets.SEMANTIC_RELEASE_BOT_APP_PRIVATE_KEY }}
 
-            - uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-                  token: ${{ steps.app-token.outputs.token }}
-                  ref: ${{ github.event.inputs.branch || 'main' }}
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+          ref: ${{ github.event.inputs.branch || 'main' }}
 
-            - uses: oven-sh/setup-bun@v1
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
 
-            - name: Install dependencies
-              run: bun install --frozen-lockfile
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
 
-            - name: Build packages
-              run: bun run build
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-            - name: Test packages
-              run: bun run test
+      - name: Build packages
+        run: pnpm run build
 
-            - name: Release with Lerna
-              env:
-                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
-              run: |
-                  git config --global user.email "semantic-release-bot@users.noreply.github.com"
-                  git config --global user.name "Semantic Release Bot"
+      - name: Test packages
+        run: pnpm run test
 
-                  npx lerna version --conventional-commits --create-release github --yes
+      - name: Release with Lerna
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git config --global user.email "semantic-release-bot@users.noreply.github.com"
+          git config --global user.name "Semantic Release Bot"
+
+          npx lerna version --conventional-commits --create-release github --yes

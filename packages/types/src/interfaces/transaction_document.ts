@@ -1,5 +1,6 @@
-import type { Document } from "mongodb";
-import type { IHubTransaction } from "./bridge_transaction";
+import type { Document } from 'mongodb';
+
+import type { IHubTransaction } from './bridge_transaction.ts';
 
 /**
  * MongoDB document interface for Hub Transactions

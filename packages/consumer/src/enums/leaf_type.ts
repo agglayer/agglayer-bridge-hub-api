@@ -1,7 +1,8 @@
 /**
- * Enum for leaftype of bridge events.
+ * Leaf type of bridge events.
  */
-export enum LeafType {
-	ASSET = 0,
-	MESSAGE = 1,
-}
+export const LeafType = {
+	ASSET: 0,
+	MESSAGE: 1
+} as const;
+export type LeafType = (typeof LeafType)[keyof typeof LeafType];

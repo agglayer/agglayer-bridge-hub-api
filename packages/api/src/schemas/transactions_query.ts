@@ -1,11 +1,8 @@
-import { z } from "@hono/zod-openapi";
-import {
-	address,
-	networkIdsSchema,
-	NetworkSchema,
-	PaginationSchema,
-} from "./common";
-import { TransactionStatusSchema } from "@agglayer/bridge-hub-types";
+import { z } from '@hono/zod-openapi';
+
+import { TransactionStatusSchema } from '@agglayer/bridge-hub-types';
+
+import { address, networkIdsSchema, NetworkSchema, PaginationSchema } from './common.ts';
 
 export const TransactionsQuerySchema = z
 	.object({
@@ -19,17 +16,11 @@ export const TransactionsQuerySchema = z
 			.number()
 			.int()
 			.nonnegative()
-			.min(
-				1000000000000,
-				"updatedSince must be a valid Unix timestamp in milliseconds (13 digits)"
-			)
-			.max(
-				9999999999999,
-				"updatedSince must be a valid Unix timestamp in milliseconds (13 digits)"
-			)
+			.min(1000000000000, 'updatedSince must be a valid Unix timestamp in milliseconds (13 digits)')
+			.max(9999999999999, 'updatedSince must be a valid Unix timestamp in milliseconds (13 digits)')
 			.optional(),
-		order: z.enum(["asc", "desc"]).optional(),
-		status: TransactionStatusSchema.optional(),
+		order: z.enum(['asc', 'desc']).optional(),
+		status: TransactionStatusSchema.optional()
 	})
 	.merge(PaginationSchema);
 
@@ -37,18 +28,16 @@ export const TransactionsByDepositCountQuerySchema = z
 	.object({
 		sourceNetworkId: z
 			.string()
-			.max(18, "Network IDs string must not exceed 18 characters")
-			.regex(/^\d+$/, "sourceNetworkId must be a non-negative integer")
+			.max(18, 'Network IDs string must not exceed 18 characters')
+			.regex(/^\d+$/, 'sourceNetworkId must be a non-negative integer')
 			.transform((val) => Number.parseInt(val, 10)),
 		depositCount: z
 			.string()
-			.max(18, "Network IDs string must not exceed 18 characters")
-			.regex(/^\d+$/, "depositCount must be a non-negative integer")
-			.transform((val) => Number.parseInt(val, 10)),
+			.max(18, 'Network IDs string must not exceed 18 characters')
+			.regex(/^\d+$/, 'depositCount must be a non-negative integer')
+			.transform((val) => Number.parseInt(val, 10))
 	})
 	.merge(NetworkSchema);
 
-export type TransactionsByDepositCountQuery = z.infer<
-	typeof TransactionsByDepositCountQuerySchema
->;
+export type TransactionsByDepositCountQuery = z.infer<typeof TransactionsByDepositCountQuerySchema>;
 export type TransactionsQuery = z.infer<typeof TransactionsQuerySchema>;

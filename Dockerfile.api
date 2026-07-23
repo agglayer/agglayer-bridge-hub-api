@@ -1,31 +1,40 @@
-# Stage 1: Build stage
-FROM oven/bun:1.2-alpine AS builder
+# Stage 1: build workspace library packages and create a self-contained production bundle
+FROM node:24-bookworm-slim AS builder
 WORKDIR /app
+
+RUN npm install -g pnpm@10.30.3
+
+# Full workspace copy — required by pnpm deploy to resolve workspace:* deps
 COPY . .
-RUN bun install --dev --no-cache
-# Build types first (required dependency for api)
-RUN cd packages/types && bun run build
-# Then build api
-RUN bun run build:api
+ENV CI=true
 
-# Stage 2: Runtime stage
-FROM oven/bun:1.2-alpine
+# Install all deps including devDeps (needed for tsc, tsup, etc.)
+# --ignore-scripts: supply chain safety; build is invoked explicitly below
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+# Build workspace library packages before pnpm deploy.
+#
+# pnpm deploy copies packages into a real node_modules/ directory (no symlinks).
+# In that context Node 24 refuses to type-strip files under node_modules/, so
+# workspace libraries that export .ts source would throw
+# ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING. Building them to dist/ first
+# ensures the deployed bundle resolves compiled JavaScript via the `import`
+# export condition.
+RUN pnpm run build
+
+# Create a self-contained production bundle for this service.
+# pnpm resolves workspace:* deps and copies their declared 'files' (dist/).
+RUN pnpm --filter bridge-hub-api deploy --prod --legacy /deploy
+
+
+# Stage 2: minimal runtime — no pnpm, no devDeps, no workspace knowledge
+FROM node:24-bookworm-slim
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-      adduser -S bunuser -u 1001
+COPY --from=builder /deploy ./
 
-# Copy the API dist files
-COPY --from=builder /app/packages/api/dist ./dist
+RUN addgroup --system app && adduser --system --ingroup app app
+USER app
 
-# Copy node_modules first (includes symlinks)
-COPY --from=builder /app/node_modules ./node_modules
-
-# Copy the types package to overwrite the symlink with actual files
-COPY --from=builder /app/packages/types/dist ./node_modules/@agglayer/bridge-hub-types/dist
-COPY --from=builder /app/packages/types/package.json ./node_modules/@agglayer/bridge-hub-types/package.json
-
-USER bunuser
 EXPOSE 3001
-CMD ["bun", "run", "dist/server.js"]
+CMD ["node", "dist/server.js"]

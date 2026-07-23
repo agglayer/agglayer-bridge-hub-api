@@ -1,5 +1,6 @@
-import type { Document } from "mongodb";
-import type { IHubTokenMappings } from "./token_mapping";
+import type { Document } from 'mongodb';
+
+import type { IHubTokenMappings } from './token_mapping.ts';
 
 /**
  * MongoDB document interface for Hub Token Mappings
