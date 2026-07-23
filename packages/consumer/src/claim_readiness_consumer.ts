@@ -1,10 +1,7 @@
-import {
-	AbstractCronEventConsumer,
-	ApiError,
-	Logger,
-} from "@polygonlabs/servercore";
-import type { IClaimReadinessConfig } from "./interfaces/claim_readiness_config";
-import type TransactionsService from "./services/transaction";
+import { AbstractCronEventConsumer, ApiError, Logger } from '@polygonlabs/servercore';
+
+import type { IClaimReadinessConfig } from './interfaces/claim_readiness_config.ts';
+import type { TransactionsService } from './services/transaction.ts';
 
 /**
  * Per-request timeout for the AggKit HTTP calls. `fetch` has no default timeout,
@@ -17,11 +14,13 @@ import type TransactionsService from "./services/transaction";
 const AGGKIT_FETCH_TIMEOUT_MS = 10_000;
 
 export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
-	constructor(
-		private config: IClaimReadinessConfig,
-		private transactionService: TransactionsService
-	) {
+	private config: IClaimReadinessConfig;
+	private transactionService: TransactionsService;
+
+	constructor(config: IClaimReadinessConfig, transactionService: TransactionsService) {
 		super();
+		this.config = config;
+		this.transactionService = transactionService;
 	}
 
 	public async start(): Promise<void> {
@@ -39,9 +38,9 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 
 	protected async onTick(): Promise<void> {
 		Logger.info({
-			location: "ClaimReadinessConsumer",
-			function: "onTick",
-			message: `NetId ${this.config.networkId} Claim readiness check triggered`,
+			location: 'ClaimReadinessConsumer',
+			function: 'onTick',
+			message: `NetId ${this.config.networkId} Claim readiness check triggered`
 		});
 		await this.syncL1InfoTree();
 		await this.syncInjectedL1InfoTree();
@@ -52,17 +51,16 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 		let afterId = undefined;
 
 		while (hasNext) {
-			const bridgedTransactions =
-				await this.transactionService.getBridgedTransactions(
-					this.config.networkId,
-					afterId
-				);
+			const bridgedTransactions = await this.transactionService.getBridgedTransactions(
+				this.config.networkId,
+				afterId
+			);
 			if (bridgedTransactions.length === 0) {
 				Logger.info({
-					location: "ClaimReadinessConsumer",
-					function: "syncL1InfoTree",
+					location: 'ClaimReadinessConsumer',
+					function: 'syncL1InfoTree',
 					networkId: this.config.networkId,
-					message: `NetId ${this.config.networkId} No bridged transactions found`,
+					message: `NetId ${this.config.networkId} No bridged transactions found`
 				});
 				hasNext = false;
 			}
@@ -70,10 +68,10 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 			for (const tx of bridgedTransactions) {
 				try {
 					Logger.info({
-						location: "ClaimReadinessConsumer",
-						function: "syncL1InfoTree",
+						location: 'ClaimReadinessConsumer',
+						function: 'syncL1InfoTree',
 						networkId: this.config.networkId,
-						message: `NetId ${this.config.networkId}Processing transaction ${tx.depositCount} on network ${tx.sourceNetwork}`,
+						message: `NetId ${this.config.networkId}Processing transaction ${tx.depositCount} on network ${tx.sourceNetwork}`
 					});
 
 					afterId = tx.hubUID;
@@ -88,10 +86,10 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 							{
 								isFatal: false,
 								context: {
-									location: "ClaimReadinessConsumer",
-									function: "syncL1InfoTree",
-									url: `${this.config.l1InfoTreeIndexUrl}?network_id=${this.config.networkId}&deposit_count=${tx.depositCount}`,
-								},
+									location: 'ClaimReadinessConsumer',
+									function: 'syncL1InfoTree',
+									url: `${this.config.l1InfoTreeIndexUrl}?network_id=${this.config.networkId}&deposit_count=${tx.depositCount}`
+								}
 							}
 						);
 					}
@@ -103,14 +101,11 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 					);
 				} catch (error) {
 					Logger.info({
-						location: "ClaimReadinessConsumer",
-						function: "syncL1InfoTree",
+						location: 'ClaimReadinessConsumer',
+						function: 'syncL1InfoTree',
 						networkId: this.config.networkId,
 						message: `NetId ${this.config.networkId}Error processing transaction ${tx.depositCount} on source network ${tx.sourceNetwork}`,
-						error:
-							error instanceof Error
-								? error.message
-								: String(error),
+						error: error instanceof Error ? error.message : String(error)
 					});
 				}
 			}
@@ -122,27 +117,26 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 		let afterId = undefined;
 
 		while (hasNext) {
-			const leafIncludedTransactions =
-				await this.transactionService.getLeafIncludedTransactions(
-					this.config.networkId,
-					afterId
-				);
+			const leafIncludedTransactions = await this.transactionService.getLeafIncludedTransactions(
+				this.config.networkId,
+				afterId
+			);
 			if (leafIncludedTransactions.length === 0) {
 				Logger.info({
-					location: "ClaimReadinessConsumer",
-					function: "syncInjectedL1InfoTree",
+					location: 'ClaimReadinessConsumer',
+					function: 'syncInjectedL1InfoTree',
 					networkId: this.config.networkId,
-					message: `NetId ${this.config.networkId} No leaf included transactions found`,
+					message: `NetId ${this.config.networkId} No leaf included transactions found`
 				});
 				hasNext = false;
 			}
 
 			for (const tx of leafIncludedTransactions) {
 				Logger.info({
-					location: "ClaimReadinessConsumer",
-					function: "syncInjectedL1InfoTree",
+					location: 'ClaimReadinessConsumer',
+					function: 'syncInjectedL1InfoTree',
 					networkId: this.config.networkId,
-					message: `NetId ${this.config.networkId}Processing transaction ${tx.depositCount} from network ${tx.sourceNetwork} with leaf index ${tx.leafIndex}`,
+					message: `NetId ${this.config.networkId}Processing transaction ${tx.depositCount} from network ${tx.sourceNetwork} with leaf index ${tx.leafIndex}`
 				});
 				try {
 					afterId = tx.hubUID;
@@ -157,10 +151,10 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 							{
 								isFatal: false,
 								context: {
-									location: "ClaimReadinessConsumer",
-									function: "syncInjectedL1InfoTree",
-									url: `${this.config.injectedL1InfoLeafUrl}?network_id=${this.config.networkId}&leaf_index=${tx.leafIndex}`,
-								},
+									location: 'ClaimReadinessConsumer',
+									function: 'syncInjectedL1InfoTree',
+									url: `${this.config.injectedL1InfoLeafUrl}?network_id=${this.config.networkId}&leaf_index=${tx.leafIndex}`
+								}
 							}
 						);
 					}
@@ -176,14 +170,11 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 					}
 				} catch (error) {
 					Logger.info({
-						location: "ClaimReadinessConsumer",
-						function: "syncInjectedL1InfoTree",
+						location: 'ClaimReadinessConsumer',
+						function: 'syncInjectedL1InfoTree',
 						networkId: this.config.networkId,
 						message: `NetId ${this.config.networkId}Error processing transaction ${tx.depositCount} on network ${tx.sourceNetwork} with leaf index ${tx.leafIndex}`,
-						error:
-							error instanceof Error
-								? error.message
-								: String(error),
+						error: error instanceof Error ? error.message : String(error)
 					});
 				}
 			}

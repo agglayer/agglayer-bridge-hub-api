@@ -1,13 +1,15 @@
-import { Logger } from "@polygonlabs/servercore";
-import TransactionService from "./transaction";
-import type { ClaimProof, IHubTransaction } from "@agglayer/bridge-hub-types";
-import {
-	getContract,
-	type GetContractReturnType,
-	type WalletClient,
-} from "viem";
-import { waitForTransactionReceipt } from "viem/actions";
-import { BRIDGE_ABI } from "../constants/bridge";
+import type { GetContractReturnType, WalletClient } from 'viem';
+
+import { getContract } from 'viem';
+import { waitForTransactionReceipt } from 'viem/actions';
+
+import type { ClaimProof, IHubTransaction } from '@agglayer/bridge-hub-types';
+
+import { Logger } from '@polygonlabs/servercore';
+
+import type { TransactionService } from './transaction.ts';
+
+import { BRIDGE_ABI } from '../constants/bridge.ts';
 
 /**
  * Service for automatically claiming ready bridge transactions.
@@ -17,7 +19,7 @@ import { BRIDGE_ABI } from "../constants/bridge";
  *
  * @class AutoClaimService
  */
-export default class AutoClaimService {
+export class AutoClaimService {
 	/**
 	 * Creates an instance of AutoClaimService.
 	 *
@@ -25,10 +27,7 @@ export default class AutoClaimService {
 	 * @param {WalletClient} walletClient - Viem wallet client for signing and sending transactions
 	 * @param {TransactionService} transactionService - Service for fetching transactions and proofs from Bridge Hub API
 	 */
-	private readonly bridgeContract: GetContractReturnType<
-		typeof BRIDGE_ABI,
-		WalletClient
-	>;
+	private readonly bridgeContract: GetContractReturnType<typeof BRIDGE_ABI, WalletClient>;
 	private readonly transactionService: TransactionService;
 	private readonly walletClient: WalletClient;
 
@@ -40,7 +39,7 @@ export default class AutoClaimService {
 		this.bridgeContract = getContract({
 			address: bridgeContractAddress,
 			abi: BRIDGE_ABI,
-			client: walletClient,
+			client: walletClient
 		});
 		this.transactionService = transactionService;
 		this.walletClient = walletClient;
@@ -54,18 +53,18 @@ export default class AutoClaimService {
 		const bridgeDetails = {
 			transactionHash: transaction.transactionHash,
 			sourceNetwork: transaction.sourceNetwork,
-			depositCount: transaction.depositCount,
+			depositCount: transaction.depositCount
 		};
 
 		try {
 			Logger.info({
-				location: "AutoClaimService.sendTransaction.start",
-				bridgeDetails,
+				location: 'AutoClaimService.sendTransaction.start',
+				bridgeDetails
 			});
 
 			let txHash = null;
 
-			if (transaction.leafType === "ASSET") {
+			if (transaction.leafType === 'ASSET') {
 				txHash = await this.bridgeContract.write.claimAsset(
 					proof.proof_local_exit_root,
 					proof.proof_rollup_exit_root,
@@ -96,25 +95,25 @@ export default class AutoClaimService {
 			}
 
 			Logger.info({
-				location: "AutoClaimService.sendTransaction.submitted",
-				message: `claim hash: ${txHash}`,
+				location: 'AutoClaimService.sendTransaction.submitted',
+				message: `claim hash: ${txHash}`
 			});
 
 			// Wait for transaction confirmation
 			const receipt = await waitForTransactionReceipt(this.walletClient, {
-				hash: txHash,
+				hash: txHash
 			});
 
 			Logger.info({
-				location: "AutoClaimService.sendTransaction.completed",
-				message: `claim confirmed: ${txHash}, status: ${receipt.status}`,
+				location: 'AutoClaimService.sendTransaction.completed',
+				message: `claim confirmed: ${txHash}, status: ${receipt.status}`
 			});
 			return txHash;
 		} catch (error: any) {
 			Logger.error({
-				location: "AutoClaimService.sendTransaction.error",
+				location: 'AutoClaimService.sendTransaction.error',
 				error: error,
-				data: bridgeDetails,
+				data: bridgeDetails
 			});
 
 			return false;
@@ -124,8 +123,8 @@ export default class AutoClaimService {
 	async claimTransactions() {
 		try {
 			Logger.info({
-				location: "AutoClaimService.claimTransactions",
-				call: "started",
+				location: 'AutoClaimService.claimTransactions',
+				call: 'started'
 			});
 			const transactions: IHubTransaction[] =
 				await this.transactionService.getPendingTransactions();
@@ -151,14 +150,14 @@ export default class AutoClaimService {
 			}
 
 			Logger.info({
-				location: "AutoClaimService.claimTransactions",
-				call: "completed",
+				location: 'AutoClaimService.claimTransactions',
+				call: 'completed'
 			});
 			return;
 		} catch (error: any) {
 			Logger.error({
-				location: "AutoClaimService.claimTransactions",
-				error: error.message ? error.message : error,
+				location: 'AutoClaimService.claimTransactions',
+				error: error.message ? error.message : error
 			});
 			throw error;
 		}

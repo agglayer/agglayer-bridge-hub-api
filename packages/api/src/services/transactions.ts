@@ -1,13 +1,13 @@
-import type { Db, Collection, Filter, Sort } from "mongodb";
-import { CryptoHasher } from "bun";
+import type { Db, Collection, Filter, Sort } from 'mongodb';
 
-import {
-	type IHubTransaction,
-	type ITransactionDocument,
-} from "@agglayer/bridge-hub-types";
-import { ApiError } from "@polygonlabs/servercore";
-import { Networks } from "../enums";
-import { executeMongoOperation } from "@polygonlabs/servercore-mongo";
+import { createHash } from 'node:crypto';
+
+import type { IHubTransaction, ITransactionDocument } from '@agglayer/bridge-hub-types';
+
+import { ApiError } from '@polygonlabs/servercore';
+import { executeMongoOperation } from '@polygonlabs/servercore-mongo';
+
+import type { Networks } from '../enums/index.ts';
 
 export class TransactionService {
 	private readonly db: Db;
@@ -16,9 +16,9 @@ export class TransactionService {
 	constructor(
 		database: Db,
 		collectionIdParams: Map<string, string> = new Map([
-			["mainnet", "bridge_hub_api_transactions"],
-			["testnet", "bridge_hub_api_transactions_testnet"],
-			["devnet", "bridge_hub_api_transactions_devnet"],
+			['mainnet', 'bridge_hub_api_transactions'],
+			['testnet', 'bridge_hub_api_transactions_testnet'],
+			['devnet', 'bridge_hub_api_transactions_devnet']
 		])
 	) {
 		this.db = database;
@@ -26,9 +26,10 @@ export class TransactionService {
 	}
 
 	generateDocId(depositCount: number, sourceNetwork: number): string {
-		const hasher = new CryptoHasher("sha256");
-		hasher.update(`${depositCount}:${sourceNetwork}`);
-		return hasher.digest("hex").slice(0, 32);
+		return createHash('sha256')
+			.update(`${depositCount}:${sourceNetwork}`)
+			.digest('hex')
+			.slice(0, 32);
 	}
 
 	async getTransactions({
@@ -40,7 +41,7 @@ export class TransactionService {
 		status,
 		order,
 		startAfter,
-		limit,
+		limit
 	}: {
 		network: Networks;
 		fromAddress?: string;
@@ -48,7 +49,7 @@ export class TransactionService {
 		destinationNetworkIds?: number[];
 		updatedSince?: number;
 		status?: string;
-		order?: "asc" | "desc";
+		order?: 'asc' | 'desc';
 		startAfter?: string;
 		limit: number;
 	}): Promise<{
@@ -57,19 +58,15 @@ export class TransactionService {
 	}> {
 		const collectionName = this.collectionId.get(network);
 		if (!collectionName) {
-			throw new ApiError(
-				`No collection configured for network: ${network}`,
-				{
-					context: {
-						service: "TransactionService",
-						network,
-						availableNetworks: Array.from(this.collectionId.keys()),
-					},
+			throw new ApiError(`No collection configured for network: ${network}`, {
+				context: {
+					service: 'TransactionService',
+					network,
+					availableNetworks: Array.from(this.collectionId.keys())
 				}
-			);
+			});
 		}
-		const collection: Collection<ITransactionDocument> =
-			this.db.collection(collectionName);
+		const collection: Collection<ITransactionDocument> = this.db.collection(collectionName);
 
 		// Build MongoDB filter
 		const filter: Filter<ITransactionDocument> = {};
@@ -96,7 +93,7 @@ export class TransactionService {
 		// MongoDB's $ne MATCHES documents where the field is absent, so the
 		// previous { $ne: "" } let these records through; require the field to
 		// be present and a non-empty string instead ($type excludes missing/null).
-		filter.transactionHash = { $type: "string", $ne: "" };
+		filter.transactionHash = { $type: 'string', $ne: '' };
 
 		if (status) {
 			filter.status = status;
@@ -111,13 +108,12 @@ export class TransactionService {
 		// its tail. cf. the consumer's correct $gt+asc pagination in
 		// packages/consumer/src/services/transaction.ts.
 		if (startAfter) {
-			filter.hubUID =
-				order === "asc" ? { $gt: startAfter } : { $lt: startAfter };
+			filter.hubUID = order === 'asc' ? { $gt: startAfter } : { $lt: startAfter };
 		}
 
 		// Build sort order
 		const sort: Sort = {
-			hubUID: order === "asc" ? 1 : -1,
+			hubUID: order === 'asc' ? 1 : -1
 		};
 
 		// Execute query
@@ -125,8 +121,8 @@ export class TransactionService {
 			collection,
 			(col) => col.find(filter).sort(sort).limit(limit).toArray(),
 			{
-				operationName: "getTransactions",
-				logContext: { network, filter },
+				operationName: 'getTransactions',
+				logContext: { network, filter }
 			}
 		);
 
@@ -135,14 +131,14 @@ export class TransactionService {
 			collection,
 			(col) => col.countDocuments(filter),
 			{
-				operationName: "getTransactionsCount",
-				logContext: { network },
+				operationName: 'getTransactionsCount',
+				logContext: { network }
 			}
 		);
 
 		return {
 			documents: documents as IHubTransaction[],
-			totalDocumentsCount,
+			totalDocumentsCount
 		};
 	}
 
@@ -152,28 +148,20 @@ export class TransactionService {
 	): Promise<IHubTransaction | null> {
 		const collectionName = this.collectionId.get(network);
 		if (!collectionName) {
-			throw new ApiError(
-				`No collection configured for network: ${network}`,
-				{
-					context: {
-						service: "TransactionService",
-						network,
-						availableNetworks: Array.from(this.collectionId.keys()),
-					},
+			throw new ApiError(`No collection configured for network: ${network}`, {
+				context: {
+					service: 'TransactionService',
+					network,
+					availableNetworks: Array.from(this.collectionId.keys())
 				}
-			);
+			});
 		}
-		const collection: Collection<ITransactionDocument> =
-			this.db.collection(collectionName);
+		const collection: Collection<ITransactionDocument> = this.db.collection(collectionName);
 
-		const document = await executeMongoOperation(
-			collection,
-			(col) => col.findOne({ _id: docId }),
-			{
-				operationName: "getTransactionByDepositCount",
-				logContext: { network, docId },
-			}
-		);
+		const document = await executeMongoOperation(collection, (col) => col.findOne({ _id: docId }), {
+			operationName: 'getTransactionByDepositCount',
+			logContext: { network, docId }
+		});
 
 		return document as IHubTransaction | null;
 	}

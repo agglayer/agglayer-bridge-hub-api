@@ -1,4 +1,4 @@
-import { z } from "@hono/zod-openapi";
+import { z } from '@hono/zod-openapi';
 
 /**
  * Zod schema for the Hub API's Token Mappings entity
@@ -12,7 +12,7 @@ export const HubTokenMappingsSchema = z.object({
 	originTokenAddress: z.string(),
 	wrappedTokenNetwork: z.number(),
 	wrappedTokenAddress: z.string(),
-	lastUpdatedAt: z.number(),
+	lastUpdatedAt: z.number()
 });
 
 // Export inferred TypeScript type

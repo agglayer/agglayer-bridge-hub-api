@@ -1,6 +1,10 @@
-import { handleResponse, handleError, ApiError } from "@polygonlabs/servercore";
-import type { Context } from "hono";
-import { getResponseContext } from "../middlewares/response_context";
+import type { Context } from 'hono';
+
+import type { ApiError } from '@polygonlabs/servercore';
+
+import { handleResponse, handleError } from '@polygonlabs/servercore';
+
+import { getResponseContext } from '../middlewares/response_context.ts';
 
 export class HealthCheckController {
 	checkServiceHealth = async (c: Context) => {
@@ -52,8 +56,8 @@ export class HealthCheckController {
 			// }
 
 			return handleResponse(getResponseContext(c), {
-				status: "success",
-				message: "All services are working correctly",
+				status: 'success',
+				message: 'All services are working correctly'
 			});
 		} catch (error) {
 			return handleError(getResponseContext(c), error as ApiError);

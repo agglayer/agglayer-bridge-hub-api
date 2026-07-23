@@ -1,49 +1,46 @@
-import { generateDeterministicULID } from "@polygonlabs/servercore";
-import { LeafType } from "../enums/leaf_type";
-import { TransactionStatus } from "@agglayer/bridge-hub-types";
-import type { IBridgeTx, IHubBridgeTransaction } from "../interfaces/bridge_tx";
-import type { IClaimTx, IHubClaimTransaction } from "../interfaces/claim_tx";
-import type { IDecodedGlobalIndex } from "../interfaces/decoded_global_index";
+import { TransactionStatus } from '@agglayer/bridge-hub-types';
+import { generateDeterministicULID } from '@polygonlabs/servercore';
 
-export default class TransactionMapper {
-	constructor(
-		private readonly networkId: number,
-		private readonly etrogUpdateBlockNumber: number
-	) {}
+import type { IBridgeTx, IHubBridgeTransaction } from '../interfaces/bridge_tx.ts';
+import type { IClaimTx, IHubClaimTransaction } from '../interfaces/claim_tx.ts';
+import type { IDecodedGlobalIndex } from '../interfaces/decoded_global_index.ts';
+
+import { LeafType } from '../enums/leaf_type.ts';
+
+export class TransactionMapper {
+	private readonly networkId: number;
+	private readonly etrogUpdateBlockNumber: number;
+
+	constructor(networkId: number, etrogUpdateBlockNumber: number) {
+		this.networkId = networkId;
+		this.etrogUpdateBlockNumber = etrogUpdateBlockNumber;
+	}
 
 	public mapBridgeTransactions(events: IBridgeTx[]): IHubBridgeTransaction[] {
 		const formattedBridgeTransactions: IHubBridgeTransaction[] = [];
 		events.forEach((bridgeTransaction) => {
 			formattedBridgeTransactions.push({
 				hubUID: generateDeterministicULID(
-					[
-						this.networkId.toString(),
-						bridgeTransaction.deposit_count.toString(),
-					],
+					[this.networkId.toString(), bridgeTransaction.deposit_count.toString()],
 					bridgeTransaction.block_timestamp
 				),
 				blockNumber: bridgeTransaction.block_num,
 				transactionIndex: bridgeTransaction.block_pos,
 				timestamp: bridgeTransaction.block_timestamp,
 				transactionHash: bridgeTransaction.tx_hash.toLowerCase(),
-				leafType:
-					LeafType.ASSET === bridgeTransaction.leaf_type
-						? "ASSET"
-						: "MESSAGE",
+				leafType: LeafType.ASSET === bridgeTransaction.leaf_type ? 'ASSET' : 'MESSAGE',
 				originTokenNetwork: bridgeTransaction.origin_network,
-				originTokenAddress:
-					bridgeTransaction.origin_address.toLowerCase(),
+				originTokenAddress: bridgeTransaction.origin_address.toLowerCase(),
 				sourceNetwork: this.networkId,
 				destinationNetwork: bridgeTransaction.destination_network,
-				receiverAddress:
-					bridgeTransaction.destination_address.toLowerCase(),
+				receiverAddress: bridgeTransaction.destination_address.toLowerCase(),
 				fromAddress: bridgeTransaction.from_address.toLowerCase(),
 				amount: bridgeTransaction.amount,
 				depositCount: bridgeTransaction.deposit_count,
 				bridgeHash: bridgeTransaction.bridge_hash,
 				status: TransactionStatus.BRIDGED,
 				txSender: bridgeTransaction.txn_sender.toLowerCase(),
-				lastUpdatedAt: Date.now(),
+				lastUpdatedAt: Date.now()
 			});
 		});
 
@@ -65,17 +62,14 @@ export default class TransactionMapper {
 				sourceNetwork: decodedGlobalIndex.sourceNetwork,
 				depositCount: decodedGlobalIndex.depositCount,
 				status: TransactionStatus.CLAIMED,
-				lastUpdatedAt: Date.now(),
+				lastUpdatedAt: Date.now()
 			});
 		});
 
 		return formattedClaimTransactions;
 	}
 
-	private decodeGlobalIndex(
-		globalIndex: string,
-		blockNumber: number
-	): IDecodedGlobalIndex {
+	private decodeGlobalIndex(globalIndex: string, blockNumber: number): IDecodedGlobalIndex {
 		try {
 			const globalIndexBigInt = BigInt(globalIndex);
 			const globalIndexInHex = globalIndexBigInt.toString(16);
@@ -83,16 +77,13 @@ export default class TransactionMapper {
 			if (blockNumber < this.etrogUpdateBlockNumber) {
 				return {
 					sourceNetwork: this.networkId === 0 ? 1 : 0,
-					depositCount: Number(globalIndexBigInt),
+					depositCount: Number(globalIndexBigInt)
 				};
 			}
 
 			return {
-				sourceNetwork:
-					globalIndexInHex.length > 16
-						? 0
-						: Number(globalIndexBigInt >> 32n) + 1,
-				depositCount: Number(globalIndexBigInt & 0xffffffffn),
+				sourceNetwork: globalIndexInHex.length > 16 ? 0 : Number(globalIndexBigInt >> 32n) + 1,
+				depositCount: Number(globalIndexBigInt & 0xffffffffn)
 			};
 		} catch (error) {
 			throw new Error(

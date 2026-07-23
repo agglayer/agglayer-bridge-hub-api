@@ -1,32 +1,33 @@
-import {
-	TransactionStatus,
-	type IHubBridgedStatusTransactions,
-	type IHubBridgeTransaction,
-	type IHubLeafIncludedStatusTransactions,
-	type ITransactionDocument,
-} from "@agglayer/bridge-hub-types";
-import type { IHubClaimTransaction } from "../interfaces/claim_tx";
-import { CryptoHasher } from "bun";
-import {
-	executeMongoOperation,
-	type Collection,
-	type Filter,
-} from "@polygonlabs/servercore-mongo";
+import { createHash } from 'node:crypto';
 
-export default class TransactionsService {
-	constructor(
-		private readonly collection: Collection<ITransactionDocument>
-	) {}
+import type {
+	IHubBridgedStatusTransactions,
+	IHubBridgeTransaction,
+	IHubLeafIncludedStatusTransactions,
+	ITransactionDocument
+} from '@agglayer/bridge-hub-types';
+import type { Collection, Filter } from '@polygonlabs/servercore-mongo';
 
-	private generateDocId(depositCount: number, sourceNetwork: number): string {
-		const hasher = new CryptoHasher("sha256");
-		hasher.update(`${depositCount}:${sourceNetwork}`);
-		return hasher.digest("hex").slice(0, 32);
+import { TransactionStatus } from '@agglayer/bridge-hub-types';
+import { executeMongoOperation } from '@polygonlabs/servercore-mongo';
+
+import type { IHubClaimTransaction } from '../interfaces/claim_tx.ts';
+
+export class TransactionsService {
+	private readonly collection: Collection<ITransactionDocument>;
+
+	constructor(collection: Collection<ITransactionDocument>) {
+		this.collection = collection;
 	}
 
-	public async saveBridges(
-		bridgetransactions: IHubBridgeTransaction[]
-	): Promise<void> {
+	private generateDocId(depositCount: number, sourceNetwork: number): string {
+		return createHash('sha256')
+			.update(`${depositCount}:${sourceNetwork}`)
+			.digest('hex')
+			.slice(0, 32);
+	}
+
+	public async saveBridges(bridgetransactions: IHubBridgeTransaction[]): Promise<void> {
 		const operations = bridgetransactions.map((tx) => {
 			const docId = this.generateDocId(tx.depositCount, tx.sourceNetwork);
 			const { status, ...txWithoutStatus } = tx;
@@ -37,27 +38,21 @@ export default class TransactionsService {
 						$set: txWithoutStatus,
 						$setOnInsert: {
 							_id: docId,
-							status: status,
-						},
+							status: status
+						}
 					},
-					upsert: true,
-				},
+					upsert: true
+				}
 			};
 		});
 
-		await executeMongoOperation(
-			this.collection,
-			(col) => col.bulkWrite(operations),
-			{
-				operationName: "saveBridges",
-				logContext: { count: bridgetransactions.length },
-			}
-		);
+		await executeMongoOperation(this.collection, (col) => col.bulkWrite(operations), {
+			operationName: 'saveBridges',
+			logContext: { count: bridgetransactions.length }
+		});
 	}
 
-	public async saveClaims(
-		claimTransactions: IHubClaimTransaction[]
-	): Promise<void> {
+	public async saveClaims(claimTransactions: IHubClaimTransaction[]): Promise<void> {
 		const operations = claimTransactions.map((tx) => {
 			const docId = this.generateDocId(tx.depositCount, tx.sourceNetwork);
 			return {
@@ -66,22 +61,18 @@ export default class TransactionsService {
 					update: {
 						$set: tx,
 						$setOnInsert: {
-							_id: docId,
-						},
+							_id: docId
+						}
 					},
-					upsert: true,
-				},
+					upsert: true
+				}
 			};
 		});
 
-		await executeMongoOperation(
-			this.collection,
-			(col) => col.bulkWrite(operations),
-			{
-				operationName: "saveClaims",
-				logContext: { count: claimTransactions.length },
-			}
-		);
+		await executeMongoOperation(this.collection, (col) => col.bulkWrite(operations), {
+			operationName: 'saveClaims',
+			logContext: { count: claimTransactions.length }
+		});
 	}
 
 	public async updateLeafIndex(
@@ -97,19 +88,19 @@ export default class TransactionsService {
 				col.updateOne(
 					{
 						_id: docId,
-						status: TransactionStatus.BRIDGED,
+						status: TransactionStatus.BRIDGED
 					},
 					{
 						$set: {
 							leafIndex,
 							status: TransactionStatus.LEAF_INCLUDED,
-							lastUpdatedAt: Date.now(),
-						},
+							lastUpdatedAt: Date.now()
+						}
 					}
 				),
 			{
-				operationName: "updateLeafIndex",
-				logContext: { depositCount, sourceNetwork, leafIndex },
+				operationName: 'updateLeafIndex',
+				logContext: { depositCount, sourceNetwork, leafIndex }
 			}
 		);
 	}
@@ -127,19 +118,19 @@ export default class TransactionsService {
 				col.updateOne(
 					{
 						_id: docId,
-						status: TransactionStatus.LEAF_INCLUDED,
+						status: TransactionStatus.LEAF_INCLUDED
 					},
 					{
 						$set: {
 							leafIndexForProof,
 							status: TransactionStatus.READY_TO_CLAIM,
-							lastUpdatedAt: Date.now(),
-						},
+							lastUpdatedAt: Date.now()
+						}
 					}
 				),
 			{
-				operationName: "updateTransactionToReadyToClaim",
-				logContext: { depositCount, sourceNetwork, leafIndexForProof },
+				operationName: 'updateTransactionToReadyToClaim',
+				logContext: { depositCount, sourceNetwork, leafIndexForProof }
 			}
 		);
 	}
@@ -150,7 +141,7 @@ export default class TransactionsService {
 	): Promise<IHubBridgedStatusTransactions[]> {
 		const filter: Filter<ITransactionDocument> = {
 			sourceNetwork,
-			status: TransactionStatus.BRIDGED,
+			status: TransactionStatus.BRIDGED
 		};
 
 		// If afterId is provided, use it for cursor-based pagination
@@ -166,15 +157,15 @@ export default class TransactionsService {
 						projection: {
 							sourceNetwork: 1,
 							depositCount: 1,
-							hubUID: 1,
-						},
+							hubUID: 1
+						}
 					})
 					.sort({ hubUID: 1 })
 					.limit(10)
 					.toArray(),
 			{
-				operationName: "getBridgedTransactions",
-				logContext: { sourceNetwork, afterId },
+				operationName: 'getBridgedTransactions',
+				logContext: { sourceNetwork, afterId }
 			}
 		);
 	}
@@ -193,23 +184,21 @@ export default class TransactionsService {
 								sourceNetwork: 1,
 								depositCount: 1,
 								hubUID: 1,
-								timestamp: 1,
-							},
+								timestamp: 1
+							}
 						}
 					)
 					.sort({ hubUID: -1 })
 					.limit(1)
 					.toArray(),
 			{
-				operationName: "getLatestBridgeTransactions",
-				logContext: { sourceNetwork },
+				operationName: 'getLatestBridgeTransactions',
+				logContext: { sourceNetwork }
 			}
 		);
 	}
 
-	public async getClaim(
-		txHash: string
-	): Promise<IHubBridgedStatusTransactions[]> {
+	public async getClaim(txHash: string): Promise<IHubBridgedStatusTransactions[]> {
 		return await executeMongoOperation(
 			this.collection,
 			(col) =>
@@ -220,15 +209,15 @@ export default class TransactionsService {
 							projection: {
 								sourceNetwork: 1,
 								depositCount: 1,
-								hubUID: 1,
-							},
+								hubUID: 1
+							}
 						}
 					)
 					.limit(1)
 					.toArray(),
 			{
-				operationName: "getClaim",
-				logContext: { txHash },
+				operationName: 'getClaim',
+				logContext: { txHash }
 			}
 		);
 	}
@@ -239,7 +228,7 @@ export default class TransactionsService {
 	): Promise<IHubLeafIncludedStatusTransactions[]> {
 		const filter: Filter<ITransactionDocument> = {
 			destinationNetwork,
-			status: TransactionStatus.LEAF_INCLUDED,
+			status: TransactionStatus.LEAF_INCLUDED
 		};
 
 		// If afterId is provided, use it for cursor-based pagination
@@ -256,15 +245,15 @@ export default class TransactionsService {
 							sourceNetwork: 1,
 							depositCount: 1,
 							leafIndex: 1,
-							hubUID: 1,
-						},
+							hubUID: 1
+						}
 					})
 					.sort({ hubUID: 1 })
 					.limit(10)
 					.toArray(),
 			{
-				operationName: "getLeafIncludedTransactions",
-				logContext: { destinationNetwork, afterId },
+				operationName: 'getLeafIncludedTransactions',
+				logContext: { destinationNetwork, afterId }
 			}
 		);
 
@@ -275,7 +264,7 @@ export default class TransactionsService {
 				sourceNetwork: doc.sourceNetwork,
 				depositCount: doc.depositCount,
 				leafIndex: doc.leafIndex as number,
-				hubUID: doc.hubUID,
+				hubUID: doc.hubUID
 			}));
 	}
 }

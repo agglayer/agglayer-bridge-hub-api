@@ -1,7 +1,7 @@
-import type { IBridgeAPIResult } from "./bridge_api_result";
+import type { IBridgeAPIResult } from './bridge_api_result.ts';
 
 // Re-export shared types from @agglayer/bridge-hub-types
-export type { IHubTokenMappings } from "@agglayer/bridge-hub-types";
+export type { IHubTokenMappings } from '@agglayer/bridge-hub-types';
 
 /**
  * Interface for the Aggkit Mapping Tx element

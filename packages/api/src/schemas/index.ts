@@ -1,4 +1,4 @@
-export * from "./mappings_query";
-export * from "./transactions_query";
-export * from "./proof_query";
-export { NetworkSchema } from "./common";
+export * from './mappings_query.ts';
+export * from './transactions_query.ts';
+export * from './proof_query.ts';
+export { NetworkSchema } from './common.ts';

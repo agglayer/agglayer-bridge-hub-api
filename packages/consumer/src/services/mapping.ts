@@ -1,38 +1,36 @@
-import {
-	type IHubTokenMappings,
-	type IMappingDocument,
-} from "@agglayer/bridge-hub-types";
-import {
-	executeMongoOperation,
-	type Collection,
-} from "@polygonlabs/servercore-mongo";
-import { CryptoHasher } from "bun";
+import { createHash } from 'node:crypto';
 
-export default class TokenMappingsService {
-	constructor(private readonly collection: Collection<IMappingDocument>) {}
+import type { IHubTokenMappings, IMappingDocument } from '@agglayer/bridge-hub-types';
+import type { Collection } from '@polygonlabs/servercore-mongo';
+
+import { executeMongoOperation } from '@polygonlabs/servercore-mongo';
+
+export class TokenMappingsService {
+	private readonly collection: Collection<IMappingDocument>;
+
+	constructor(collection: Collection<IMappingDocument>) {
+		this.collection = collection;
+	}
 
 	private generateDocId(
 		originTokenAddress: string,
 		originTokenNetwork: number,
 		wrappedTokenNetwork: number
 	): string {
-		const hasher = new CryptoHasher("sha256");
-		hasher.update(
-			`${originTokenNetwork}:${originTokenAddress}:${wrappedTokenNetwork}`
-		);
-		return hasher.digest("hex").slice(0, 32);
+		return createHash('sha256')
+			.update(`${originTokenNetwork}:${originTokenAddress}:${wrappedTokenNetwork}`)
+			.digest('hex')
+			.slice(0, 32);
 	}
 
-	public async saveTokenMappings(
-		mappings: IHubTokenMappings[]
-	): Promise<void> {
+	public async saveTokenMappings(mappings: IHubTokenMappings[]): Promise<void> {
 		const documents = mappings.map((mapping) => ({
 			_id: this.generateDocId(
 				mapping.originTokenAddress,
 				mapping.originTokenNetwork,
 				mapping.wrappedTokenNetwork
 			),
-			...mapping,
+			...mapping
 		}));
 
 		await executeMongoOperation(
@@ -43,14 +41,14 @@ export default class TokenMappingsService {
 					replaceOne: {
 						filter: { _id: doc._id },
 						replacement: doc,
-						upsert: true,
-					},
+						upsert: true
+					}
 				}));
 				return col.bulkWrite(operations);
 			},
 			{
-				operationName: "saveTokenMappings",
-				logContext: { count: mappings.length },
+				operationName: 'saveTokenMappings',
+				logContext: { count: mappings.length }
 			}
 		);
 	}
@@ -65,14 +63,14 @@ export default class TokenMappingsService {
 				col
 					.find({
 						transactionHash,
-						blockNumber,
+						blockNumber
 					})
 					.sort({ blockNumber: -1 })
 					.limit(1)
 					.toArray(),
 			{
-				operationName: "getTokenMapping",
-				logContext: { transactionHash, blockNumber },
+				operationName: 'getTokenMapping',
+				logContext: { transactionHash, blockNumber }
 			}
 		);
 	}

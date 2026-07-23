@@ -1,9 +1,9 @@
 // Export Zod schemas
-export * from "./bridge_transaction";
-export * from "./token_mapping";
-export * from "./common";
-export * from "./proof";
+export * from './bridge_transaction.ts';
+export * from './token_mapping.ts';
+export * from './common.ts';
+export * from './proof.ts';
 
 // Export MongoDB document interfaces
-export * from "./transaction_document";
-export * from "./mapping_document";
+export * from './transaction_document.ts';
+export * from './mapping_document.ts';

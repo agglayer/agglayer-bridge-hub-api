@@ -1,18 +1,19 @@
-import { Logger } from "@polygonlabs/servercore";
+import { createWalletClient, http } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
 
-import AutoClaimService from "./services/auto-claim";
-import TransactionService from "./services/transaction";
-import { privateKeyToAccount } from "viem/accounts";
-import { createWalletClient, http } from "viem";
+import { Logger } from '@polygonlabs/servercore';
+
+import { AutoClaimService } from './services/auto-claim.ts';
+import { TransactionService } from './services/transaction.ts';
 
 Logger.create({
 	sentry: {
 		dsn: process.env.SENTRY_DSN,
-		level: "error",
+		level: 'error'
 	},
 	console: {
-		level: "debug",
-	},
+		level: 'debug'
+	}
 });
 
 let autoClaimService: AutoClaimService;
@@ -23,7 +24,7 @@ async function run() {
 		try {
 			await autoClaimService.claimTransactions();
 		} catch (error: any) {
-			Logger.error({ error, message: "Error claiming transactions" });
+			Logger.error({ error, message: 'Error claiming transactions' });
 		}
 		await new Promise((r) => setTimeout(r, POLL_INTERVAL));
 	}
@@ -31,17 +32,15 @@ async function run() {
 
 async function start() {
 	try {
-		const rawRPCConfig = JSON.parse(process.env.RPC_CONFIG || "{}");
+		const rawRPCConfig = JSON.parse(process.env.RPC_CONFIG || '{}');
 		const providerURL =
 			rawRPCConfig[process.env.DESTINATION_NETWORK_CHAINID as string] ||
 			`${process.env.BASE_ERPC_URL}/${process.env.DESTINATION_NETWORK_CHAINID as string}?token=${process.env.ERPC_API_KEY}`;
 
-		const account = privateKeyToAccount(
-			process.env.PRIVATE_KEY as `0x${string}`
-		);
+		const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
 		const wallet = createWalletClient({
 			account,
-			transport: http(providerURL),
+			transport: http(providerURL)
 		});
 
 		const transactionService = new TransactionService(
@@ -56,9 +55,9 @@ async function start() {
 			transactionService
 		);
 
-		run();
+		void run();
 	} catch (error: any) {
-		Logger.error({ location: "index.start", error });
+		Logger.error({ location: 'index.start', error });
 	}
 }
 

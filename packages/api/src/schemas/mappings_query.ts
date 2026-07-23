@@ -1,26 +1,19 @@
-import { z } from "@hono/zod-openapi";
-import {
-	address,
-	networkIdsSchema,
-	NetworkSchema,
-	PaginationSchema,
-} from "./common";
+import { z } from '@hono/zod-openapi';
+
 import {
 	HubTokenMappingsSchema,
 	PaginatedResponseSchema,
-	ResponseSchema,
-} from "@agglayer/bridge-hub-types";
+	ResponseSchema
+} from '@agglayer/bridge-hub-types';
+
+import { address, networkIdsSchema, NetworkSchema, PaginationSchema } from './common.ts';
 
 export const MappingsQuerySchema = z
 	.object({
-		originTokenAddress: address
-			.optional()
-			.transform((val) => val?.toLowerCase()),
-		wrappedTokenAddress: address
-			.optional()
-			.transform((val) => val?.toLowerCase()),
+		originTokenAddress: address.optional().transform((val) => val?.toLowerCase()),
+		wrappedTokenAddress: address.optional().transform((val) => val?.toLowerCase()),
 		originNetworkIds: networkIdsSchema.optional(),
-		wrappedNetworkIds: networkIdsSchema.optional(),
+		wrappedNetworkIds: networkIdsSchema.optional()
 	})
 	.merge(PaginationSchema);
 
@@ -28,16 +21,16 @@ export const MappingsByTokenQuerySchema = z
 	.object({
 		tokenNetwork: z
 			.string()
-			.max(18, "Network IDs string must not exceed 18 characters")
-			.regex(/^\d+$/, "chainId must be a non-negative integer")
+			.max(18, 'Network IDs string must not exceed 18 characters')
+			.regex(/^\d+$/, 'chainId must be a non-negative integer')
 			.transform((val) => parseInt(val, 10)),
-		tokenAddress: address.nonempty().transform((val) => val?.toLowerCase()),
+		tokenAddress: address.nonempty().transform((val) => val?.toLowerCase())
 	})
 	.merge(NetworkSchema);
 
 export const TokenMetadataQuerySchema = z
 	.object({
-		tokenAddress: address.nonempty().transform((val) => val?.toLowerCase()),
+		tokenAddress: address.nonempty().transform((val) => val?.toLowerCase())
 	})
 	.merge(NetworkSchema);
 
@@ -48,14 +41,12 @@ export const TokenMetadataSchema = z.object({
 	originTokenAddress: address,
 	originTokenNetwork: z.number(),
 	wrappedTokenAddressV1: address,
-	wrappedTokenAddressV2: address,
+	wrappedTokenAddressV2: address
 });
 
 export const TokenMetadataResponseSchema = ResponseSchema(TokenMetadataSchema);
 
-export const MappingsResponseSchema = PaginatedResponseSchema(
-	z.array(HubTokenMappingsSchema)
-);
+export const MappingsResponseSchema = PaginatedResponseSchema(z.array(HubTokenMappingsSchema));
 
 export type MappingsQuery = z.infer<typeof MappingsQuerySchema>;
 export type mappingsByTokenQuery = z.infer<typeof MappingsByTokenQuerySchema>;

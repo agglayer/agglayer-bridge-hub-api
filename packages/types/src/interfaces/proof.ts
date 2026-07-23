@@ -1,5 +1,6 @@
-import { z } from "@hono/zod-openapi";
-import { ResponseSchema } from "./common";
+import { z } from '@hono/zod-openapi';
+
+import { ResponseSchema } from './common.ts';
 
 export const ClaimProofSchema = z.object({
 	proof_local_exit_root: z.array(z.string()),
@@ -13,9 +14,9 @@ export const ClaimProofSchema = z.object({
 		mainnet_exit_root: z.string(),
 		rollup_exit_root: z.string(),
 		global_exit_root: z.string(),
-		hash: z.string(),
+		hash: z.string()
 	}),
-	bridge_tx_metadata: z.string(),
+	bridge_tx_metadata: z.string()
 });
 
 export const ClaimProofResponseSchema = ResponseSchema(ClaimProofSchema);

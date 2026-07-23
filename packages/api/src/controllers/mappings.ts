@@ -1,14 +1,21 @@
-import type { Context } from "hono";
-import { MappingsService } from "../services/mappings";
-import { handleResponse } from "@polygonlabs/servercore";
-import { getResponseContext } from "../middlewares/response_context";
+import type { Context } from 'hono';
+
+import { handleResponse } from '@polygonlabs/servercore';
+
+import type { MappingsService } from '../services/mappings.ts';
+
+import { getResponseContext } from '../middlewares/response_context.ts';
 
 export class MappingsController {
-	constructor(private readonly mappingsService: MappingsService) {}
+	private readonly mappingsService: MappingsService;
+
+	constructor(mappingsService: MappingsService) {
+		this.mappingsService = mappingsService;
+	}
 
 	getMappings = async (c: Context) => {
-		const query = c.get("validatedQuery");
-		const { network } = c.get("validatedParams");
+		const query = c.get('validatedQuery');
+		const { network } = c.get('validatedParams');
 
 		const mappings = await this.mappingsService.getMappings({
 			network,
@@ -17,23 +24,20 @@ export class MappingsController {
 			wrappedNetworkIds: query.wrappedNetworkIds,
 			wrappedTokenAddress: query.wrappedTokenAddress,
 			limit: query.limit,
-			startAfter: query.startAfter,
+			startAfter: query.startAfter
 		});
 
 		return handleResponse(getResponseContext(c), mappings.documents, {
 			total: mappings.totalDocumentsCount || 0,
 			limit: query.limit,
 			nextStartAfterCursor:
-				query.offset === undefined
-					? mappings.documents.at(-1)?.timestamp
-					: undefined,
+				query.offset === undefined ? mappings.documents.at(-1)?.timestamp : undefined
 		});
 	};
 
 	getMappingsByToken = async (c: Context) => {
-		const query = c.get("validatedQuery");
-		const { tokenNetwork, tokenAddress, network } =
-			c.get("validatedParams");
+		const query = c.get('validatedQuery');
+		const { tokenNetwork, tokenAddress, network } = c.get('validatedParams');
 
 		const mappings = await this.mappingsService.getMappingsByToken(
 			tokenAddress,
@@ -45,9 +49,7 @@ export class MappingsController {
 			total: mappings.totalDocumentsCount || 0,
 			limit: query.limit,
 			nextStartAfterCursor:
-				query.offset === undefined
-					? mappings.documents.at(-1)?.timestamp
-					: undefined,
+				query.offset === undefined ? mappings.documents.at(-1)?.timestamp : undefined
 		});
 	};
 }

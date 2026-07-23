@@ -1,19 +1,21 @@
-import {
-	executeMongoOperation,
-	type Collection,
-	type Document,
-} from "@polygonlabs/servercore-mongo";
-import type { IHubMetadata } from "../interfaces/metadata";
+import type { Collection, Document } from '@polygonlabs/servercore-mongo';
+
+import { executeMongoOperation } from '@polygonlabs/servercore-mongo';
+
+import type { IHubMetadata } from '../interfaces/metadata.ts';
 
 interface MetadataDocument extends Document, IHubMetadata {
 	_id: string;
 }
 
-export default class MetadataService {
-	constructor(
-		private readonly collection: Collection<MetadataDocument>,
-		private readonly docId: string = "lastIndexedTransactions"
-	) {}
+export class MetadataService {
+	private readonly collection: Collection<MetadataDocument>;
+	private readonly docId: string;
+
+	constructor(collection: Collection<MetadataDocument>, docId: string = 'lastIndexedTransactions') {
+		this.collection = collection;
+		this.docId = docId;
+	}
 
 	public async saveLastIndexedTxs(data: IHubMetadata): Promise<void> {
 		await executeMongoOperation(
@@ -23,13 +25,13 @@ export default class MetadataService {
 					{ _id: this.docId },
 					{
 						$set: { ...data },
-						$setOnInsert: { _id: this.docId },
+						$setOnInsert: { _id: this.docId }
 					},
 					{ upsert: true }
 				),
 			{
-				operationName: "saveLastIndexedTxs",
-				logContext: { ...data } as Record<string, unknown>,
+				operationName: 'saveLastIndexedTxs',
+				logContext: { ...data } as Record<string, unknown>
 			}
 		);
 	}
@@ -39,7 +41,7 @@ export default class MetadataService {
 			this.collection,
 			(col) => col.findOne({ _id: this.docId }),
 			{
-				operationName: "getLastIndexedTxs",
+				operationName: 'getLastIndexedTxs'
 			}
 		);
 
