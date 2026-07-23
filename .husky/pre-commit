@@ -1,1 +1,2 @@
-echo '🎨 Formatting code...' && bun run style && git add . && bun run test
+pnpm exec lint-staged
+pnpm run typecheck

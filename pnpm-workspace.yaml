@@ -1,0 +1,25 @@
+packages:
+  - 'packages/*'
+
+blockExoticSubdeps: true
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - '@polygonlabs/*'
+  - '@maticnetwork/*'
+  - '@agglayer/*'
+  - '@0xsequence/*'
+  - '@0xtrails/*'
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # Transitive dep of tsup; this version lacks provenance attestation that an
+  # earlier release had, but it's a well-established, high-traffic package —
+  # not a supply-chain risk. Matches the exclusion pattern established in
+  # apps-team-ts-template's pnpm-workspace.yaml.
+  - 'chokidar@4.0.3'
+  # Transitive dep of lerna (via write-pkg -> write-json-file -> make-dir).
+  # Same story as apps-team-ts-template's semver@6.3.1 exclusion — a
+  # well-established package, not a supply-chain risk.
+  - 'semver@5.7.2'
+  - '@octokit/endpoint@9.0.6'
+onlyBuiltDependencies:
+  - esbuild
