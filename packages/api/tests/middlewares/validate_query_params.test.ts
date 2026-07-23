@@ -1,89 +1,87 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from 'vitest';
+
 import {
 	validateTransactionQueryParams,
 	validateTransactionByDepositCountQueryParams,
 	validateMappingsQueryParams,
 	validateMappingsByTokenQueryParams,
 	validateTokenMetadataQueryParams,
-	validateClaimProofQueryParams,
-} from "../../src/middlewares/validate_query_params";
+	validateClaimProofQueryParams
+} from '../../src/middlewares/validate_query_params.ts';
 
 // Mock servercore classes
-class MockBadRequestError extends Error {
-	constructor(
-		message: string,
-		public details?: any,
-		public statusCode?: number,
-		public context?: any
-	) {
-		super(message);
-		this.name = "BadRequestError";
+const { MockBadRequestError } = vi.hoisted(() => {
+	class MockBadRequestError extends Error {
+		details?: any;
+		statusCode?: number;
+		context?: any;
+
+		constructor(message: string, details?: any, statusCode?: number, context?: any) {
+			super(message);
+			this.details = details;
+			this.statusCode = statusCode;
+			this.context = context;
+			this.name = 'BadRequestError';
+		}
 	}
-}
+	return { MockBadRequestError };
+});
 
-const mockHandleError = mock(() => Promise.resolve());
+const mockHandleError = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 
-// NOTE: deliberately no mock.module of "../../src/middlewares/response_context"
-// here. Bun's mock.module is process-global for the whole `bun test` run, so a
-// module mock registered in this file leaks into every test file that loads
-// after it. When file discovery order put this file before
-// response_context.test.ts (order differs per filesystem), that file ended up
-// testing the mock instead of the real implementation and failed. The real
+// NOTE: deliberately no vi.mock of "../../src/middlewares/response_context"
+// here (carried over from the original bun:test suite, where mock.module is
+// process-global for the whole run, so a module mock registered in this file
+// leaked into every test file that loaded after it). The real
 // getResponseContext is side-effect-free with the contexts used below, so no
 // mock is needed. ApiError is included in the servercore mock because the real
 // response_context module imports it.
-mock.module("@polygonlabs/servercore", () => ({
+vi.mock('@polygonlabs/servercore', () => ({
 	ApiError: class ApiError extends Error {},
 	BadRequestError: MockBadRequestError,
-	handleError: mockHandleError,
+	handleError: mockHandleError
 }));
 
-describe("Validate Query Params Middlewares", () => {
+describe('Validate Query Params Middlewares', () => {
 	let mockContext: any;
-	let mockNext: ReturnType<typeof mock>;
+	let mockNext: ReturnType<typeof vi.fn<() => Promise<void>>>;
 
 	beforeEach(() => {
-		mockNext = mock(() => Promise.resolve());
+		mockNext = vi.fn<() => Promise<void>>(() => Promise.resolve());
 		mockHandleError.mockClear();
 
 		mockContext = {
 			req: {
-				param: mock(() => ({})),
-				query: mock(() => ({})),
+				param: vi.fn(() => ({})),
+				query: vi.fn(() => ({}))
 			},
-			set: mock(() => {}),
-			status: mock(() => {}),
-			json: mock(() => ({})),
+			set: vi.fn(() => {}),
+			status: vi.fn(() => {}),
+			json: vi.fn(() => ({}))
 		};
 	});
 
-	describe("validateTransactionQueryParams", () => {
-		test("should validate successfully with valid params and query", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "testnet" });
+	describe('validateTransactionQueryParams', () => {
+		test('should validate successfully with valid params and query', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: 'testnet' });
 			mockContext.req.query.mockReturnValueOnce({
-				fromAddress: "0x1234567890abcdef1234567890abcdef12345678",
-				limit: "10",
+				fromAddress: '0x1234567890abcdef1234567890abcdef12345678',
+				limit: '10'
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
 
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedQuery",
-				expect.any(Object)
-			);
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedParams",
-				expect.any(Object)
-			);
+			expect(mockContext.set).toHaveBeenCalledWith('validatedQuery', expect.any(Object));
+			expect(mockContext.set).toHaveBeenCalledWith('validatedParams', expect.any(Object));
 			expect(mockNext).toHaveBeenCalled();
 			expect(mockHandleError).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid query parameters", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "testnet" });
+		test('should handle invalid query parameters', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: 'testnet' });
 			mockContext.req.query.mockReturnValueOnce({
-				fromAddress: "invalid-address", // Invalid Ethereum address
-				limit: "not-a-number", // Invalid limit
+				fromAddress: 'invalid-address', // Invalid Ethereum address
+				limit: 'not-a-number' // Invalid limit
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
@@ -91,17 +89,17 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateTransactionQueryParams",
+					name: 'BadRequestError',
+					context: 'validateTransactionQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid network parameter", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "" }); // Empty network
+		test('should handle invalid network parameter', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: '' }); // Empty network
 			mockContext.req.query.mockReturnValueOnce({
-				fromAddress: "0x1234567890abcdef1234567890abcdef12345678",
+				fromAddress: '0x1234567890abcdef1234567890abcdef12345678'
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
@@ -109,17 +107,17 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateTransactionQueryParams",
+					name: 'BadRequestError',
+					context: 'validateTransactionQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle both invalid params and query (query error takes precedence)", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "" });
+		test('should handle both invalid params and query (query error takes precedence)', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: '' });
 			mockContext.req.query.mockReturnValueOnce({
-				fromAddress: "invalid-address",
+				fromAddress: 'invalid-address'
 			});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
@@ -127,14 +125,14 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateTransactionQueryParams",
+					name: 'BadRequestError',
+					context: 'validateTransactionQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle empty query and params", async () => {
+		test('should handle empty query and params', async () => {
 			mockContext.req.param.mockReturnValueOnce({});
 			mockContext.req.query.mockReturnValueOnce({});
 
@@ -145,110 +143,88 @@ describe("Validate Query Params Middlewares", () => {
 		});
 	});
 
-	describe("validateTransactionByDepositCountQueryParams", () => {
-		test("should validate successfully with valid parameters", async () => {
+	describe('validateTransactionByDepositCountQueryParams', () => {
+		test('should validate successfully with valid parameters', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
-				depositCount: "42",
-				sourceNetworkId: "1",
+				network: 'testnet',
+				depositCount: '42',
+				sourceNetworkId: '1'
 			});
 
-			await validateTransactionByDepositCountQueryParams(
-				mockContext,
-				mockNext
-			);
+			await validateTransactionByDepositCountQueryParams(mockContext, mockNext);
 
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedParams",
-				expect.any(Object)
-			);
+			expect(mockContext.set).toHaveBeenCalledWith('validatedParams', expect.any(Object));
 			expect(mockNext).toHaveBeenCalled();
 			expect(mockHandleError).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid parameters", async () => {
+		test('should handle invalid parameters', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
-				depositCount: "not-a-number",
-				sourceNetwork: "invalid",
+				network: 'testnet',
+				depositCount: 'not-a-number',
+				sourceNetwork: 'invalid'
 			});
 
-			await validateTransactionByDepositCountQueryParams(
-				mockContext,
-				mockNext
-			);
+			await validateTransactionByDepositCountQueryParams(mockContext, mockNext);
 
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateTransactionByDepositCountQueryParams",
+					name: 'BadRequestError',
+					context: 'validateTransactionByDepositCountQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle missing required parameters", async () => {
+		test('should handle missing required parameters', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
+				network: 'testnet'
 				// Missing depositCount and sourceNetwork
 			});
 
-			await validateTransactionByDepositCountQueryParams(
-				mockContext,
-				mockNext
-			);
+			await validateTransactionByDepositCountQueryParams(mockContext, mockNext);
 
 			expect(mockHandleError).toHaveBeenCalled();
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle negative numbers", async () => {
+		test('should handle negative numbers', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
-				depositCount: "-1",
-				sourceNetwork: "1",
+				network: 'testnet',
+				depositCount: '-1',
+				sourceNetwork: '1'
 			});
 
-			await validateTransactionByDepositCountQueryParams(
-				mockContext,
-				mockNext
-			);
+			await validateTransactionByDepositCountQueryParams(mockContext, mockNext);
 
 			expect(mockHandleError).toHaveBeenCalled();
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 	});
 
-	describe("validateMappingsQueryParams", () => {
-		test("should validate successfully with valid params and query", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "mainnet" });
+	describe('validateMappingsQueryParams', () => {
+		test('should validate successfully with valid params and query', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: 'mainnet' });
 			mockContext.req.query.mockReturnValueOnce({
-				originTokenAddress:
-					"0x1234567890abcdef1234567890abcdef12345678",
-				originNetworkIds: "1,137",
-				limit: "20",
+				originTokenAddress: '0x1234567890abcdef1234567890abcdef12345678',
+				originNetworkIds: '1,137',
+				limit: '20'
 			});
 
 			await validateMappingsQueryParams(mockContext, mockNext);
 
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedQuery",
-				expect.any(Object)
-			);
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedParams",
-				expect.any(Object)
-			);
+			expect(mockContext.set).toHaveBeenCalledWith('validatedQuery', expect.any(Object));
+			expect(mockContext.set).toHaveBeenCalledWith('validatedParams', expect.any(Object));
 			expect(mockNext).toHaveBeenCalled();
 			expect(mockHandleError).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid query parameters", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "testnet" });
+		test('should handle invalid query parameters', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: 'testnet' });
 			mockContext.req.query.mockReturnValueOnce({
-				originTokenAddress: "invalid-address",
-				originNetworkIds: "invalid,ids",
+				originTokenAddress: 'invalid-address',
+				originNetworkIds: 'invalid,ids'
 			});
 
 			await validateMappingsQueryParams(mockContext, mockNext);
@@ -256,18 +232,17 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateMappingsQueryParams",
+					name: 'BadRequestError',
+					context: 'validateMappingsQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid network parameter", async () => {
+		test('should handle invalid network parameter', async () => {
 			mockContext.req.param.mockReturnValueOnce({ network: 123 }); // Wrong type
 			mockContext.req.query.mockReturnValueOnce({
-				originTokenAddress:
-					"0x1234567890abcdef1234567890abcdef12345678",
+				originTokenAddress: '0x1234567890abcdef1234567890abcdef12345678'
 			});
 
 			await validateMappingsQueryParams(mockContext, mockNext);
@@ -275,15 +250,15 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateMappingsQueryParams",
+					name: 'BadRequestError',
+					context: 'validateMappingsQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should validate with minimal valid parameters", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "testnet" });
+		test('should validate with minimal valid parameters', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: 'testnet' });
 			mockContext.req.query.mockReturnValueOnce({}); // Empty query is valid
 
 			await validateMappingsQueryParams(mockContext, mockNext);
@@ -293,37 +268,31 @@ describe("Validate Query Params Middlewares", () => {
 		});
 	});
 
-	describe("validateMappingsByTokenQueryParams", () => {
-		test("should validate successfully with valid token parameters", async () => {
+	describe('validateMappingsByTokenQueryParams', () => {
+		test('should validate successfully with valid token parameters', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
-				tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-				tokenNetwork: "1",
+				network: 'testnet',
+				tokenAddress: '0x1234567890abcdef1234567890abcdef12345678',
+				tokenNetwork: '1'
 			});
 			mockContext.req.query.mockReturnValueOnce({
-				limit: "10",
-				startAfter: "cursor123",
+				limit: '10',
+				startAfter: 'cursor123'
 			});
 
 			await validateMappingsByTokenQueryParams(mockContext, mockNext);
 
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedQuery",
-				expect.any(Object)
-			);
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedParams",
-				expect.any(Object)
-			);
+			expect(mockContext.set).toHaveBeenCalledWith('validatedQuery', expect.any(Object));
+			expect(mockContext.set).toHaveBeenCalledWith('validatedParams', expect.any(Object));
 			expect(mockNext).toHaveBeenCalled();
 			expect(mockHandleError).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid token address", async () => {
+		test('should handle invalid token address', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
-				tokenAddress: "invalid-token-address",
-				tokenNetwork: "1",
+				network: 'testnet',
+				tokenAddress: 'invalid-token-address',
+				tokenNetwork: '1'
 			});
 			mockContext.req.query.mockReturnValueOnce({});
 
@@ -332,18 +301,18 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateMappingsByOriginTokenQueryParams",
+					name: 'BadRequestError',
+					context: 'validateMappingsByOriginTokenQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid token network", async () => {
+		test('should handle invalid token network', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
-				tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-				tokenNetwork: "invalid-network",
+				network: 'testnet',
+				tokenAddress: '0x1234567890abcdef1234567890abcdef12345678',
+				tokenNetwork: 'invalid-network'
 			});
 			mockContext.req.query.mockReturnValueOnce({});
 
@@ -352,21 +321,21 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateMappingsByOriginTokenQueryParams",
+					name: 'BadRequestError',
+					context: 'validateMappingsByOriginTokenQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid pagination parameters", async () => {
+		test('should handle invalid pagination parameters', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
-				tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-				tokenNetwork: "1",
+				network: 'testnet',
+				tokenAddress: '0x1234567890abcdef1234567890abcdef12345678',
+				tokenNetwork: '1'
 			});
 			mockContext.req.query.mockReturnValueOnce({
-				limit: "invalid-limit",
+				limit: 'invalid-limit'
 			});
 
 			await validateMappingsByTokenQueryParams(mockContext, mockNext);
@@ -374,16 +343,16 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateMappingsByOriginTokenQueryParams",
+					name: 'BadRequestError',
+					context: 'validateMappingsByOriginTokenQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle missing required parameters", async () => {
+		test('should handle missing required parameters', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
+				network: 'testnet'
 				// Missing tokenAddress and tokenNetwork
 			});
 			mockContext.req.query.mockReturnValueOnce({});
@@ -395,29 +364,26 @@ describe("Validate Query Params Middlewares", () => {
 		});
 	});
 
-	describe("validateTokenMetadataQueryParams", () => {
-		test("should validate successfully with valid token metadata parameters", async () => {
+	describe('validateTokenMetadataQueryParams', () => {
+		test('should validate successfully with valid token metadata parameters', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
-				tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-				tokenNetwork: "1",
+				network: 'testnet',
+				tokenAddress: '0x1234567890abcdef1234567890abcdef12345678',
+				tokenNetwork: '1'
 			});
 
 			await validateTokenMetadataQueryParams(mockContext, mockNext);
 
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedParams",
-				expect.any(Object)
-			);
+			expect(mockContext.set).toHaveBeenCalledWith('validatedParams', expect.any(Object));
 			expect(mockNext).toHaveBeenCalled();
 			expect(mockHandleError).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid token address", async () => {
+		test('should handle invalid token address', async () => {
 			mockContext.req.param.mockReturnValueOnce({
-				network: "testnet",
-				tokenAddress: "0xinvalid",
-				tokenNetwork: "1",
+				network: 'testnet',
+				tokenAddress: '0xinvalid',
+				tokenNetwork: '1'
 			});
 
 			await validateTokenMetadataQueryParams(mockContext, mockNext);
@@ -425,18 +391,18 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateTokenMetadataQueryParams",
+					name: 'BadRequestError',
+					context: 'validateTokenMetadataQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle missing network parameter", async () => {
+		test('should handle missing network parameter', async () => {
 			mockContext.req.param.mockReturnValueOnce({
 				// Missing network parameter
-				tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-				tokenNetwork: "1",
+				tokenAddress: '0x1234567890abcdef1234567890abcdef12345678',
+				tokenNetwork: '1'
 			});
 
 			await validateTokenMetadataQueryParams(mockContext, mockNext);
@@ -445,7 +411,7 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle completely empty parameters", async () => {
+		test('should handle completely empty parameters', async () => {
 			mockContext.req.param.mockReturnValueOnce({});
 
 			await validateTokenMetadataQueryParams(mockContext, mockNext);
@@ -455,35 +421,29 @@ describe("Validate Query Params Middlewares", () => {
 		});
 	});
 
-	describe("validateClaimProofQueryParams", () => {
-		test("should validate successfully with valid proof parameters", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "testnet" });
+	describe('validateClaimProofQueryParams', () => {
+		test('should validate successfully with valid proof parameters', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: 'testnet' });
 			mockContext.req.query.mockReturnValueOnce({
-				depositCount: "42",
-				sourceNetworkId: "1",
-				leafIndex: "100",
+				depositCount: '42',
+				sourceNetworkId: '1',
+				leafIndex: '100'
 			});
 
 			await validateClaimProofQueryParams(mockContext, mockNext);
 
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedQuery",
-				expect.any(Object)
-			);
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedParams",
-				expect.any(Object)
-			);
+			expect(mockContext.set).toHaveBeenCalledWith('validatedQuery', expect.any(Object));
+			expect(mockContext.set).toHaveBeenCalledWith('validatedParams', expect.any(Object));
 			expect(mockNext).toHaveBeenCalled();
 			expect(mockHandleError).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid query parameters", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "testnet" });
+		test('should handle invalid query parameters', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: 'testnet' });
 			mockContext.req.query.mockReturnValueOnce({
-				depositCount: "invalid",
-				sourceNetwork: "not-a-number",
-				leafIndex: "-1", // Negative leaf index
+				depositCount: 'invalid',
+				sourceNetwork: 'not-a-number',
+				leafIndex: '-1' // Negative leaf index
 			});
 
 			await validateClaimProofQueryParams(mockContext, mockNext);
@@ -491,19 +451,19 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateProofQueryParams",
+					name: 'BadRequestError',
+					context: 'validateProofQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid network parameter", async () => {
+		test('should handle invalid network parameter', async () => {
 			mockContext.req.param.mockReturnValueOnce({ network: null }); // Null network
 			mockContext.req.query.mockReturnValueOnce({
-				depositCount: "42",
-				sourceNetwork: "1",
-				leafIndex: "100",
+				depositCount: '42',
+				sourceNetwork: '1',
+				leafIndex: '100'
 			});
 
 			await validateClaimProofQueryParams(mockContext, mockNext);
@@ -511,15 +471,15 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateProofQueryParams",
+					name: 'BadRequestError',
+					context: 'validateProofQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle missing required query parameters", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "testnet" });
+		test('should handle missing required query parameters', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: 'testnet' });
 			mockContext.req.query.mockReturnValueOnce({
 				// Missing all required parameters
 			});
@@ -530,10 +490,10 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle partial missing query parameters", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "testnet" });
+		test('should handle partial missing query parameters', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: 'testnet' });
 			mockContext.req.query.mockReturnValueOnce({
-				depositCount: "42",
+				depositCount: '42'
 				// Missing sourceNetwork and leafIndex
 			});
 
@@ -543,10 +503,10 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle both invalid params and query (query error takes precedence)", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "" });
+		test('should handle both invalid params and query (query error takes precedence)', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: '' });
 			mockContext.req.query.mockReturnValueOnce({
-				depositCount: "invalid",
+				depositCount: 'invalid'
 			});
 
 			await validateClaimProofQueryParams(mockContext, mockNext);
@@ -554,19 +514,19 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateProofQueryParams",
+					name: 'BadRequestError',
+					context: 'validateProofQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle zero values in query parameters", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "testnet" });
+		test('should handle zero values in query parameters', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: 'testnet' });
 			mockContext.req.query.mockReturnValueOnce({
-				depositCount: "0",
-				sourceNetwork: "0",
-				leafIndex: "0",
+				depositCount: '0',
+				sourceNetwork: '0',
+				leafIndex: '0'
 			});
 
 			await validateClaimProofQueryParams(mockContext, mockNext);
@@ -577,15 +537,15 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle invalid params when query is valid", async () => {
+		test('should handle invalid params when query is valid', async () => {
 			// This tests the else-if block (lines 174-182) where query succeeds but params fail
 			mockContext.req.param.mockReturnValueOnce({
-				network: "invalid-network",
+				network: 'invalid-network'
 			});
 			mockContext.req.query.mockReturnValueOnce({
-				depositCount: "42",
-				sourceNetworkId: "1",
-				leafIndex: "100",
+				depositCount: '42',
+				sourceNetworkId: '1',
+				leafIndex: '100'
 			});
 
 			await validateClaimProofQueryParams(mockContext, mockNext);
@@ -593,20 +553,20 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockHandleError).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.objectContaining({
-					name: "BadRequestError",
-					context: "validateProofQueryParams",
+					name: 'BadRequestError',
+					context: 'validateProofQueryParams'
 				})
 			);
 			expect(mockNext).not.toHaveBeenCalled();
 			expect(mockContext.set).not.toHaveBeenCalled();
 		});
 
-		test("should handle empty network param when query is valid", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "" });
+		test('should handle empty network param when query is valid', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: '' });
 			mockContext.req.query.mockReturnValueOnce({
-				depositCount: "42",
-				sourceNetworkId: "1",
-				leafIndex: "100",
+				depositCount: '42',
+				sourceNetworkId: '1',
+				leafIndex: '100'
 			});
 
 			await validateClaimProofQueryParams(mockContext, mockNext);
@@ -616,16 +576,16 @@ describe("Validate Query Params Middlewares", () => {
 			const error = errorCall[1];
 
 			expect(error).toBeInstanceOf(MockBadRequestError);
-			expect(error.context).toBe("validateProofQueryParams");
+			expect(error.context).toBe('validateProofQueryParams');
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		test("should handle missing network param when query is valid", async () => {
+		test('should handle missing network param when query is valid', async () => {
 			mockContext.req.param.mockReturnValueOnce({});
 			mockContext.req.query.mockReturnValueOnce({
-				depositCount: "42",
-				sourceNetworkId: "1",
-				leafIndex: "100",
+				depositCount: '42',
+				sourceNetworkId: '1',
+				leafIndex: '100'
 			});
 
 			await validateClaimProofQueryParams(mockContext, mockNext);
@@ -635,16 +595,15 @@ describe("Validate Query Params Middlewares", () => {
 		});
 	});
 
-	describe("error handling consistency", () => {
-		test("should call handleError with a response context wired to the Hono context", async () => {
-			mockContext.req.param.mockReturnValue({ network: "invalid" });
+	describe('error handling consistency', () => {
+		test('should call handleError with a response context wired to the Hono context', async () => {
+			mockContext.req.param.mockReturnValue({ network: 'invalid' });
 			mockContext.req.query.mockReturnValue({});
 
 			await validateTransactionQueryParams(mockContext, mockNext);
 
 			expect(mockHandleError).toHaveBeenCalledTimes(1);
-			const [responseContext, error] = mockHandleError.mock
-				.calls[0] as any;
+			const [responseContext, error] = mockHandleError.mock.calls[0] as any;
 			expect(error).toBeInstanceOf(MockBadRequestError);
 			// The response context passed to handleError must delegate to the
 			// Hono context's status/json methods.
@@ -654,7 +613,7 @@ describe("Validate Query Params Middlewares", () => {
 			expect(mockContext.json).toHaveBeenCalledWith({ ok: false });
 		});
 
-		test("should create BadRequestError with proper structure", async () => {
+		test('should create BadRequestError with proper structure', async () => {
 			mockContext.req.param.mockReturnValue({});
 			mockContext.req.query.mockReturnValue({});
 
@@ -665,31 +624,25 @@ describe("Validate Query Params Middlewares", () => {
 
 			expect(error).toBeInstanceOf(MockBadRequestError);
 			expect(error).toBeDefined();
-			expect(error.name).toBe("BadRequestError");
-			expect(error.context).toBe("validateTransactionQueryParams");
+			expect(error.name).toBe('BadRequestError');
+			expect(error.context).toBe('validateTransactionQueryParams');
 			expect(error.details).toBeDefined();
 		});
 	});
 
-	describe("context setting behavior", () => {
-		test("should set validated data only on successful validation", async () => {
-			mockContext.req.param.mockReturnValueOnce({ network: "testnet" });
-			mockContext.req.query.mockReturnValueOnce({ limit: "10" });
+	describe('context setting behavior', () => {
+		test('should set validated data only on successful validation', async () => {
+			mockContext.req.param.mockReturnValueOnce({ network: 'testnet' });
+			mockContext.req.query.mockReturnValueOnce({ limit: '10' });
 
 			await validateTransactionQueryParams(mockContext, mockNext);
 
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedQuery",
-				expect.any(Object)
-			);
-			expect(mockContext.set).toHaveBeenCalledWith(
-				"validatedParams",
-				expect.any(Object)
-			);
+			expect(mockContext.set).toHaveBeenCalledWith('validatedQuery', expect.any(Object));
+			expect(mockContext.set).toHaveBeenCalledWith('validatedParams', expect.any(Object));
 			expect(mockContext.set).toHaveBeenCalledTimes(2);
 		});
 
-		test("should not set context on validation failure", async () => {
+		test('should not set context on validation failure', async () => {
 			mockContext.req.param.mockReturnValueOnce({});
 			mockContext.req.query.mockReturnValueOnce({});
 
