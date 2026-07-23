@@ -1,4 +1,4 @@
-import { ApiError, Logger, setupHealthCheckServer } from '@polygonlabs/servercore';
+import { ApiError, Logger } from '@polygonlabs/servercore';
 
 // Initialize the logger globally
 Logger.create({
@@ -16,6 +16,7 @@ import { MongoDBClient } from '@polygonlabs/servercore-mongo';
 import { BridgeAPIConsumer } from './bridge_api_consumer.ts';
 import { ClaimReadinessConsumer } from './claim_readiness_consumer.ts';
 import { COLLECTIONS_CONFIG } from './config.ts';
+import { startHealthCheckServer } from './health_check_server.ts';
 import { TokenMappingsMapper } from './mappers/mapping.ts';
 import { MetadataMapper } from './mappers/metadata.ts';
 import { TransactionMapper } from './mappers/transaction.ts';
@@ -107,7 +108,7 @@ async function start(): Promise<void> {
 			transactionService
 		);
 
-		setupHealthCheckServer([], Number(process.env.HEALTH_CHECK_PORT || '3001'), async () => {
+		startHealthCheckServer(Number(process.env.HEALTH_CHECK_PORT || '3001'), async () => {
 			try {
 				// Liveness is gated solely on the DB connection — a
 				// round-trip command surfaces a dropped/unauthenticated
