@@ -4,19 +4,26 @@
 	"version": "1.6.12",
 	"module": "src/index.ts",
 	"exports": "./dist/",
+	"files": [
+		"dist"
+	],
 	"scripts": {
-		"build": "tsup",
-		"dev": "bun run --hot src/index.ts",
-		"start": "bun dist/index.js",
-		"test": "bun test"
-	},
-	"devDependencies": {
-		"@types/bun": "latest"
-	},
-	"peerDependencies": {
-		"typescript": "^5"
+		"build": "tsc -b tsconfig.lib.json",
+		"dev": "node --conditions @polygonlabs/source --watch src/index.ts",
+		"start": "node dist/index.js",
+		"test": "vitest run",
+		"typecheck": "tsc -b"
 	},
 	"dependencies": {
-		"@agglayer/bridge-hub-types": "workspace:*"
+		"@agglayer/bridge-hub-types": "workspace:*",
+		"@polygonlabs/servercore": "^1.5.0",
+		"@polygonlabs/servercore-mongo": "^0.1.0"
+	},
+	"devDependencies": {
+		"@tsconfig/node-ts": "^23.0.0",
+		"@tsconfig/node24": "^24.0.0",
+		"@types/node": "^24.0.0",
+		"typescript": "^5",
+		"vitest": "^4.1.5"
 	}
 }

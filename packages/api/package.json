@@ -4,23 +4,32 @@
 	"version": "1.7.3",
 	"module": "src/server.ts",
 	"exports": "./dist/",
+	"files": [
+		"dist"
+	],
 	"scripts": {
-		"build": "tsup",
-		"dev": "bun run --hot src/server.ts",
-		"start": "bun dist/server.js",
-		"test": "bun test"
+		"build": "tsc -b tsconfig.lib.json",
+		"dev": "node --conditions @polygonlabs/source --watch src/server.ts",
+		"start": "node dist/server.js",
+		"test": "vitest run",
+		"typecheck": "tsc -b"
 	},
 	"devDependencies": {
-		"@types/bun": "latest"
-	},
-	"peerDependencies": {
-		"typescript": "^5"
+		"@tsconfig/node-ts": "^23.0.0",
+		"@tsconfig/node24": "^24.0.0",
+		"@types/node": "^24.0.0",
+		"typescript": "^5",
+		"vitest": "^4.1.5"
 	},
 	"dependencies": {
 		"@agglayer/bridge-hub-types": "workspace:*",
+		"@hono/node-server": "^1.13.5",
 		"@hono/zod-openapi": "^1.1.2",
+		"@polygonlabs/servercore": "^1.5.0",
+		"@polygonlabs/servercore-mongo": "^0.1.0",
 		"@scalar/hono-api-reference": "^0.9.19",
 		"hono": "^4.9.0",
+		"mongodb": "^7.0.0",
 		"viem": "2.38.1",
 		"zod": "^4.0.17"
 	}
