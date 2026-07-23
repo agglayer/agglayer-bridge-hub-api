@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.14](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.13...bridge-hub-consumer@1.6.14) (2026-07-23)
+
+
+### Bug Fixes
+
+* **consumer:** replace servercore's Bun-only health-check server with a Node-native one ([58bc1f0](https://github.com/agglayer/agglayer-bridge-hub-api/commit/58bc1f0d2e588c95f1c679cc8f3d75108060b5d6)), closes [#131](https://github.com/agglayer/agglayer-bridge-hub-api/issues/131) [agglayer-bridge-hub-api#127](https://github.com/agglayer-bridge-hub-api/issues/127)
+
+
+
+
+
 ## [1.6.13](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.12...bridge-hub-consumer@1.6.13) (2026-07-23)
 
 **Note:** Version bump only for package bridge-hub-consumer
