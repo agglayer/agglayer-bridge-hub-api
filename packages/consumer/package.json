@@ -16,12 +16,17 @@
 	},
 	"dependencies": {
 		"@agglayer/bridge-hub-types": "workspace:*",
+		"@polygonlabs/express": "^4.1.2",
+		"@polygonlabs/logger": "^3.0.2",
 		"@polygonlabs/servercore": "^1.5.0",
-		"@polygonlabs/servercore-mongo": "^0.1.0"
+		"@polygonlabs/servercore-mongo": "^0.1.0",
+		"@polygonlabs/verror": "^1.1.2",
+		"express": "^5.2.1"
 	},
 	"devDependencies": {
 		"@tsconfig/node-ts": "^23.0.0",
 		"@tsconfig/node24": "^24.0.0",
+		"@types/express": "^5.0.6",
 		"@types/node": "^24.0.0",
 		"typescript": "^5",
 		"vitest": "^4.1.5"

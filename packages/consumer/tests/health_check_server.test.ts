@@ -1,22 +1,19 @@
-import { describe, test, expect, beforeAll } from 'vitest';
-
-import { Logger } from '@polygonlabs/servercore';
+import { beforeAll, describe, expect, test } from 'vitest';
 
 import { startHealthCheckServer } from '../src/health_check_server.ts';
 
 // Regression test for agglayer-bridge-hub-api#127 / the 2026-07-23 incident:
 // @polygonlabs/servercore's setupHealthCheckServer calls Bun.serve()
 // unconditionally, which throws `ReferenceError: Bun is not defined` under
-// Node. This exercises the Node-native replacement end to end over a real
-// HTTP request, which the old code could never do under Node at all.
+// Node. This exercises the @polygonlabs/express replacement over a real
+// HTTP request, which the old code could never do at all under Node.
 describe('startHealthCheckServer', () => {
 	const port = 34521;
 	const baseUrl = `http://localhost:${port}/health-check`;
 	const state = { shouldSucceed: true };
 
-	beforeAll(() => {
-		Logger.create({});
-		startHealthCheckServer(port, async () => {
+	beforeAll(async () => {
+		await startHealthCheckServer(port, async () => {
 			if (!state.shouldSucceed) {
 				throw new Error('database unreachable');
 			}
