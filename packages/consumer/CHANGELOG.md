@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.15](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.14...bridge-hub-consumer@1.6.15) (2026-07-27)
+
+
+### Bug Fixes
+
+* **consumer:** use @polygonlabs/express for the health-check server ([6f31da8](https://github.com/agglayer/agglayer-bridge-hub-api/commit/6f31da80b6756e1579181c73f037be84231d1ff6)), closes [#117](https://github.com/agglayer/agglayer-bridge-hub-api/issues/117)
+
+
+
+
+
 ## [1.6.14](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.13...bridge-hub-consumer@1.6.14) (2026-07-23)
 
 
