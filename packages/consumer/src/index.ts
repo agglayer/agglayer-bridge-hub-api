@@ -108,7 +108,7 @@ async function start(): Promise<void> {
 			transactionService
 		);
 
-		startHealthCheckServer(Number(process.env.HEALTH_CHECK_PORT || '3001'), async () => {
+		await startHealthCheckServer(Number(process.env.HEALTH_CHECK_PORT || '3001'), async () => {
 			try {
 				// Liveness is gated solely on the DB connection — a
 				// round-trip command surfaces a dropped/unauthenticated
