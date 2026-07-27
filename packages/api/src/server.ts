@@ -1,23 +1,34 @@
-import { serve } from '@hono/node-server';
-import { OpenAPIHono } from '@hono/zod-openapi';
-import { Scalar } from '@scalar/hono-api-reference';
-import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
+import cors from 'cors';
+import express from 'express';
 
+import { createErrorHandler, notFoundHandler, setupLogger } from '@polygonlabs/express';
+import { createRegistryRouter } from '@polygonlabs/express/registry';
+import { createLogger } from '@polygonlabs/logger';
 import { Logger } from '@polygonlabs/servercore';
 import { MongoDBClient } from '@polygonlabs/servercore-mongo';
 
 import { BRIDGE_ADDRESSES, MAPPINGS_COLLECTIONS, TRANSACTIONS_COLLECTIONS } from './config.ts';
-import { createHealthCheckRoutes } from './routes/health_check.ts';
-import { createRouter } from './routes/index.ts';
+import { HealthCheckController } from './controllers/health_check.ts';
+import { MappingsController } from './controllers/mappings.ts';
+import { ProofController } from './controllers/proof.ts';
+import { TokenMetadataController } from './controllers/token_metadata.ts';
+import { TransactionsController } from './controllers/transactions.ts';
+import { buildRegistry } from './registry.ts';
+import { createOpenApiRouter } from './routes/openapi.ts';
 import { MappingsService } from './services/mappings.ts';
 import { ProofService } from './services/proof.ts';
 import { TokenMetadataService } from './services/token_metadata.ts';
 import { TransactionService } from './services/transactions.ts';
 
-const app = new OpenAPIHono();
+const app = express();
 
 async function bootstrap(): Promise<void> {
+	// @polygonlabs/servercore's Logger is a process-wide singleton used
+	// directly by the service layer (proof.ts, token_metadata.ts) — kept
+	// as-is. @polygonlabs/logger below is a second, separate logger instance
+	// that only powers @polygonlabs/express's request-scoped setupLogger/
+	// getLogger; migrating the service layer off servercore's Logger is
+	// tracked separately (epic #117), not part of this framework migration.
 	Logger.create({
 		sentry: {
 			dsn: process.env.SENTRY_DSN,
@@ -27,6 +38,8 @@ async function bootstrap(): Promise<void> {
 			level: 'info'
 		}
 	});
+
+	const httpLogger = await createLogger();
 
 	const database = new MongoDBClient(
 		process.env.MONGODB_CONNECTION_URI || 'mongodb://localhost:27017',
@@ -74,54 +87,48 @@ async function bootstrap(): Promise<void> {
 
 	const proofService = new ProofService(proofConfig);
 
-	// Middlewares
-	app.use('*', logger()); // Logs all requests
-	app.use('*', cors()); // Enables CORS for all routes
+	const transactionsController = new TransactionsController(transactionService);
+	const mappingsController = new MappingsController(mappingsService);
+	const proofController = new ProofController(proofService, transactionService);
+	const tokenMetadataController = new TokenMetadataController(tokenMetadataService);
+	const healthCheckController = new HealthCheckController();
 
-	// The OpenAPI documentation will be available at /openapi
-	app.doc('/openapi', {
-		openapi: '3.0.0',
-		info: {
-			version: 'v1',
-			title: 'Agglayer Bridge Hub API',
-			description:
-				'The Agglayer Bridge Hub API provides access to query agglayer bridge transaction statuses, retrieve token address mappings across chains, generate claim proofs for asset withdrawals, and access comprehensive token metadata. Supports mainnet, testnet, and devnet environments for seamless integration with bridge-enabled applications.'
-		},
-		servers: [
-			{
-				url: process.env.API_BASE_URL || 'http://localhost:3001',
-				description:
-					process.env.NODE_ENV === 'prod-api' ? 'Production server' : 'Development server'
-			}
-		]
-	});
+	app.use(cors());
+	app.use(express.json());
 
-	// Scalar API Reference UI
-	app.get(
-		'/docs',
-		Scalar({
-			theme: 'kepler',
-			url: '/openapi',
-			pageTitle: 'Agglayer Bridge Hub API Documentation'
+	// `setupLogger` mounts the per-request child-logger middleware AND primes
+	// the out-of-request fallback that `getLogger()` reads.
+	app.use(setupLogger(httpLogger));
+
+	const registry = buildRegistry();
+
+	// Routes are derived from the `TypedRegistry` — the registry router
+	// validates each request against the registered Zod schemas (decoded
+	// `req.params`/`req.query` reach handlers as runtime types) and
+	// re-encodes responses on the way out against the declared response
+	// schema for whatever status the handler actually sent.
+	const registryRouter = createRegistryRouter({ registry })
+		.implement({
+			checkServiceHealth: healthCheckController.checkServiceHealth,
+			getTransactions: transactionsController.getTransactions,
+			getTransactionByDepositCount: transactionsController.getTransactionByDepositCount,
+			getMappings: mappingsController.getMappings,
+			getMappingsByToken: mappingsController.getMappingsByToken,
+			getClaimProof: proofController.getProof,
+			getTokenMetadata: tokenMetadataController.getTokenMetadata
 		})
-	);
+		.toExpress();
 
-	// Register routes with network parameter schema
-	const router = createRouter(
-		transactionService,
-		mappingsService,
-		proofService,
-		tokenMetadataService
-	);
-	const healthCheckRoutes = createHealthCheckRoutes();
+	app.use(registryRouter);
 
-	app.route('/:network', router);
-	app.route('/health-check', healthCheckRoutes);
+	// Out-of-band routes deliberately not in the registry: the spec and
+	// interactive docs serve themselves.
+	app.use(createOpenApiRouter(registry));
+
+	app.use(notFoundHandler);
+	app.use(createErrorHandler());
 }
 
 await bootstrap();
 
-serve({
-	fetch: app.fetch,
-	port: Number(process.env.PORT) || 3001
-});
+app.listen(Number(process.env.PORT) || 3001);

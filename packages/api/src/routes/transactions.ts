@@ -1,111 +1,83 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import type { OperationsManifest, TypedRegistry } from '@polygonlabs/openapi-registry';
 
 import {
 	TransactionByDepositCountResponseSchema,
 	TransactionResponseSchema
 } from '@agglayer/bridge-hub-types';
 
-import type { TransactionService } from '../services/transactions.ts';
-
-import { TransactionsController } from '../controllers/transactions.ts';
 import {
-	validateTransactionQueryParams,
-	validateTransactionByDepositCountQueryParams
-} from '../middlewares/validate_query_params.ts';
-import {
-	TransactionsQuerySchema,
+	ApiErrorResponseSchema,
+	NetworkSchema,
 	TransactionsByDepositCountQuerySchema,
-	NetworkSchema
+	TransactionsQuerySchema
 } from '../schemas/index.ts';
 
-const createTransactionsRoutes = (transactionService: TransactionService) => {
-	const transactionsRoutes = new OpenAPIHono();
-	const transactionsController = new TransactionsController(transactionService);
-
-	const ErrorResponseSchema = z.object({
-		success: z.boolean(),
-		error: z.string()
-	});
-
-	// GET /transactions route
-	const getTransactionsRoute = createRoute({
-		method: 'get',
-		path: '/',
-		tags: ['transactions'],
-		summary: 'Get bridge transactions',
-		description: 'Retrieve a paginated list of bridge transactions with optional filtering',
-		request: {
-			params: NetworkSchema,
-			query: TransactionsQuerySchema
-		},
-		middleware: [validateTransactionQueryParams],
-		responses: {
-			200: {
-				content: {
-					'application/json': {
-						schema: TransactionResponseSchema
-					}
-				},
-				description: 'Successful response with bridge transactions'
+export const addTransactionsRoutes = <Prev extends OperationsManifest>(r: TypedRegistry<Prev>) =>
+	r
+		.registerPath({
+			operationId: 'getTransactions',
+			method: 'get',
+			path: '/{network}/transactions',
+			tags: ['transactions'],
+			summary: 'Get bridge transactions',
+			description: 'Retrieve a paginated list of bridge transactions with optional filtering',
+			request: {
+				params: NetworkSchema,
+				query: TransactionsQuerySchema
 			},
-			400: {
-				content: {
-					'application/json': {
-						schema: ErrorResponseSchema
-					}
+			responses: {
+				200: {
+					content: {
+						'application/json': {
+							schema: TransactionResponseSchema
+						}
+					},
+					description: 'Successful response with bridge transactions'
 				},
-				description: 'Bad request - invalid parameters'
+				400: {
+					content: {
+						'application/json': {
+							schema: ApiErrorResponseSchema
+						}
+					},
+					description: 'Bad request - invalid parameters'
+				}
 			}
-		}
-	});
-
-	// GET /transactions/:sourceNetworkId/:depositCount route
-	const getTransactionByDepositCountRoute = createRoute({
-		method: 'get',
-		path: '/{sourceNetworkId}/{depositCount}',
-		tags: ['transactions'],
-		summary: 'Get transaction by deposit count',
-		description: 'Retrieve a specific bridge transaction by source network ID and deposit count',
-		request: {
-			params: TransactionsByDepositCountQuerySchema
-		},
-		middleware: [validateTransactionByDepositCountQueryParams],
-		responses: {
-			200: {
-				content: {
-					'application/json': {
-						schema: TransactionByDepositCountResponseSchema
-					}
-				},
-				description: 'Successful response with transaction details'
+		})
+		.registerPath({
+			operationId: 'getTransactionByDepositCount',
+			method: 'get',
+			path: '/{network}/transactions/{sourceNetworkId}/{depositCount}',
+			tags: ['transactions'],
+			summary: 'Get transaction by deposit count',
+			description: 'Retrieve a specific bridge transaction by source network ID and deposit count',
+			request: {
+				params: TransactionsByDepositCountQuerySchema
 			},
-			400: {
-				content: {
-					'application/json': {
-						schema: ErrorResponseSchema
-					}
+			responses: {
+				200: {
+					content: {
+						'application/json': {
+							schema: TransactionByDepositCountResponseSchema
+						}
+					},
+					description: 'Successful response with transaction details'
 				},
-				description: 'Bad request - invalid parameters'
-			},
-			404: {
-				content: {
-					'application/json': {
-						schema: ErrorResponseSchema
-					}
+				400: {
+					content: {
+						'application/json': {
+							schema: ApiErrorResponseSchema
+						}
+					},
+					description: 'Bad request - invalid parameters'
 				},
-				description: 'Transaction not found'
+				404: {
+					content: {
+						'application/json': {
+							schema: ApiErrorResponseSchema
+						}
+					},
+					description: 'Transaction not found'
+				}
 			}
-		}
-	});
-
-	// Register routes - middleware is already defined in createRoute
-	transactionsRoutes.openapi(getTransactionsRoute, transactionsController.getTransactions);
-	transactionsRoutes.openapi(
-		getTransactionByDepositCountRoute,
-		transactionsController.getTransactionByDepositCount
-	);
-
-	return transactionsRoutes;
-};
-
-export { createTransactionsRoutes };
+		});

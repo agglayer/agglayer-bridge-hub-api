@@ -1,21 +1,14 @@
-import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
+import type { OperationsManifest, TypedRegistry } from '@polygonlabs/openapi-registry';
 
 import { ClaimProofResponseSchema } from '@agglayer/bridge-hub-types';
 
-import type { ProofService } from '../services/proof.ts';
-import type { TransactionService } from '../services/transactions.ts';
+import { ApiErrorResponseSchema, ClaimProofQuerySchema, NetworkSchema } from '../schemas/index.ts';
 
-import { ProofController } from '../controllers/proof.ts';
-import { validateClaimProofQueryParams } from '../middlewares/validate_query_params.ts';
-import { ClaimProofQuerySchema, NetworkSchema } from '../schemas/index.ts';
-
-const createProofRoutes = (proofService: ProofService, transactionService: TransactionService) => {
-	const proofRoutes = new OpenAPIHono();
-	const proofController = new ProofController(proofService, transactionService);
-
-	const getClaimProofRoute = createRoute({
+export const addProofRoutes = <Prev extends OperationsManifest>(r: TypedRegistry<Prev>) =>
+	r.registerPath({
+		operationId: 'getClaimProof',
 		method: 'get',
-		path: '/',
+		path: '/{network}/claim-proof',
 		tags: ['proof'],
 		summary: 'Get claim proof',
 		description: 'Retrieve the claim proof for a specific transaction',
@@ -23,7 +16,6 @@ const createProofRoutes = (proofService: ProofService, transactionService: Trans
 			params: NetworkSchema,
 			query: ClaimProofQuerySchema
 		},
-		middleware: [validateClaimProofQueryParams],
 		responses: {
 			200: {
 				content: {
@@ -34,17 +26,20 @@ const createProofRoutes = (proofService: ProofService, transactionService: Trans
 				description: 'Successful response with claim proof'
 			},
 			400: {
-				description: 'Bad request - invalid parameters'
+				content: {
+					'application/json': {
+						schema: ApiErrorResponseSchema
+					}
+				},
+				description: 'Bad request - invalid parameters or transaction not ready to claim'
 			},
 			404: {
+				content: {
+					'application/json': {
+						schema: ApiErrorResponseSchema
+					}
+				},
 				description: 'Claim proof not found'
 			}
 		}
 	});
-
-	proofRoutes.openapi(getClaimProofRoute, proofController.getProof);
-
-	return proofRoutes;
-};
-
-export { createProofRoutes };

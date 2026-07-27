@@ -1,4 +1,4 @@
-import { z } from '@hono/zod-openapi';
+import { z } from 'zod';
 
 import { TransactionStatusSchema } from '@agglayer/bridge-hub-types';
 

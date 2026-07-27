@@ -1,14 +1,32 @@
-import { Hono } from 'hono';
+import { z } from 'zod';
 
-import { HealthCheckController } from '../controllers/health_check.ts';
+import type { OperationsManifest, TypedRegistry } from '@polygonlabs/openapi-registry';
 
-const createHealthCheckRoutes = () => {
-	const healthCheckRoutes = new Hono();
-	const healthCheckController = new HealthCheckController();
+import { ResponseSchema } from '@agglayer/bridge-hub-types';
 
-	healthCheckRoutes.get('/', healthCheckController.checkServiceHealth);
+export const HealthCheckResponseSchema = ResponseSchema(
+	z.object({
+		status: z.string(),
+		message: z.string()
+	})
+);
 
-	return healthCheckRoutes;
-};
-
-export { createHealthCheckRoutes };
+export const addHealthCheckRoutes = <Prev extends OperationsManifest>(r: TypedRegistry<Prev>) =>
+	r.registerPath({
+		operationId: 'checkServiceHealth',
+		method: 'get',
+		path: '/health-check',
+		tags: ['health-check'],
+		summary: 'Service health check',
+		description: 'Reports whether the API and its dependencies are working correctly',
+		responses: {
+			200: {
+				content: {
+					'application/json': {
+						schema: HealthCheckResponseSchema
+					}
+				},
+				description: 'Service is healthy'
+			}
+		}
+	});
