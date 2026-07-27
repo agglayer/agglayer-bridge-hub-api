@@ -831,16 +831,16 @@ To add support for a new network to your deployment:
 
 Networks are identified by their chain ID. Common networks:
 
-| Network ID | Network Name     | Type      | Common Use                     |
-| ---------- | ---------------- | --------- | ------------------------------ |
-| 0          | Ethereum Mainnet | L1        | Source for bridges to L2s      |
-| 1          | zkEVM Mainnet    | L2        | Polygon zkEVM                  |
-| 137        | Polygon PoS      | Sidechain | Polygon PoS chain              |
-| 2442       | Cardona Testnet  | L2        | zkEVM testnet                  |
-| 1101       | Polygon zkEVM    | L2        | zkEVM mainnet (alternative ID) |
-| 42161      | Arbitrum One     | L2        | Arbitrum mainnet               |
+| Network ID | Network Name     | Type      | Common Use                                    |
+| ---------- | ---------------- | --------- | ---------------------------------------------- |
+| 0          | Ethereum Mainnet | L1        | Source for bridges to L2s                      |
+| 1          | zkEVM Mainnet    | L2        | Polygon zkEVM — **decommissioned**, network sunset |
+| 137        | Polygon PoS      | Sidechain | Polygon PoS chain                              |
+| 2442       | Cardona Testnet  | L2        | zkEVM testnet — **decommissioned**, network sunset |
+| 1101       | Polygon zkEVM    | L2        | zkEVM mainnet (alternative ID) — **decommissioned**, network sunset |
+| 42161      | Arbitrum One     | L2        | Arbitrum mainnet                               |
 
-**Note**: Actual network IDs depend on Agglayer configuration. Check with network operators for canonical IDs.
+**Note**: Actual network IDs depend on Agglayer configuration. Check with network operators for canonical IDs. zkEVM mainnet and its Cardona testnet are retained here only as illustrative examples elsewhere in this doc — do not deploy new consumer/auto-claim instances for them.
 
 ### Resource Requirements Per Network
 
