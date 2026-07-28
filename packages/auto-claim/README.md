@@ -1,5 +1,14 @@
 # Auto-Claim Service
 
+> [!IMPORTANT]
+> **Ownership of this service has transferred to the AgLayer team.**
+>
+> Ownership and ongoing maintenance of auto-claim-hub have migrated to the
+> AgLayer team as part of AgLayer ecosystem consolidation. This is the same
+> running service under new ownership — not a shutdown or a code migration to
+> a successor entity. Apps Team is no longer the maintainer; direct questions
+> and changes to the AgLayer team.
+
 Automated service that claims ready bridge transactions on behalf of users. For complete system architecture and deployment topology, see [ARCHITECTURE.md](../../ARCHITECTURE.md).
 
 ## Overview
