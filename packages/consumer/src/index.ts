@@ -7,7 +7,7 @@ Logger.create({
 		level: 'error'
 	},
 	console: {
-		level: 'info'
+		level: process.env.LOG_LEVEL || 'info'
 	}
 });
 
