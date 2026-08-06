@@ -7,9 +7,11 @@ import type { ClaimProof, IHubTransaction } from '@agglayer/bridge-hub-types';
 
 import { Logger } from '@polygonlabs/servercore';
 
+import type { ClaimCircuitBreakerOptions } from './circuit-breaker.ts';
 import type { TransactionService } from './transaction.ts';
 
 import { BRIDGE_ABI } from '../constants/bridge.ts';
+import { ClaimCircuitBreaker } from './circuit-breaker.ts';
 
 /**
  * Service for automatically claiming ready bridge transactions.
@@ -30,11 +32,13 @@ export class AutoClaimService {
 	private readonly bridgeContract: GetContractReturnType<typeof BRIDGE_ABI, WalletClient>;
 	private readonly transactionService: TransactionService;
 	private readonly walletClient: WalletClient;
+	private readonly circuitBreaker: ClaimCircuitBreaker;
 
 	constructor(
 		bridgeContractAddress: `0x${string}`,
 		walletClient: WalletClient,
-		transactionService: TransactionService
+		transactionService: TransactionService,
+		circuitBreakerOptions?: ClaimCircuitBreakerOptions
 	) {
 		this.bridgeContract = getContract({
 			address: bridgeContractAddress,
@@ -43,6 +47,7 @@ export class AutoClaimService {
 		});
 		this.transactionService = transactionService;
 		this.walletClient = walletClient;
+		this.circuitBreaker = new ClaimCircuitBreaker(circuitBreakerOptions);
 	}
 
 	private async sendTransaction(
@@ -59,6 +64,7 @@ export class AutoClaimService {
 		try {
 			Logger.info({
 				location: 'AutoClaimService.sendTransaction.start',
+				message: `submitting claim for sourceNetwork=${bridgeDetails.sourceNetwork} depositCount=${bridgeDetails.depositCount}`,
 				bridgeDetails
 			});
 
@@ -112,6 +118,7 @@ export class AutoClaimService {
 		} catch (error: any) {
 			Logger.error({
 				location: 'AutoClaimService.sendTransaction.error',
+				message: `claim submission failed for sourceNetwork=${bridgeDetails.sourceNetwork} depositCount=${bridgeDetails.depositCount}`,
 				error: error,
 				data: bridgeDetails
 			});
@@ -120,10 +127,27 @@ export class AutoClaimService {
 		}
 	}
 
+	/**
+	 * Logs (once, on the trip transition) and records that a transaction has permanently
+	 * failed its claim-proof lookup or claim submission, per {@link ClaimCircuitBreaker}.
+	 */
+	private recordClaimFailure(sourceNetwork: number, depositCount: number, breakerKey: string) {
+		const justTripped = this.circuitBreaker.recordFailure(breakerKey);
+		if (justTripped) {
+			Logger.warn({
+				location: 'AutoClaimService.claimTransactions.circuitBreakerTripped',
+				message: `circuit breaker tripped for sourceNetwork=${sourceNetwork} depositCount=${depositCount} — skipping on future ticks after repeated claim-proof/claim failures`,
+				sourceNetwork,
+				depositCount
+			});
+		}
+	}
+
 	async claimTransactions() {
 		try {
 			Logger.info({
 				location: 'AutoClaimService.claimTransactions',
+				message: 'claim tick started',
 				call: 'started'
 			});
 			const transactions: IHubTransaction[] =
@@ -133,30 +157,49 @@ export class AutoClaimService {
 				if (!transaction.leafIndexForProof) {
 					continue;
 				}
+
+				const breakerKey = ClaimCircuitBreaker.keyFor(
+					transaction.sourceNetwork,
+					transaction.depositCount
+				);
+				if (this.circuitBreaker.shouldSkip(breakerKey)) {
+					continue;
+				}
+
 				const proof = await this.transactionService.getProof(
 					transaction.sourceNetwork,
 					transaction.depositCount,
 					transaction.leafIndexForProof
 				);
+				if (!proof) {
+					this.recordClaimFailure(transaction.sourceNetwork, transaction.depositCount, breakerKey);
+					continue;
+				}
+
 				const globalIndex = transaction.globalIndex
 					? BigInt(transaction.globalIndex)
 					: this.transactionService.computeGlobalIndex(
 							transaction.depositCount,
 							transaction.sourceNetwork
 						);
-				if (proof) {
-					await this.sendTransaction(transaction, proof, globalIndex);
+				const txHash = await this.sendTransaction(transaction, proof, globalIndex);
+				if (txHash) {
+					this.circuitBreaker.recordSuccess(breakerKey);
+				} else {
+					this.recordClaimFailure(transaction.sourceNetwork, transaction.depositCount, breakerKey);
 				}
 			}
 
 			Logger.info({
 				location: 'AutoClaimService.claimTransactions',
+				message: 'claim tick completed',
 				call: 'completed'
 			});
 			return;
 		} catch (error: any) {
 			Logger.error({
 				location: 'AutoClaimService.claimTransactions',
+				message: `claim tick failed: ${error.message ? error.message : error}`,
 				error: error.message ? error.message : error
 			});
 			throw error;

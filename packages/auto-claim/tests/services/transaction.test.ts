@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { describe, test, expect, beforeEach, beforeAll, vi } from 'vitest';
 
 import { Logger } from '@polygonlabs/servercore';
 
@@ -417,6 +417,50 @@ describe('TransactionService', () => {
 			// Service handles malformed response and exits loop gracefully
 			const result = await service.getPendingTransactions();
 			expect(result).toHaveLength(0);
+		});
+	});
+
+	describe('logging', () => {
+		// Every Logger call in the package must carry an explicit `message` — prior to this,
+		// log lines rendered with an empty message, making them unreadable in Datadog.
+		test('getProof logs an explicit message on fetch failure', async () => {
+			const errorSpy = vi.spyOn(Logger, 'error');
+
+			const responses = new Map([
+				[
+					`${bridgeHubAPIUrl}/claim-proof?sourceNetworkId=1&leafIndex=10&depositCount=42`,
+					new Error('Network error')
+				]
+			]);
+			globalThis.fetch = createMockFetch(responses);
+
+			await service.getProof(1, 42, 10);
+
+			expect(errorSpy).toHaveBeenCalled();
+			const loggedArg = errorSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+			expect(loggedArg).property('message').a('string');
+
+			errorSpy.mockRestore();
+		});
+
+		test('getPendingTransactions logs an explicit message on success', async () => {
+			const infoSpy = vi.spyOn(Logger, 'info');
+
+			const responses = new Map([
+				[
+					`${bridgeHubAPIUrl}/transactions?destinationNetworkIds=${destinationNetwork}&sourceNetworkIds=1,137&status=READY_TO_CLAIM&limit=50`,
+					mockEmptyTransactionResponse
+				]
+			]);
+			globalThis.fetch = createMockFetch(responses);
+
+			await service.getPendingTransactions();
+
+			expect(infoSpy).toHaveBeenCalled();
+			const loggedArg = infoSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+			expect(loggedArg).property('message').a('string');
+
+			infoSpy.mockRestore();
 		});
 	});
 });
