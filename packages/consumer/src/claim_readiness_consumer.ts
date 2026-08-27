@@ -49,6 +49,9 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 	private async syncL1InfoTree(): Promise<void> {
 		let hasNext = true;
 		let afterId = undefined;
+		let scanned = 0;
+		let promoted = 0;
+		let failed = 0;
 
 		while (hasNext) {
 			const bridgedTransactions = await this.transactionService.getBridgedTransactions(
@@ -56,7 +59,7 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 				afterId
 			);
 			if (bridgedTransactions.length === 0) {
-				Logger.info({
+				Logger.debug({
 					location: 'ClaimReadinessConsumer',
 					function: 'syncL1InfoTree',
 					networkId: this.config.networkId,
@@ -66,12 +69,13 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 			}
 
 			for (const tx of bridgedTransactions) {
+				scanned++;
 				try {
-					Logger.info({
+					Logger.debug({
 						location: 'ClaimReadinessConsumer',
 						function: 'syncL1InfoTree',
 						networkId: this.config.networkId,
-						message: `NetId ${this.config.networkId}Processing transaction ${tx.depositCount} on network ${tx.sourceNetwork}`
+						message: `NetId ${this.config.networkId} Processing transaction ${tx.depositCount} on network ${tx.sourceNetwork}`
 					});
 
 					afterId = tx.hubUID;
@@ -99,22 +103,42 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 						tx.sourceNetwork,
 						leafIndex
 					);
+					promoted++;
 				} catch (error) {
-					Logger.info({
+					failed++;
+					// A missing leaf index is expected steady-state — the deposit
+					// may not yet be included in the L1 info tree, and the tx is
+					// retried next tick. Logged at debug so a large not-yet-ready
+					// backlog doesn't flood the logs every tick; the per-tick
+					// summary below carries the counts.
+					Logger.debug({
 						location: 'ClaimReadinessConsumer',
 						function: 'syncL1InfoTree',
 						networkId: this.config.networkId,
-						message: `NetId ${this.config.networkId}Error processing transaction ${tx.depositCount} on source network ${tx.sourceNetwork}`,
+						message: `NetId ${this.config.networkId} Error processing transaction ${tx.depositCount} on source network ${tx.sourceNetwork}`,
 						error: error instanceof Error ? error.message : String(error)
 					});
 				}
 			}
 		}
+
+		Logger.info({
+			location: 'ClaimReadinessConsumer',
+			function: 'syncL1InfoTree',
+			networkId: this.config.networkId,
+			message: `NetId ${this.config.networkId} L1 info tree sync complete`,
+			scanned,
+			promoted,
+			failed
+		});
 	}
 
 	private async syncInjectedL1InfoTree(): Promise<void> {
 		let hasNext = true;
 		let afterId = undefined;
+		let scanned = 0;
+		let promoted = 0;
+		let failed = 0;
 
 		while (hasNext) {
 			const leafIncludedTransactions = await this.transactionService.getLeafIncludedTransactions(
@@ -122,7 +146,7 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 				afterId
 			);
 			if (leafIncludedTransactions.length === 0) {
-				Logger.info({
+				Logger.debug({
 					location: 'ClaimReadinessConsumer',
 					function: 'syncInjectedL1InfoTree',
 					networkId: this.config.networkId,
@@ -132,11 +156,12 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 			}
 
 			for (const tx of leafIncludedTransactions) {
-				Logger.info({
+				scanned++;
+				Logger.debug({
 					location: 'ClaimReadinessConsumer',
 					function: 'syncInjectedL1InfoTree',
 					networkId: this.config.networkId,
-					message: `NetId ${this.config.networkId}Processing transaction ${tx.depositCount} from network ${tx.sourceNetwork} with leaf index ${tx.leafIndex}`
+					message: `NetId ${this.config.networkId} Processing transaction ${tx.depositCount} from network ${tx.sourceNetwork} with leaf index ${tx.leafIndex}`
 				});
 				try {
 					afterId = tx.hubUID;
@@ -167,17 +192,34 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 							tx.sourceNetwork,
 							injectedTreeData.l1_info_tree_index
 						);
+						promoted++;
 					}
 				} catch (error) {
-					Logger.info({
+					failed++;
+					// A missing injected tree is expected steady-state — the leaf
+					// may not yet be injected into the L1 info tree, and the tx is
+					// retried next tick. Logged at debug so the not-yet-ready
+					// backlog doesn't flood the logs every tick; the per-tick
+					// summary below carries the counts.
+					Logger.debug({
 						location: 'ClaimReadinessConsumer',
 						function: 'syncInjectedL1InfoTree',
 						networkId: this.config.networkId,
-						message: `NetId ${this.config.networkId}Error processing transaction ${tx.depositCount} on network ${tx.sourceNetwork} with leaf index ${tx.leafIndex}`,
+						message: `NetId ${this.config.networkId} Error processing transaction ${tx.depositCount} on network ${tx.sourceNetwork} with leaf index ${tx.leafIndex}`,
 						error: error instanceof Error ? error.message : String(error)
 					});
 				}
 			}
 		}
+
+		Logger.info({
+			location: 'ClaimReadinessConsumer',
+			function: 'syncInjectedL1InfoTree',
+			networkId: this.config.networkId,
+			message: `NetId ${this.config.networkId} Injected L1 info tree sync complete`,
+			scanned,
+			promoted,
+			failed
+		});
 	}
 }
