@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.2](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-auto-claim@1.2.1...bridge-hub-auto-claim@1.2.2) (2026-08-27)
+
+
+### Bug Fixes
+
+* **auto-claim:** stop retrying permanently-failed claims, add log messages ([c3fffb9](https://github.com/agglayer/agglayer-bridge-hub-api/commit/c3fffb96f641c9218458ce069154dd95f4560d95))
+
+
+
+
+
 ## [1.2.1](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-auto-claim@1.2.0...bridge-hub-auto-claim@1.2.1) (2026-07-23)
 
 **Note:** Version bump only for package bridge-hub-auto-claim

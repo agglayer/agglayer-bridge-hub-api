@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.16](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.15...bridge-hub-consumer@1.6.16) (2026-08-27)
+
+
+### Bug Fixes
+
+* **consumer:** cut claim-readiness log volume to per-tick summaries ([081e426](https://github.com/agglayer/agglayer-bridge-hub-api/commit/081e42648a4122eddfc65c13f6e0651ae8207412))
+* **consumer:** replace servercore cron with croner directly in ClaimReadinessConsumer ([27db0ed](https://github.com/agglayer/agglayer-bridge-hub-api/commit/27db0ed70b8af637dac1684843a0f6a4243f5dc6))
+
+
+
+
+
 ## [1.6.15](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-consumer@1.6.14...bridge-hub-consumer@1.6.15) (2026-07-27)
 
 
