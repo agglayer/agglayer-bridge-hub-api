@@ -1,4 +1,6 @@
-import { AbstractCronEventConsumer, ApiError, Logger } from '@polygonlabs/servercore';
+import { Cron } from 'croner';
+
+import { ApiError, Logger } from '@polygonlabs/servercore';
 
 import type { IClaimReadinessConfig } from './interfaces/claim_readiness_config.ts';
 import type { TransactionsService } from './services/transaction.ts';
@@ -13,19 +15,47 @@ import type { TransactionsService } from './services/transaction.ts';
  */
 const AGGKIT_FETCH_TIMEOUT_MS = 10_000;
 
-export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
+export class ClaimReadinessConsumer {
 	private config: IClaimReadinessConfig;
 	private transactionService: TransactionsService;
+	private cronJob: Cron | null = null;
 
 	constructor(config: IClaimReadinessConfig, transactionService: TransactionsService) {
-		super();
 		this.config = config;
 		this.transactionService = transactionService;
 	}
 
 	public async start(): Promise<void> {
 		if (this.config.cronExpr) {
-			this.startCron(this.config.cronExpr);
+			// Cron's `protect: true` blocks new triggers while a previous run
+			// is still in progress. Without a `catch` handler, an unhandled
+			// rejection from the triggered function makes croner exit
+			// _trigger() before it clears that in-progress flag — protect's
+			// overrun guard then wedges shut for the rest of the process's
+			// life, since every future scheduled run is skipped forever
+			// (verified against croner's source; this is exactly how the
+			// 2026-08-25 MongoDB blip permanently killed this cron via
+			// @polygonlabs/servercore's AbstractCronEventConsumer, which
+			// never passed a `catch` option). Passing `catch` here is what
+			// makes protect self-healing instead of a one-way latch.
+			this.cronJob = new Cron(
+				this.config.cronExpr,
+				{
+					protect: true,
+					catch: (error) => {
+						Logger.error({
+							location: 'ClaimReadinessConsumer',
+							function: 'onTick',
+							networkId: this.config.networkId,
+							message: `NetId ${this.config.networkId} Claim readiness tick failed`,
+							error: error instanceof Error ? error.message : String(error)
+						});
+					}
+				},
+				async () => {
+					await this.onTick();
+				}
+			);
 		} else {
 			// fallback: run once if no cron
 			await this.onTick();
@@ -33,7 +63,8 @@ export class ClaimReadinessConsumer extends AbstractCronEventConsumer {
 	}
 
 	public stop(): void {
-		this.stopCron();
+		this.cronJob?.stop();
+		this.cronJob = null;
 	}
 
 	protected async onTick(): Promise<void> {
