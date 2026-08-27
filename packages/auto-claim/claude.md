@@ -8,7 +8,15 @@ Long-running daemon that polls the API for READY_TO_CLAIM transactions, fetches 
 - Uses `claimAsset()` for ASSET leaf type, `claimMessage()` for MESSAGE leaf type on the bridge contract
 - `computeGlobalIndex` uses bitwise ops — mainnet flag at bit 64, rollup index at bits 32-63, deposit count at bits 0-31
 - Claims are sequential (one at a time) to avoid nonce issues
+- `ClaimCircuitBreaker` (`src/services/circuit-breaker.ts`) tracks per-`(sourceNetwork, depositCount)`
+  consecutive claim-proof/claim failures in memory and skips a transaction after
+  `AUTO_CLAIM_FAILURE_THRESHOLD` (default 15) failures in a row, retrying it once every
+  `AUTO_CLAIM_RETRY_WINDOW_TICKS` (default 120) ticks — prevents a stuck source-network backlog
+  from 404-storming the Bridge Hub API forever
 
 ## Testing
 
-Only `computeGlobalIndex`, `filterEligibleTransactions`, and pagination logic are unit tested (`tests/services/transaction.test.ts`). The auto-claim orchestration is integration glue — not unit tested.
+`computeGlobalIndex`, `filterEligibleTransactions`, and pagination logic are unit tested
+(`tests/services/transaction.test.ts`); `ClaimCircuitBreaker` is unit tested
+(`tests/services/circuit-breaker.test.ts`) as pure logic. The auto-claim orchestration itself
+is integration glue — not unit tested.

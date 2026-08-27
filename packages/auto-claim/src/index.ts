@@ -19,6 +19,12 @@ Logger.create({
 let autoClaimService: AutoClaimService;
 
 const POLL_INTERVAL = 30000; // 30 seconds
+
+// Consecutive claim-proof/claim failures before a transaction is skipped by the circuit
+// breaker, and how many ticks it stays skipped before one retry attempt is allowed. See
+// ClaimCircuitBreaker for why this exists.
+const CLAIM_FAILURE_THRESHOLD = Number(process.env.AUTO_CLAIM_FAILURE_THRESHOLD) || 15;
+const CLAIM_RETRY_WINDOW_TICKS = Number(process.env.AUTO_CLAIM_RETRY_WINDOW_TICKS) || 120;
 async function run() {
 	while (true) {
 		try {
@@ -52,12 +58,16 @@ async function start() {
 		autoClaimService = new AutoClaimService(
 			process.env.BRIDGE_CONTRACT as `0x${string}`,
 			wallet,
-			transactionService
+			transactionService,
+			{
+				failureThreshold: CLAIM_FAILURE_THRESHOLD,
+				retryWindowTicks: CLAIM_RETRY_WINDOW_TICKS
+			}
 		);
 
 		void run();
 	} catch (error: any) {
-		Logger.error({ location: 'index.start', error });
+		Logger.error({ location: 'index.start', message: 'auto-claim service failed to start', error });
 	}
 }
 

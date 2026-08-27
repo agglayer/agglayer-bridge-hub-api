@@ -52,6 +52,7 @@ export class TransactionService {
 					// Malformed response - exit the loop to prevent infinite loop
 					Logger.error({
 						location: 'TransactionService.getPendingTransactions',
+						message: 'malformed API response - missing data field',
 						error: 'Malformed API response - missing data field'
 					});
 					hasNext = false;
@@ -60,12 +61,14 @@ export class TransactionService {
 		} catch (error: any) {
 			Logger.error({
 				location: 'TransactionService.getPendingTransactions',
+				message: `failed to fetch pending transactions: ${error.message}`,
 				error: error.message
 			});
 		}
 
 		Logger.info({
 			location: 'TransactionService.getPendingTransactions',
+			message: `fetched ${transactions.length} pending transactions`,
 			length: transactions.length
 		});
 		return transactions;
@@ -88,6 +91,7 @@ export class TransactionService {
 		} catch (error: any) {
 			Logger.error({
 				location: 'TransactionService.getProof',
+				message: `claim-proof fetch failed for sourceNetwork=${sourceNetwork} depositCount=${depositCount}`,
 				error: error.message,
 				data: {
 					sourceNetwork,
