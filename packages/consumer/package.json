@@ -21,6 +21,7 @@
 		"@polygonlabs/servercore": "^1.5.0",
 		"@polygonlabs/servercore-mongo": "^0.1.0",
 		"@polygonlabs/verror": "^1.1.2",
+		"croner": "^9.1.0",
 		"express": "^5.2.1"
 	},
 	"devDependencies": {
