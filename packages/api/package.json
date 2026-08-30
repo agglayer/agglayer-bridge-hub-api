@@ -17,18 +17,24 @@
 	"devDependencies": {
 		"@tsconfig/node-ts": "^23.0.0",
 		"@tsconfig/node24": "^24.0.0",
+		"@types/cors": "^2.8.19",
+		"@types/express": "^5.0.6",
 		"@types/node": "^24.0.0",
 		"typescript": "^5",
 		"vitest": "^4.1.5"
 	},
 	"dependencies": {
 		"@agglayer/bridge-hub-types": "workspace:*",
-		"@hono/node-server": "^1.13.5",
-		"@hono/zod-openapi": "^1.1.2",
+		"@asteasolutions/zod-to-openapi": "^8.5.0",
+		"@polygonlabs/express": "^4.1.2",
+		"@polygonlabs/logger": "^3.0.2",
+		"@polygonlabs/openapi-registry": "^2.1.3",
 		"@polygonlabs/servercore": "^1.5.0",
 		"@polygonlabs/servercore-mongo": "^0.1.0",
-		"@scalar/hono-api-reference": "^0.9.19",
-		"hono": "^4.9.0",
+		"@polygonlabs/verror": "^1.1.2",
+		"@scalar/express-api-reference": "^0.10.11",
+		"cors": "^2.8.6",
+		"express": "^5.2.1",
 		"mongodb": "^7.0.0",
 		"viem": "2.38.1",
 		"zod": "^4.0.17"

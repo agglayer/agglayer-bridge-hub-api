@@ -1,6 +1,21 @@
-import { z } from '@hono/zod-openapi';
+import { z } from 'zod';
 
 import { Networks } from '../enums/index.ts';
+
+// Matches @polygonlabs/servercore's handleError output exactly:
+// `{ status: 'error', message, name, code, details }`. The registry
+// router's response validator (z.encode) enforces this at runtime — unlike
+// Hono, which never validated responses — so every error-emitting route
+// must register this shape for whatever status codes it can actually
+// produce, or a legitimate 400/404 turns into a 500 "response failed
+// schema validation".
+export const ApiErrorResponseSchema = z.object({
+	status: z.literal('error'),
+	message: z.string(),
+	name: z.string(),
+	code: z.number(),
+	details: z.record(z.string(), z.unknown())
+});
 
 export const networkIdsSchema = z
 	.string()

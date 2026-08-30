@@ -1,8 +1,8 @@
-import type { Context } from 'hono';
+import type { Handler } from '@polygonlabs/express/registry';
 
-import { handleResponse } from '@polygonlabs/servercore';
+import { handleError, handleResponse, NotFoundError } from '@polygonlabs/servercore';
 
-import type { TransactionsByDepositCountQuery, TransactionsQuery } from '../schemas/index.ts';
+import type { Operations } from '../registry.ts';
 import type { TransactionService } from '../services/transactions.ts';
 
 import { getResponseContext } from '../middlewares/response_context.ts';
@@ -14,9 +14,9 @@ export class TransactionsController {
 		this.transactionService = transactionService;
 	}
 
-	getTransactions = async (c: Context) => {
-		const query: TransactionsQuery = c.get('validatedQuery');
-		const { network } = c.get('validatedParams');
+	getTransactions: Handler<Operations['getTransactions']> = async (req, res) => {
+		const { network } = req.params;
+		const query = req.query;
 
 		const transactions = await this.transactionService.getTransactions({
 			network,
@@ -30,21 +30,40 @@ export class TransactionsController {
 			limit: query.limit
 		});
 
-		return handleResponse(getResponseContext(c), transactions.documents, {
+		handleResponse(getResponseContext(res), transactions.documents, {
 			total: transactions?.totalDocumentsCount || 0,
 			limit: query.limit,
 			nextStartAfterCursor: transactions?.documents.at(-1)?.hubUID
 		});
 	};
 
-	getTransactionByDepositCount = async (c: Context) => {
-		const { sourceNetworkId, depositCount, network }: TransactionsByDepositCountQuery =
-			c.get('validatedParams');
+	getTransactionByDepositCount: Handler<Operations['getTransactionByDepositCount']> = async (
+		req,
+		res
+	) => {
+		const { sourceNetworkId, depositCount, network } = req.params;
 
 		const docId: string = this.transactionService.generateDocId(depositCount, sourceNetworkId);
 
 		const transaction = await this.transactionService.getTransactionByDepositCount(network, docId);
 
-		return handleResponse(getResponseContext(c), transaction);
+		if (!transaction) {
+			handleError(
+				getResponseContext(res),
+				new NotFoundError(
+					'Transaction not found for the given deposit count and source network',
+					'Transaction',
+					docId,
+					{
+						network,
+						sourceNetworkId,
+						depositCount
+					}
+				)
+			);
+			return;
+		}
+
+		handleResponse(getResponseContext(res), transaction);
 	};
 }

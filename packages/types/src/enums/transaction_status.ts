@@ -1,4 +1,4 @@
-import { z } from '@hono/zod-openapi';
+import { z } from 'zod';
 
 /**
  * TransactionStatus. It contains the 4 values BRIDGED, READY_TO_CLAIM, CLAIM_IN_PROGRESS and CLAIMED
