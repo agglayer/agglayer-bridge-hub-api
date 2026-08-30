@@ -1,5 +1,16 @@
 # Bridge Hub API
 
+> [!WARNING]
+> **This service is deprecated and being wound down.**
+>
+> Per the 2026-07-23 Apps Team product review, the AggLayer (LXLY) bridge-hub
+> API is being wound down as the AggLayer bridging estate is retired over the
+> next 2-3 months, with the user-facing surface moving to Sequence/Trails
+> (Taylan Pince team) and residual bridge-hub responsibilities consolidating to
+> the AgLayer team (see auto-claim-hub, same repo).
+>
+> No new features should be added here.
+
 REST API service that exposes bridge transaction data and claim proofs with OpenAPI documentation. For complete system architecture and cluster deployment, see [README.md](../../README.md) and [ARCHITECTURE.md](../../ARCHITECTURE.md).
 
 ## Overview

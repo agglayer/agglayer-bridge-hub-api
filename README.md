@@ -1,5 +1,21 @@
 # Agglayer Bridge Hub
 
+> [!WARNING]
+> **Parts of this monorepo are deprecated; ownership of the rest is transferring.**
+>
+> Per the 2026-07-23 Apps Team product review, the AggLayer (LXLY) bridging
+> estate is being wound down over the next 2-3 months as the user-facing
+> surface moves to Sequence/Trails (Taylan Pince team). The **API** and
+> **Consumer** packages are being retired as part of that wind-down, with
+> residual bridge-hub responsibilities consolidating to the AgLayer team.
+>
+> The **Auto-Claim** package (registry id `auto-claim-hub`) is not being shut
+> down — ownership and ongoing maintenance have migrated to the AgLayer team
+> as part of AgLayer ecosystem consolidation; it is the same running service
+> under new ownership.
+>
+> See each package's own README for its specific status.
+
 A comprehensive bridge transaction indexing and claiming system for the Agglayer ecosystem. This monorepo provides services to monitor, store, expose, and automatically claim bridge transactions across multiple blockchain networks.
 
 ## Overview
