@@ -1,13 +1,14 @@
-import type { Context } from 'hono';
-
+import type { Handler } from '@polygonlabs/express/registry';
 import type { ApiError } from '@polygonlabs/servercore';
 
 import { handleResponse, handleError } from '@polygonlabs/servercore';
 
+import type { Operations } from '../registry.ts';
+
 import { getResponseContext } from '../middlewares/response_context.ts';
 
 export class HealthCheckController {
-	checkServiceHealth = async (c: Context) => {
+	checkServiceHealth: Handler<Operations['checkServiceHealth']> = async (_req, res) => {
 		try {
 			// const rawConfig = JSON.parse(process.env.CHAIN_CONFIG || "{}");
 			// const failedServices: string[] = [];
@@ -55,12 +56,12 @@ export class HealthCheckController {
 			//     );
 			// }
 
-			return handleResponse(getResponseContext(c), {
+			handleResponse(getResponseContext(res), {
 				status: 'success',
 				message: 'All services are working correctly'
 			});
 		} catch (error) {
-			return handleError(getResponseContext(c), error as ApiError);
+			handleError(getResponseContext(res), error as ApiError);
 		}
 	};
 }

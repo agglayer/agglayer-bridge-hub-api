@@ -70,12 +70,12 @@ export const mockClaimProof: ClaimProof = {
 };
 
 export const mockClaimProofResponse: ClaimProofResponse = {
-	success: true,
+	status: 'success',
 	data: mockClaimProof
 };
 
 export const mockTransactionResponse: ITransactionResponse = {
-	success: true,
+	status: 'success',
 	data: [mockTransaction, mockTransactionMessage],
 	pagination: {
 		total: 2,
@@ -85,7 +85,7 @@ export const mockTransactionResponse: ITransactionResponse = {
 };
 
 export const mockTransactionResponseWithPagination: ITransactionResponse = {
-	success: true,
+	status: 'success',
 	data: [mockTransaction],
 	pagination: {
 		total: 50,
@@ -95,7 +95,7 @@ export const mockTransactionResponseWithPagination: ITransactionResponse = {
 };
 
 export const mockEmptyTransactionResponse: ITransactionResponse = {
-	success: true,
+	status: 'success',
 	data: [],
 	pagination: {
 		total: 0,

@@ -7,9 +7,9 @@ TypeScript monorepo for bridge transaction management in the Agglayer ecosystem.
 - **Runtime**: Node 24
 - **Monorepo**: Lerna + pnpm workspaces
 - **DB**: MongoDB (via `@polygonlabs/servercore-mongo`)
-- **API**: Hono + Zod + OpenAPI (Scalar docs)
+- **API**: Express + `@polygonlabs/express` registry-driven router + Zod + OpenAPI (Scalar docs)
 - **Blockchain**: viem
-- **Build**: tsup
+- **Build**: `tsc -b`
 - **Test**: Vitest
 
 ## Commands

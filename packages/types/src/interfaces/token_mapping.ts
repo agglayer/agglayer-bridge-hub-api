@@ -1,4 +1,4 @@
-import { z } from '@hono/zod-openapi';
+import { z } from 'zod';
 
 /**
  * Zod schema for the Hub API's Token Mappings entity

@@ -1,7 +1,8 @@
-import type { Context } from 'hono';
+import type { Handler } from '@polygonlabs/express/registry';
 
 import { handleResponse } from '@polygonlabs/servercore';
 
+import type { Operations } from '../registry.ts';
 import type { MappingsService } from '../services/mappings.ts';
 
 import { getResponseContext } from '../middlewares/response_context.ts';
@@ -13,9 +14,9 @@ export class MappingsController {
 		this.mappingsService = mappingsService;
 	}
 
-	getMappings = async (c: Context) => {
-		const query = c.get('validatedQuery');
-		const { network } = c.get('validatedParams');
+	getMappings: Handler<Operations['getMappings']> = async (req, res) => {
+		const { network } = req.params;
+		const query = req.query;
 
 		const mappings = await this.mappingsService.getMappings({
 			network,
@@ -24,20 +25,29 @@ export class MappingsController {
 			wrappedNetworkIds: query.wrappedNetworkIds,
 			wrappedTokenAddress: query.wrappedTokenAddress,
 			limit: query.limit,
-			startAfter: query.startAfter
+			// PaginationSchema.startAfter is a wire-format string (URL query
+			// params are always strings); MappingsService.getMappings compares
+			// it against the numeric `timestamp` field, so it must be parsed
+			// here. Previously silently mismatched (string passed where a
+			// number was expected) because the Hono controller's unannotated
+			// `Context` never caught it at compile time.
+			startAfter: query.startAfter === undefined ? undefined : Number(query.startAfter)
 		});
 
-		return handleResponse(getResponseContext(c), mappings.documents, {
+		handleResponse(getResponseContext(res), mappings.documents, {
 			total: mappings.totalDocumentsCount || 0,
 			limit: query.limit,
-			nextStartAfterCursor:
-				query.offset === undefined ? mappings.documents.at(-1)?.timestamp : undefined
+			// PaginationSchema/MappingsQuerySchema have no `offset` field — this
+			// was previously an always-true `query.offset === undefined` check
+			// against a property that never existed, silently allowed by the
+			// unannotated Hono `Context` this controller used to read from.
+			nextStartAfterCursor: mappings.documents.at(-1)?.timestamp
 		});
 	};
 
-	getMappingsByToken = async (c: Context) => {
-		const query = c.get('validatedQuery');
-		const { tokenNetwork, tokenAddress, network } = c.get('validatedParams');
+	getMappingsByToken: Handler<Operations['getMappingsByToken']> = async (req, res) => {
+		const { tokenNetwork, tokenAddress, network } = req.params;
+		const query = req.query;
 
 		const mappings = await this.mappingsService.getMappingsByToken(
 			tokenAddress,
@@ -45,11 +55,14 @@ export class MappingsController {
 			network
 		);
 
-		return handleResponse(getResponseContext(c), mappings.documents, {
+		handleResponse(getResponseContext(res), mappings.documents, {
 			total: mappings.totalDocumentsCount || 0,
 			limit: query.limit,
-			nextStartAfterCursor:
-				query.offset === undefined ? mappings.documents.at(-1)?.timestamp : undefined
+			// PaginationSchema/MappingsQuerySchema have no `offset` field — this
+			// was previously an always-true `query.offset === undefined` check
+			// against a property that never existed, silently allowed by the
+			// unannotated Hono `Context` this controller used to read from.
+			nextStartAfterCursor: mappings.documents.at(-1)?.timestamp
 		});
 	};
 }

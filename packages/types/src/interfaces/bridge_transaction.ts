@@ -1,4 +1,4 @@
-import { z } from '@hono/zod-openapi';
+import { z } from 'zod';
 
 import { TransactionStatusSchema } from '../enums/transaction_status.ts';
 import { PaginatedResponseSchema, ResponseSchema } from './common.ts';

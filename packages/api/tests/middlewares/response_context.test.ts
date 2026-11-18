@@ -23,12 +23,12 @@ describe('response_context middleware', () => {
 		test('should create response context with status and json methods', () => {
 			const mockJson = vi.fn(() => ({ data: 'test' }));
 			const mockStatus = vi.fn(() => {});
-			const mockContext = {
+			const mockRes = {
 				status: mockStatus,
 				json: mockJson
 			} as any;
 
-			const responseContext = getResponseContext(mockContext);
+			const responseContext = getResponseContext(mockRes);
 
 			expect(responseContext).toBeDefined();
 			expect(responseContext.status).toBeDefined();
@@ -37,37 +37,37 @@ describe('response_context middleware', () => {
 			expect(typeof responseContext.json).toBe('function');
 		});
 
-		test('should throw ApiError when context is null', () => {
-			expect(() => getResponseContext(null as any)).toThrow('Context is required');
+		test('should throw ApiError when res is null', () => {
+			expect(() => getResponseContext(null as any)).toThrow('Response is required');
 		});
 
-		test('should throw ApiError when context is undefined', () => {
-			expect(() => getResponseContext(undefined as any)).toThrow('Context is required');
+		test('should throw ApiError when res is undefined', () => {
+			expect(() => getResponseContext(undefined as any)).toThrow('Response is required');
 		});
 
-		test('should call Hono context status method with correct status code', () => {
+		test('should call Express res status method with correct status code', () => {
 			const mockStatus = vi.fn(() => {});
 			const mockJson = vi.fn(() => ({ data: 'test' }));
-			const mockContext = {
+			const mockRes = {
 				status: mockStatus,
 				json: mockJson
 			} as any;
 
-			const responseContext = getResponseContext(mockContext);
+			const responseContext = getResponseContext(mockRes);
 			responseContext.status(200);
 
 			expect(mockStatus).toHaveBeenCalledWith(200);
 		});
 
-		test('should call Hono context json method with correct body', () => {
+		test('should call Express res json method with correct body', () => {
 			const mockStatus = vi.fn(() => {});
 			const mockJson = vi.fn(() => ({ data: 'test' }));
-			const mockContext = {
+			const mockRes = {
 				status: mockStatus,
 				json: mockJson
 			} as any;
 
-			const responseContext = getResponseContext(mockContext);
+			const responseContext = getResponseContext(mockRes);
 			const testBody = { message: 'success', data: [1, 2, 3] };
 			responseContext.json(testBody);
 
@@ -77,12 +77,12 @@ describe('response_context middleware', () => {
 		test('should return responseContext from status method for chaining', () => {
 			const mockStatus = vi.fn(() => {});
 			const mockJson = vi.fn(() => ({ data: 'test' }));
-			const mockContext = {
+			const mockRes = {
 				status: mockStatus,
 				json: mockJson
 			} as any;
 
-			const responseContext = getResponseContext(mockContext);
+			const responseContext = getResponseContext(mockRes);
 			const result = responseContext.status(200);
 
 			expect(result).toBe(responseContext);
@@ -91,12 +91,12 @@ describe('response_context middleware', () => {
 		test('should allow chaining status and json methods', () => {
 			const mockStatus = vi.fn(() => {});
 			const mockJson = vi.fn(() => ({ data: 'test' }));
-			const mockContext = {
+			const mockRes = {
 				status: mockStatus,
 				json: mockJson
 			} as any;
 
-			const responseContext = getResponseContext(mockContext);
+			const responseContext = getResponseContext(mockRes);
 			const testBody = { message: 'success' };
 
 			responseContext.status(201).json(testBody);
@@ -108,12 +108,12 @@ describe('response_context middleware', () => {
 		test('should work with different status codes', () => {
 			const mockStatus = vi.fn(() => {});
 			const mockJson = vi.fn(() => ({ data: 'test' }));
-			const mockContext = {
+			const mockRes = {
 				status: mockStatus,
 				json: mockJson
 			} as any;
 
-			const responseContext = getResponseContext(mockContext);
+			const responseContext = getResponseContext(mockRes);
 
 			responseContext.status(404);
 			expect(mockStatus).toHaveBeenCalledWith(404);
@@ -128,12 +128,12 @@ describe('response_context middleware', () => {
 		test('should work with complex JSON bodies', () => {
 			const mockStatus = vi.fn(() => {});
 			const mockJson = vi.fn(() => ({ data: 'test' }));
-			const mockContext = {
+			const mockRes = {
 				status: mockStatus,
 				json: mockJson
 			} as any;
 
-			const responseContext = getResponseContext(mockContext);
+			const responseContext = getResponseContext(mockRes);
 			const complexBody = {
 				data: [
 					{ id: 1, name: 'test1', nested: { value: 100 } },
@@ -153,12 +153,12 @@ describe('response_context middleware', () => {
 		test('should work with null JSON body', () => {
 			const mockStatus = vi.fn(() => {});
 			const mockJson = vi.fn(() => null);
-			const mockContext = {
+			const mockRes = {
 				status: mockStatus,
 				json: mockJson
 			} as any;
 
-			const responseContext = getResponseContext(mockContext);
+			const responseContext = getResponseContext(mockRes);
 			responseContext.json(null);
 
 			expect(mockJson).toHaveBeenCalledWith(null);
@@ -167,34 +167,34 @@ describe('response_context middleware', () => {
 		test('should work with empty object JSON body', () => {
 			const mockStatus = vi.fn(() => {});
 			const mockJson = vi.fn(() => ({}));
-			const mockContext = {
+			const mockRes = {
 				status: mockStatus,
 				json: mockJson
 			} as any;
 
-			const responseContext = getResponseContext(mockContext);
+			const responseContext = getResponseContext(mockRes);
 			responseContext.json({});
 
 			expect(mockJson).toHaveBeenCalledWith({});
 		});
 
-		test('should create independent response contexts for different Hono contexts', () => {
+		test('should create independent response contexts for different Express responses', () => {
 			const mockStatus1 = vi.fn(() => {});
 			const mockJson1 = vi.fn(() => ({ data: 'test1' }));
-			const mockContext1 = {
+			const mockRes1 = {
 				status: mockStatus1,
 				json: mockJson1
 			} as any;
 
 			const mockStatus2 = vi.fn(() => {});
 			const mockJson2 = vi.fn(() => ({ data: 'test2' }));
-			const mockContext2 = {
+			const mockRes2 = {
 				status: mockStatus2,
 				json: mockJson2
 			} as any;
 
-			const responseContext1 = getResponseContext(mockContext1);
-			const responseContext2 = getResponseContext(mockContext2);
+			const responseContext1 = getResponseContext(mockRes1);
+			const responseContext2 = getResponseContext(mockRes2);
 
 			responseContext1.status(200).json({ data: 'response1' });
 			responseContext2.status(404).json({ data: 'response2' });
@@ -208,12 +208,12 @@ describe('response_context middleware', () => {
 		test('should handle multiple status calls', () => {
 			const mockStatus = vi.fn(() => {});
 			const mockJson = vi.fn(() => ({ data: 'test' }));
-			const mockContext = {
+			const mockRes = {
 				status: mockStatus,
 				json: mockJson
 			} as any;
 
-			const responseContext = getResponseContext(mockContext);
+			const responseContext = getResponseContext(mockRes);
 
 			responseContext.status(200);
 			responseContext.status(404);
@@ -228,12 +228,12 @@ describe('response_context middleware', () => {
 		test('should handle multiple json calls', () => {
 			const mockStatus = vi.fn(() => {});
 			const mockJson = vi.fn(() => ({ data: 'test' }));
-			const mockContext = {
+			const mockRes = {
 				status: mockStatus,
 				json: mockJson
 			} as any;
 
-			const responseContext = getResponseContext(mockContext);
+			const responseContext = getResponseContext(mockRes);
 
 			responseContext.json({ data: 1 });
 			responseContext.json({ data: 2 });

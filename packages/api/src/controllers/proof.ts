@@ -1,5 +1,4 @@
-import type { Context } from 'hono';
-
+import type { Handler } from '@polygonlabs/express/registry';
 import type { ApiError, ExternalDependencyError } from '@polygonlabs/servercore';
 
 import {
@@ -9,7 +8,7 @@ import {
 	NotFoundError
 } from '@polygonlabs/servercore';
 
-import type { ClaimProofQuery } from '../schemas/index.ts';
+import type { Operations } from '../registry.ts';
 import type { ProofService } from '../services/proof.ts';
 import type { TransactionService } from '../services/transactions.ts';
 
@@ -24,15 +23,17 @@ export class ProofController {
 		this.transactionService = transactionService;
 	}
 
-	getProof = async (c: Context) => {
+	getProof: Handler<Operations['getClaimProof']> = async (req, res) => {
 		try {
-			const validatedQuery: ClaimProofQuery = c.get('validatedQuery');
-			const { network } = c.get('validatedParams');
+			const { network } = req.params;
+			const query = req.query;
 
-			if (validatedQuery.leafIndex == null) {
+			let leafIndex = query.leafIndex;
+
+			if (leafIndex == null) {
 				const docId = this.transactionService.generateDocId(
-					validatedQuery.depositCount,
-					validatedQuery.sourceNetworkId
+					query.depositCount,
+					query.sourceNetworkId
 				);
 
 				const transaction = await this.transactionService.getTransactionByDepositCount(
@@ -47,12 +48,12 @@ export class ProofController {
 						undefined,
 						{
 							network: network,
-							sourceNetwork: validatedQuery.sourceNetworkId,
-							depositCount: validatedQuery.depositCount
+							sourceNetwork: query.sourceNetworkId,
+							depositCount: query.depositCount
 						}
 					);
 				} else if (transaction.status === 'READY_TO_CLAIM' && transaction.leafIndexForProof) {
-					validatedQuery.leafIndex = transaction.leafIndexForProof;
+					leafIndex = transaction.leafIndexForProof;
 				} else if (transaction.status === 'CLAIMED') {
 					throw new BadRequestError('Transaction already claimed');
 				} else {
@@ -64,20 +65,20 @@ export class ProofController {
 			// from a READY_TO_CLAIM transaction above; guard to narrow the
 			// optional type for getProof (which requires a number) rather than
 			// asserting non-null.
-			if (validatedQuery.leafIndex == null) {
+			if (leafIndex == null) {
 				throw new BadRequestError('Transaction not ready to claim');
 			}
 
 			const proof = await this.proofService.getProof(
 				network,
-				validatedQuery.sourceNetworkId,
-				validatedQuery.depositCount,
-				validatedQuery.leafIndex
+				query.sourceNetworkId,
+				query.depositCount,
+				leafIndex
 			);
 
-			return handleResponse(getResponseContext(c), proof);
+			handleResponse(getResponseContext(res), proof);
 		} catch (error) {
-			return handleError(getResponseContext(c), error as ExternalDependencyError | ApiError);
+			handleError(getResponseContext(res), error as ExternalDependencyError | ApiError);
 		}
 	};
 }

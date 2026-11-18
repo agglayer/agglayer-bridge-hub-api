@@ -1,18 +1,17 @@
-import type { Context } from 'hono';
-import type { StatusCode } from 'hono/utils/http-status';
+import type { Response } from 'express';
 
 import type { ResponseContext } from '@polygonlabs/servercore';
 
 import { ApiError } from '@polygonlabs/servercore';
 
-export const getResponseContext = (c: Context): ResponseContext => {
-	if (!c) throw new ApiError('Context is required');
+export const getResponseContext = (res: Response): ResponseContext => {
+	if (!res) throw new ApiError('Response is required');
 	const responseContext: ResponseContext = {
 		status: (statusCode: number) => {
-			c.status(statusCode as StatusCode);
+			res.status(statusCode);
 			return responseContext;
 		},
-		json: (body: any) => c.json(body) // Use Hono's `json` method
+		json: (body: any) => res.json(body)
 	};
 
 	return responseContext;
