@@ -10,15 +10,15 @@ import { executeMongoOperation } from '@polygonlabs/servercore-mongo';
 import type { Networks } from '../enums/index.ts';
 import type { TokenMetadata } from '../schemas/index.ts';
 
-import { BRIDGE_ABI_V2, BRIDGE_ABI_V1 } from '../constants/bridge.ts';
+import { BRIDGE_ABI_V2 } from '../constants/bridge.ts';
 import { ERC20_ABI } from '../constants/erc20.ts';
+import { computeWrappedAddressV1 } from './wrapped_token_address.ts';
 
 export class TokenMetadataService {
 	private readonly db: Db;
 	private readonly collectionId: Map<string, string>;
 	private readonly chainConfig: Map<string, Map<number, string>>;
 	private readonly bridgeAddress: Map<string, string>;
-	private readonly V1_NETWORK_ID: number = 1;
 	private readonly V2_NETWORK_ID: number = 20;
 
 	constructor(
@@ -72,23 +72,6 @@ export class TokenMetadataService {
 			symbol: symbol as string,
 			decimals: Number(decimals)
 		};
-	}
-
-	private async calculateWrappedAddressV1(
-		client: any,
-		bridgeAddr: string,
-		originTokenNetwork: number,
-		originTokenAddress: string,
-		name: string,
-		symbol: string,
-		decimals: number
-	): Promise<string> {
-		return (await client.readContract({
-			address: bridgeAddr as `0x${string}`,
-			abi: BRIDGE_ABI_V1,
-			functionName: 'precalculatedWrapperAddress',
-			args: [originTokenNetwork, originTokenAddress as `0x${string}`, name, symbol, decimals]
-		})) as string;
 	}
 
 	private async calculateWrappedAddressV2(
@@ -145,10 +128,9 @@ export class TokenMetadataService {
 
 		//get token details from chain
 		const rpcUrl = this.chainConfig.get(network)?.get(originTokenNetwork) || undefined;
-		const rpcUrlV1 = this.chainConfig.get(network)?.get(this.V1_NETWORK_ID) || undefined;
 		const rpcUrlV2 = this.chainConfig.get(network)?.get(this.V2_NETWORK_ID) || undefined;
 
-		if (!rpcUrl || !rpcUrlV1 || !rpcUrlV2) {
+		if (!rpcUrl || !rpcUrlV2) {
 			throw new BadRequestError(
 				`Unsupported origin token network ${originTokenNetwork} for ${network}`
 			);
@@ -158,25 +140,18 @@ export class TokenMetadataService {
 			transport: http(rpcUrl)
 		});
 
-		const v1Client = createPublicClient({
-			transport: http(rpcUrlV1)
-		});
-
 		const v2Client = createPublicClient({
 			transport: http(rpcUrlV2)
 		});
 
 		const tokenData = await this.fetchERC20TokenData(originClient, originTokenAddress);
 
-		const wrappedTokenAddressV1 = await this.calculateWrappedAddressV1(
-			v1Client,
-			this.bridgeAddress.get(network) || '',
+		const wrappedTokenAddressV1 = computeWrappedAddressV1({
+			bridgeAddress: this.bridgeAddress.get(network) || '',
 			originTokenNetwork,
 			originTokenAddress,
-			tokenData.name,
-			tokenData.symbol,
-			tokenData.decimals
-		);
+			...tokenData
+		});
 
 		const wrappedTokenAddressV2 = await this.calculateWrappedAddressV2(
 			v2Client,
@@ -224,27 +199,18 @@ export class TokenMetadataService {
 
 				const tokenData = await this.fetchERC20TokenData(client, tokenAddress);
 
-				// Calculate both v1 and v2 wrapped addresses
-				const v1Client = createPublicClient({
-					transport: http(this.chainConfig.get(network)?.get(this.V1_NETWORK_ID) || rpcUrl)
-				});
-
 				const v2Client = createPublicClient({
 					transport: http(this.chainConfig.get(network)?.get(this.V2_NETWORK_ID) || rpcUrl)
 				});
 
-				const [wrappedTokenAddressV1, wrappedTokenAddressV2] = await Promise.allSettled([
-					this.calculateWrappedAddressV1(
-						v1Client,
-						bridgeAddr,
-						networkId,
-						tokenAddress,
-						tokenData.name,
-						tokenData.symbol,
-						tokenData.decimals
-					),
-					this.calculateWrappedAddressV2(v2Client, bridgeAddr, networkId, tokenAddress)
-				]);
+				// A token found on some chain is still valid metadata even if the V2 bridge
+				// can't be reached, so a failed V2 lookup degrades to '' instead of failing.
+				const wrappedTokenAddressV2 = await this.calculateWrappedAddressV2(
+					v2Client,
+					bridgeAddr,
+					networkId,
+					tokenAddress
+				).catch(() => '');
 
 				return {
 					name: tokenData.name,
@@ -252,10 +218,13 @@ export class TokenMetadataService {
 					decimals: tokenData.decimals,
 					originTokenAddress: tokenAddress,
 					originTokenNetwork: networkId,
-					wrappedTokenAddressV1:
-						wrappedTokenAddressV1.status === 'fulfilled' ? wrappedTokenAddressV1.value : '',
-					wrappedTokenAddressV2:
-						wrappedTokenAddressV2.status === 'fulfilled' ? wrappedTokenAddressV2.value : ''
+					wrappedTokenAddressV1: computeWrappedAddressV1({
+						bridgeAddress: bridgeAddr,
+						originTokenNetwork: networkId,
+						originTokenAddress: tokenAddress,
+						...tokenData
+					}),
+					wrappedTokenAddressV2
 				};
 			} catch (error) {
 				Logger.warn({
