@@ -1,5 +1,15 @@
 # Bridge Hub Consumer
 
+> [!WARNING]
+> **This service is deprecated and being wound down.**
+>
+> Per the 2026-07-23 Apps Team product review, this multi-network LXLY event
+> consumer feeding bridge-hub-api is retired alongside it as the AggLayer
+> bridging estate winds down (surface to Sequence/Trails, residual infra to the
+> AgLayer team; see auto-claim-hub, same repo).
+>
+> No new features should be added here.
+
 Blockchain event indexer that monitors bridge contracts and syncs transaction data to MongoDB. For complete system architecture and deployment topology, see [ARCHITECTURE.md - Production Cluster Architecture](../../ARCHITECTURE.md#production-cluster-architecture).
 
 ## Overview
