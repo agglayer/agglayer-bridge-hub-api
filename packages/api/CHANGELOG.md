@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.7.5](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.7.4...bridge-hub-api@1.7.5) (2026-11-18)
+
+
+### Bug Fixes
+
+* **api:** derive V1 wrapped token address locally instead of calling zkEVM ([4f3a932](https://github.com/agglayer/agglayer-bridge-hub-api/commit/4f3a9322984c7903c012b4f8ed9543ae5858f409))
+
+
+
+
+
 ## [1.7.4](https://github.com/agglayer/agglayer-bridge-hub-api/compare/bridge-hub-api@1.7.3...bridge-hub-api@1.7.4) (2026-07-23)
 
 **Note:** Version bump only for package bridge-hub-api
